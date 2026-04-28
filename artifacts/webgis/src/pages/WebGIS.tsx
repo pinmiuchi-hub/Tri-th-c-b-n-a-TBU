@@ -42,15 +42,15 @@ const PROVINCE_FILES: Record<string, string> = {
 };
 
 const PROVINCE_CENTERS: Record<string, [number, number]> = {
-  "Sơn La": [21.1, 104.0],
-  "Điện Biên": [21.4, 103.0],
-  "Lai Châu": [22.2, 103.4],
+  "Sơn La": [21.30, 104.12],
+  "Điện Biên": [21.72, 102.87],
+  "Lai Châu": [22.25, 103.15],
 };
 
 const PROVINCE_ZOOM: Record<string, number> = {
-  "Sơn La": 9,
-  "Điện Biên": 9,
-  "Lai Châu": 9,
+  "Sơn La": 8,
+  "Điện Biên": 8,
+  "Lai Châu": 8,
 };
 
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -78,8 +78,8 @@ export default function WebGIS() {
     if (!mapContainerRef.current || mapRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [21.3, 103.5],
-      zoom: 8,
+      center: [21.7, 103.5],
+      zoom: 7,
       zoomControl: false,
     });
 
@@ -98,6 +98,12 @@ export default function WebGIS() {
     try {
       const data = await fetchGeoJson("/data/tinh.geojson");
       addProvincesLayer(map, data);
+      // Fit to real province bounds
+      const layer = L.geoJSON(data as GeoJSON.FeatureCollection);
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 9 });
+      }
     } catch (e) {
       console.error("Failed to load provinces:", e);
     }
@@ -255,7 +261,11 @@ export default function WebGIS() {
     try {
       const data = await fetchGeoJson("/data/tinh.geojson");
       addProvincesLayer(map, data);
-      map.flyTo([21.3, 103.5], 8, { duration: 1.5 });
+      const layer = L.geoJSON(data as GeoJSON.FeatureCollection);
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 9, duration: 1.5 });
+      }
     } catch (e) {
       console.error("Failed to reload provinces:", e);
     } finally {
@@ -440,12 +450,12 @@ export default function WebGIS() {
                       <div className="stat-label">km² Diện tích</div>
                     </div>
                     <div className="stat-item">
-                      <div className="stat-value">1,2M</div>
+                      <div className="stat-value">1,25M</div>
                       <div className="stat-label">Dân số</div>
                     </div>
                     <div className="stat-item">
-                      <div className="stat-value">12</div>
-                      <div className="stat-label">Huyện/TP</div>
+                      <div className="stat-value">75</div>
+                      <div className="stat-label">Xã/Phường</div>
                     </div>
                   </>
                 )}
@@ -456,12 +466,12 @@ export default function WebGIS() {
                       <div className="stat-label">km² Diện tích</div>
                     </div>
                     <div className="stat-item">
-                      <div className="stat-value">598K</div>
+                      <div className="stat-value">599K</div>
                       <div className="stat-label">Dân số</div>
                     </div>
                     <div className="stat-item">
-                      <div className="stat-value">10</div>
-                      <div className="stat-label">Huyện/TP</div>
+                      <div className="stat-value">45</div>
+                      <div className="stat-label">Xã/Phường</div>
                     </div>
                   </>
                 )}
@@ -476,8 +486,8 @@ export default function WebGIS() {
                       <div className="stat-label">Dân số</div>
                     </div>
                     <div className="stat-item">
-                      <div className="stat-value">8</div>
-                      <div className="stat-label">Huyện/TP</div>
+                      <div className="stat-value">38</div>
+                      <div className="stat-label">Xã/Phường</div>
                     </div>
                   </>
                 )}
