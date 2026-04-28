@@ -1,0 +1,349 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04000",
+        "ten_xa": "TP. Lai Châu",
+        "loai": "Thành phố",
+        "dtich_km2": 68.7,
+        "dan_so": 35000,
+        "matdo_km2": 509.4,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.38,
+              22.38
+            ],
+            [
+              103.42,
+              22.35
+            ],
+            [
+              103.45,
+              22.39
+            ],
+            [
+              103.41,
+              22.43
+            ],
+            [
+              103.37,
+              22.41
+            ],
+            [
+              103.38,
+              22.38
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04001",
+        "ten_xa": "Phong Thổ",
+        "loai": "Huyện",
+        "dtich_km2": 1466.6,
+        "dan_so": 75000,
+        "matdo_km2": 51.2,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.52,
+              22.55
+            ],
+            [
+              103.58,
+              22.51
+            ],
+            [
+              103.63,
+              22.56
+            ],
+            [
+              103.57,
+              22.62
+            ],
+            [
+              103.5,
+              22.6
+            ],
+            [
+              103.52,
+              22.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04002",
+        "ten_xa": "Sìn Hồ",
+        "loai": "Huyện",
+        "dtich_km2": 1539.9,
+        "dan_so": 80000,
+        "matdo_km2": 51.9,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.22,
+              22.25
+            ],
+            [
+              103.28,
+              22.21
+            ],
+            [
+              103.33,
+              22.26
+            ],
+            [
+              103.27,
+              22.32
+            ],
+            [
+              103.2,
+              22.3
+            ],
+            [
+              103.22,
+              22.25
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04003",
+        "ten_xa": "Tam Đường",
+        "loai": "Huyện",
+        "dtich_km2": 684.5,
+        "dan_so": 55000,
+        "matdo_km2": 80.3,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.42,
+              22.15
+            ],
+            [
+              103.48,
+              22.11
+            ],
+            [
+              103.53,
+              22.16
+            ],
+            [
+              103.47,
+              22.22
+            ],
+            [
+              103.4,
+              22.2
+            ],
+            [
+              103.42,
+              22.15
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04004",
+        "ten_xa": "Nậm Nhùn",
+        "loai": "Huyện",
+        "dtich_km2": 1461.5,
+        "dan_so": 40000,
+        "matdo_km2": 27.4,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.07,
+              22.1
+            ],
+            [
+              103.13,
+              22.06
+            ],
+            [
+              103.18,
+              22.11
+            ],
+            [
+              103.12,
+              22.17
+            ],
+            [
+              103.05,
+              22.15
+            ],
+            [
+              103.07,
+              22.1
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04005",
+        "ten_xa": "Tân Uyên",
+        "loai": "Huyện",
+        "dtich_km2": 912.2,
+        "dan_so": 60000,
+        "matdo_km2": 65.8,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.6,
+              22.05
+            ],
+            [
+              103.66,
+              22.01
+            ],
+            [
+              103.71,
+              22.06
+            ],
+            [
+              103.65,
+              22.12
+            ],
+            [
+              103.58,
+              22.1
+            ],
+            [
+              103.6,
+              22.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04006",
+        "ten_xa": "Than Uyên",
+        "loai": "Huyện",
+        "dtich_km2": 790.7,
+        "dan_so": 70000,
+        "matdo_km2": 88.5,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.78,
+              21.95
+            ],
+            [
+              103.84,
+              21.91
+            ],
+            [
+              103.89,
+              21.96
+            ],
+            [
+              103.83,
+              22.02
+            ],
+            [
+              103.76,
+              22
+            ],
+            [
+              103.78,
+              21.95
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "04007",
+        "ten_xa": "Mường Tè",
+        "loai": "Huyện",
+        "dtich_km2": 2696.7,
+        "dan_so": 45000,
+        "matdo_km2": 16.7,
+        "ten_tinh": "Lai Châu"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              102.55,
+              22.2
+            ],
+            [
+              102.62,
+              22.15
+            ],
+            [
+              102.68,
+              22.21
+            ],
+            [
+              102.62,
+              22.28
+            ],
+            [
+              102.54,
+              22.26
+            ],
+            [
+              102.55,
+              22.2
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

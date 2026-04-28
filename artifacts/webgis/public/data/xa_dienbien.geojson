@@ -1,0 +1,353 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03541",
+        "ten_xa": "TP. Điện Biên Phủ",
+        "loai": "Thành phố",
+        "dtich_km2": 60.05,
+        "dan_so": 70000,
+        "matdo_km2": 1165.7,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103,
+              21.38
+            ],
+            [
+              103.02,
+              21.38
+            ],
+            [
+              103.04,
+              21.4
+            ],
+            [
+              103.02,
+              21.42
+            ],
+            [
+              103,
+              21.42
+            ],
+            [
+              102.98,
+              21.4
+            ],
+            [
+              103,
+              21.38
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03542",
+        "ten_xa": "Tuần Giáo",
+        "loai": "Huyện",
+        "dtich_km2": 1126.4,
+        "dan_so": 75000,
+        "matdo_km2": 66.6,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.25,
+              21.55
+            ],
+            [
+              103.3,
+              21.52
+            ],
+            [
+              103.33,
+              21.55
+            ],
+            [
+              103.28,
+              21.6
+            ],
+            [
+              103.22,
+              21.58
+            ],
+            [
+              103.25,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03543",
+        "ten_xa": "Mường Lay",
+        "loai": "Thị xã",
+        "dtich_km2": 106.9,
+        "dan_so": 9000,
+        "matdo_km2": 84.2,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.12,
+              22.05
+            ],
+            [
+              103.16,
+              22.03
+            ],
+            [
+              103.18,
+              22.06
+            ],
+            [
+              103.14,
+              22.09
+            ],
+            [
+              103.1,
+              22.07
+            ],
+            [
+              103.12,
+              22.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03544",
+        "ten_xa": "Điện Biên Đông",
+        "loai": "Huyện",
+        "dtich_km2": 1326.1,
+        "dan_so": 72000,
+        "matdo_km2": 54.3,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.3,
+              21.2
+            ],
+            [
+              103.35,
+              21.17
+            ],
+            [
+              103.4,
+              21.21
+            ],
+            [
+              103.35,
+              21.26
+            ],
+            [
+              103.28,
+              21.24
+            ],
+            [
+              103.3,
+              21.2
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03545",
+        "ten_xa": "Mường Ảng",
+        "loai": "Huyện",
+        "dtich_km2": 455.1,
+        "dan_so": 55000,
+        "matdo_km2": 120.8,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.2,
+              21.45
+            ],
+            [
+              103.26,
+              21.42
+            ],
+            [
+              103.3,
+              21.47
+            ],
+            [
+              103.24,
+              21.52
+            ],
+            [
+              103.18,
+              21.5
+            ],
+            [
+              103.2,
+              21.45
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03546",
+        "ten_xa": "Nậm Pồ",
+        "loai": "Huyện",
+        "dtich_km2": 1453.7,
+        "dan_so": 45000,
+        "matdo_km2": 30.9,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              102.6,
+              21.7
+            ],
+            [
+              102.65,
+              21.67
+            ],
+            [
+              102.7,
+              21.71
+            ],
+            [
+              102.65,
+              21.76
+            ],
+            [
+              102.58,
+              21.74
+            ],
+            [
+              102.6,
+              21.7
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03547",
+        "ten_xa": "Tủa Chùa",
+        "loai": "Huyện",
+        "dtich_km2": 687,
+        "dan_so": 60000,
+        "matdo_km2": 87.3,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.45,
+              21.55
+            ],
+            [
+              103.52,
+              21.51
+            ],
+            [
+              103.56,
+              21.56
+            ],
+            [
+              103.5,
+              21.62
+            ],
+            [
+              103.43,
+              21.6
+            ],
+            [
+              103.45,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ma_xa": "03548",
+        "ten_xa": "Mường Chà",
+        "loai": "Huyện",
+        "dtich_km2": 1490,
+        "dan_so": 50000,
+        "matdo_km2": 33.6,
+        "ten_tinh": "Điện Biên"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              103.05,
+              21.8
+            ],
+            [
+              103.12,
+              21.76
+            ],
+            [
+              103.16,
+              21.82
+            ],
+            [
+              103.1,
+              21.88
+            ],
+            [
+              103.03,
+              21.85
+            ],
+            [
+              103.05,
+              21.8
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
