@@ -1,0 +1,305 @@
+{
+  "dan_toc": [
+    {
+      "id": "thai",
+      "ten": "Dân tộc Thái",
+      "mau": "#2d6a4f",
+      "dan_so_ca_nuoc": 1820950,
+      "ngon_ngu": "Ngữ hệ Tai-Kadai",
+      "mo_ta": "Dân tộc Thái là một trong những dân tộc lớn nhất vùng Tây Bắc, sinh sống chủ yếu ở các thung lũng và vùng núi thấp ven sông suối. Người Thái có nền văn hóa phong phú với chữ viết riêng, trang phục đặc trưng và hệ thống thủy lợi ruộng bậc thang truyền thống.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Thái nổi tiếng với kỹ thuật dẫn nước làm ruộng bậc thang — gọi là 'mương, phai, lái, lịn'. Hệ thống thủy lợi truyền thống này gồm đập ngăn nước (phai), kênh chính (mương), kênh phụ (lái) và máng tre nhỏ (lịn). Lúa nếp là cây trồng chủ đạo, gắn liền với văn hóa ẩm thực đặc trưng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Người Thái sử dụng hàng trăm loài thực vật để chữa bệnh. Một số bài thuốc nổi tiếng: lá ngải cứu rừng (nghệ sen) chữa đau bụng; vỏ cây mò hoa trắng chữa phong thấp; lá cây thuốc tím chữa viêm da; rễ cây hà thủ ô chữa thiếu máu. Thầy thuốc dân gian (mo thuốc) có vai trò quan trọng trong cộng đồng.",
+          "bai_thuoc": [
+            { "ten": "Bài thuốc tắm thảo dược sau sinh", "nguyen_lieu": "Lá ngải cứu, cành sả, lá bưởi, gừng tươi, muối hạt", "cong_dung": "Phục hồi sức khỏe sản phụ, giữ ấm cơ thể, phòng tránh phong hàn" },
+            { "ten": "Bài thuốc chữa đau xương khớp", "nguyen_lieu": "Vỏ cây gắm, rễ đinh lăng, cành dâu tằm, rượu trắng", "cong_dung": "Giảm đau, tiêu viêm, thông kinh lạc" }
+          ]
+        },
+        {
+          "chu_de": "Thủ công truyền thống",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Nghề dệt thổ cẩm của người Thái là di sản văn hóa phi vật thể quý giá. Phụ nữ Thái học dệt từ nhỏ, tạo ra các tấm thổ cẩm (piêu, váy, khăn) với hoa văn rồng, chim công, hoa sen. Khung dệt thủ công (khung cửi) sử dụng kỹ thuật dệt nổi truyền thống. Màu nhuộm từ cây rừng tự nhiên: chàm cho màu xanh, quả mặc nưa cho màu đen.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Kiến trúc nhà sàn",
+          "bieu_tuong": "🏠",
+          "noi_dung": "Nhà sàn Thái (hướn) được làm hoàn toàn từ vật liệu tự nhiên: gỗ, tre, nứa, lá cọ. Nhà cao từ 1–1,5m so với mặt đất, giúp tránh thú dữ và lũ lụt, đồng thời tạo không gian chăn nuôi bên dưới. Mái nhà hai mái dốc đặc trưng với 'sừng trâu' (khau cút) trang trí trên đỉnh là nhận diện văn hóa quan trọng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Ẩm thực",
+          "bieu_tuong": "🍜",
+          "noi_dung": "Xôi nếp (khảu nựng) là lương thực chính, ăn kèm với thịt nướng, cá suối, rau rừng. Các món đặc trưng: pa pỉnh tộp (cá nướng gập), nộm hoa chuối, thịt trâu sấy, măng đắng muối. Rượu cần (lẩu xá) được làm từ gạo nếp ủ với men lá cây rừng, dùng trong các dịp lễ hội cộng đồng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Lễ hội Xên Bản (cúng bản) tổ chức đầu năm để cầu phúc cho cộng đồng. Lễ hội Hoa Ban (Xên Đông) vào tháng 2–3 âm lịch gắn với truyền thuyết tình yêu. Múa xoè là điệu múa cộng đồng biểu tượng, được UNESCO công nhận là di sản văn hóa phi vật thể. Mo — thầy cúng — đóng vai trò kết nối thế giới người sống và tổ tiên.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "mong",
+      "ten": "Dân tộc Mông",
+      "mau": "#b5179e",
+      "dan_so_ca_nuoc": 1393547,
+      "ngon_ngu": "Ngữ hệ Hmong-Mien",
+      "mo_ta": "Người Mông sinh sống chủ yếu trên các đỉnh núi cao từ 800–1500m, nổi tiếng với sức bền, ý chí và tinh thần cộng đồng mạnh mẽ. Họ có kỹ thuật canh tác nương rẫy độc đáo trên đất dốc và nghề thủ công rèn đúc, thêu thùa tinh xảo.",
+      "tri_thuc": [
+        {
+          "chu_de": "Canh tác nương rẫy",
+          "bieu_tuong": "⛰️",
+          "noi_dung": "Người Mông có kỹ thuật canh tác nương đá (làm hốc đá trồng ngô) độc đáo trên những vùng núi đá vôi tưởng chừng không thể canh tác. Ngô là cây lương thực chính bên cạnh lúa nương. Kỹ thuật xen canh ngô – đậu – bí ngô giúp duy trì độ phì nhiêu của đất. Cây thảo quả được trồng dưới tán rừng già — nguồn thu nhập quan trọng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Người Mông sử dụng cây thuốc rừng rất thành thạo. Thầy thuốc Mông (tu giáo) có kiến thức sâu về cây thuốc núi cao. Cây chùa dù (actiso rừng) chữa bệnh gan; tam thất rừng cầm máu, bổ huyết; hà thủ ô đỏ bổ thận; hoàng liên chữa viêm nhiễm. Bài thuốc gia truyền thường kết hợp nhiều loại cây, giữ bí quyết trong gia đình.",
+          "bai_thuoc": [
+            { "ten": "Thuốc chữa đau bụng cấp", "nguyen_lieu": "Lá cây nhọ nồi, rễ gừng gió, lá ngải cứu, muối", "cong_dung": "Giảm đau bụng, tiêu chảy, rối loạn tiêu hóa" },
+            { "ten": "Bài thuốc bổ thận tráng dương", "nguyen_lieu": "Rễ hà thủ ô đỏ, tam thất, đỗ trọng, rượu ngô 40 độ", "cong_dung": "Bổ thận, tăng cường sinh lực, chữa đau lưng mỏi gối" }
+          ]
+        },
+        {
+          "chu_de": "Nghề rèn truyền thống",
+          "bieu_tuong": "🔨",
+          "noi_dung": "Nghề rèn của người Mông nổi tiếng khắp vùng núi Tây Bắc. Thợ rèn Mông (pò rền) tạo ra các công cụ nông nghiệp (cuốc, dao, liềm) và vũ khí săn bắt từ sắt tự khai thác hoặc thu mua. Kỹ thuật tôi thép, làm nguội bằng nước hoặc dầu tạo ra sản phẩm bền và sắc. Mỗi gia đình thường có lò rèn nhỏ trong nhà.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Thêu thổ cẩm",
+          "bieu_tuong": "🧶",
+          "noi_dung": "Trang phục Mông được thêu tay công phu với hoa văn hình học đặc trưng: xoáy ốc, hoa tám cánh, đường zigzag. Váy phụ nữ Mông (thường gồm nhiều lớp xếp nếp) có thể mất 3–6 tháng để hoàn thiện. Màu sắc sặc sỡ từ thuốc nhuộm tự nhiên: chàm xanh, cỏ đỏ, hoa vàng. Kỹ thuật in sáp ong (batik) tạo hoa văn trước khi nhuộm là đặc trưng riêng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Ẩm thực",
+          "bieu_tuong": "🍖",
+          "noi_dung": "Mèn mén (bột ngô đồ chín) là lương thực truyền thống. Thịt lợn đen bản địa, gà đen thả rừng là thực phẩm quý dùng trong lễ tết. Rượu ngô (rượu sắn) nổi tiếng thơm ngon, ủ bằng men lá truyền thống. Bánh dày (piabanh) làm từ gạo nếp giã tay dùng trong lễ Tết. Canh đắng từ lá rừng là món ăn dân dã được ưa chuộng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎉",
+          "noi_dung": "Tết Mông (Nào Pê Chầu) tổ chức vào tháng 11–12 âm lịch — sớm hơn Tết Nguyên Đán. Lễ Gầu Tào (hội xuân) tổ chức trên đỉnh đồi để cầu phúc, cầu con. Trò chơi ném pao, đánh quay, bắn nỏ là nét văn hóa đặc trưng. Khèn Mông — nhạc cụ thiêng liêng — vừa là phương tiện giao tiếp tình cảm vừa có chức năng tâm linh trong tang lễ.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "muong",
+      "ten": "Dân tộc Mường",
+      "mau": "#e76f51",
+      "dan_so_ca_nuoc": 1452095,
+      "ngon_ngu": "Ngữ hệ Nam Á (nhánh Môn-Khmer)",
+      "mo_ta": "Người Mường có quan hệ gần gũi với người Kinh, sinh sống ở vùng trung du và núi thấp. Họ có nền văn hóa dân gian phong phú với hệ thống sử thi Đẻ Đất Đẻ Nước, cồng chiêng và các tập tục nông nghiệp lúa nước đặc sắc.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp lúa nước",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Mường thuần thục kỹ thuật canh tác lúa nước ở các thung lũng hẹp và sườn đồi. Hệ thống thủy lợi 'kênh mương cạn' đặc trưng dẫn nước từ suối vào ruộng. Lịch nông nghiệp Mường (sách đoi) truyền thống dự báo thời tiết và xác định thời điểm gieo cấy dựa trên quan sát thiên nhiên.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Tri thức y học dân gian Mường rất phong phú. Cây bồ công anh chữa viêm gan; lá lốt chữa đau xương; rễ cỏ tranh lợi tiểu; vỏ núc nác hạ sốt. Người Mường có tục dùng lá cây tắm thảo dược (tắm mường) để phòng bệnh và phục hồi sức khỏe, đặc biệt sau khi sinh nở.",
+          "bai_thuoc": [
+            { "ten": "Bài thuốc chữa cảm mạo", "nguyen_lieu": "Lá tía tô, gừng tươi, sả, lá bưởi, kinh giới", "cong_dung": "Giải cảm, ra mồ hôi, hạ sốt, thông mũi" }
+          ]
+        },
+        {
+          "chu_de": "Cồng chiêng",
+          "bieu_tuong": "🥁",
+          "noi_dung": "Cồng chiêng Mường là nhạc cụ thiêng liêng, gắn với mọi sự kiện lớn của đời người và cộng đồng: sinh, tử, hội mùa, lễ xuống đồng. Bộ chiêng truyền thống gồm 12 chiếc (theo 12 tháng âm lịch). Nghệ nhân chỉnh chiêng (thợ chỉnh cồng) là người được cộng đồng kính trọng. Mỗi bản có bộ chiêng riêng được bảo quản như báu vật.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Sử thi dân gian",
+          "bieu_tuong": "📖",
+          "noi_dung": "Đẻ Đất Đẻ Nước là bộ sử thi lớn nhất của người Mường, kể về nguồn gốc vũ trụ, sự ra đời của đất nước và con người. Được truyền miệng qua nhiều thế hệ bởi các thầy mo, sử thi này chứa đựng tri thức về thiên nhiên, xã hội và triết lý sống của người Mường. Dài hơn 8.000 câu thơ.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "dao",
+      "ten": "Dân tộc Dao",
+      "mau": "#f4a261",
+      "dan_so_ca_nuoc": 891151,
+      "ngon_ngu": "Ngữ hệ Hmong-Mien",
+      "mo_ta": "Người Dao sinh sống ở độ cao trung bình 700–1200m, có nhiều ngành khác nhau (Dao Đỏ, Dao Tiền, Dao Quần Chẹt…). Họ nổi tiếng với nghề thuốc nam gia truyền, chữ Nôm Dao và các nghi lễ tâm linh phong phú.",
+      "tri_thuc": [
+        {
+          "chu_de": "Thuốc nam gia truyền",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Người Dao Đỏ nổi danh với bài thuốc tắm thảo dược truyền thống sử dụng hơn 120 loại cây rừng. Bài thuốc này (lẩu pẩu) dùng để chữa đau nhức xương khớp, phục hồi sau chấn thương, tăng cường sức khỏe. Kiến thức thuốc nam được truyền trong dòng họ, thường chỉ truyền cho con trai trưởng.",
+          "bai_thuoc": [
+            { "ten": "Bài thuốc tắm lá người Dao Đỏ", "nguyen_lieu": "Hơn 100 loại lá rừng gồm: chân chim, lá mú từn, cây sói rừng, cây gắm, nghệ đen, gừng gió, lá bưởi, sả, đinh lăng, ngải cứu rừng...", "cong_dung": "Chữa đau nhức xương khớp, phong thấp, mệt mỏi; tăng cường tuần hoàn máu; phục hồi sau sinh" },
+            { "ten": "Thuốc chữa rắn cắn", "nguyen_lieu": "Lá cây lưỡi hổ, rễ cây nam tinh, bồ công anh, muối", "cong_dung": "Hút độc, tiêu viêm, kháng khuẩn — dùng khi sơ cứu" }
+          ]
+        },
+        {
+          "chu_de": "Chữ Nôm Dao",
+          "bieu_tuong": "✍️",
+          "noi_dung": "Người Dao có hệ thống chữ viết riêng (chữ Nôm Dao) phái sinh từ chữ Hán, dùng để ghi chép sách cúng, bài thuốc, truyện cổ tích và tri thức dân gian. Các thầy cúng (pàng) là người duy nhất có thể đọc và viết chữ Dao. Sách cổ người Dao chứa đựng toàn bộ tri thức văn hóa, y học và tâm linh của cộng đồng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ Cấp Sắc",
+          "bieu_tuong": "🕯️",
+          "noi_dung": "Lễ Cấp Sắc (lẩu dàng) là nghi lễ trưởng thành quan trọng nhất của người Dao, diễn ra khi nam thanh niên từ 10 tuổi trở lên. Người được cấp sắc được giao tên âm (tên cúng cơm), được thừa nhận là thành viên chính thức của cộng đồng và có quyền tham gia các nghi lễ tâm linh. Lễ kéo dài 3 ngày 3 đêm với nhiều nghi thức phức tạp.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Thêu trang phục",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Trang phục Dao Đỏ nổi tiếng với màu đỏ rực rỡ và hoa văn thêu tay công phu. Khăn đội đầu của phụ nữ Dao Đỏ (khăn đỏ) là nhận diện văn hóa quan trọng nhất. Hoa văn thêu mang ý nghĩa tâm linh: bảo vệ người mặc khỏi tà ma, thu hút may mắn. Mỗi bộ trang phục đầy đủ có thể mất 1–2 năm để hoàn thành.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "kho_mu",
+      "ten": "Dân tộc Khơ Mú",
+      "mau": "#6d6875",
+      "dan_so_ca_nuoc": 90612,
+      "ngon_ngu": "Ngữ hệ Nam Á (nhánh Môn-Khmer)",
+      "mo_ta": "Người Khơ Mú (còn gọi Xá Cẩu, Mứn Xen) sinh sống ở các thung lũng và sườn núi thuộc Sơn La, Điện Biên, Nghệ An. Họ có truyền thống săn bắt, hái lượm và chế tác công cụ từ tre nứa tinh xảo.",
+      "tri_thuc": [
+        {
+          "chu_de": "Săn bắt & bẫy thú",
+          "bieu_tuong": "🏹",
+          "noi_dung": "Người Khơ Mú có kiến thức sâu rộng về tập tính thú rừng và kỹ thuật đặt bẫy. Các loại bẫy truyền thống: bẫy chim (tà lư), bẫy thú nhỏ (kà nẹt), bẫy hổ (tơ nứa). Nỏ (nả) là vũ khí săn chủ lực, được chế tác từ gỗ cứng và dây mây, bắn tên tẩm độc từ nhựa cây. Kiến thức đọc dấu vết thú rừng được truyền từ cha sang con.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Đan lát tre nứa",
+          "bieu_tuong": "🧺",
+          "noi_dung": "Người Khơ Mú nổi tiếng với nghề đan lát thủ công từ mây, tre, nứa. Các sản phẩm: gùi (cái mủng), rổ, rá, nong, nia, giỏ cá. Kỹ thuật đan mắt cáo, đan chéo và đan xoắn tạo ra sản phẩm vừa bền vừa thẩm mỹ. Gùi của người Khơ Mú có thiết kế đặc biệt phù hợp với địa hình núi dốc.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Tri thức về rừng",
+          "bieu_tuong": "🌲",
+          "noi_dung": "Người Khơ Mú có hệ thống tri thức bản địa về rừng rất phong phú: phân biệt hàng trăm loại cây rừng, nhận biết địa điểm có nước ngầm, dự báo thời tiết qua tiếng động vật và quan sát thực vật. Tục kiêng chặt cây ăn quả trong rừng già và bảo vệ nguồn nước là nét văn hóa bảo tồn môi trường đặc sắc.",
+          "bai_thuoc": [
+            { "ten": "Thuốc trị sốt rét dân gian", "nguyen_lieu": "Vỏ cây thường sơn, lá cây dây ký ninh rừng, rễ cỏ lào", "cong_dung": "Hạ sốt, điều trị sốt rét ở vùng núi xa trung tâm y tế" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "la_hu",
+      "ten": "Dân tộc La Hủ",
+      "mau": "#457b9d",
+      "dan_so_ca_nuoc": 12113,
+      "ngon_ngu": "Ngữ hệ Tạng-Miến",
+      "mo_ta": "Người La Hủ là dân tộc thiểu số rất ít người, sinh sống tập trung ở huyện Mường Tè, tỉnh Lai Châu. Họ có lối sống du canh du cư truyền thống trên các vùng núi cao, đang trong quá trình định canh định cư.",
+      "tri_thuc": [
+        {
+          "chu_de": "Săn bắt truyền thống",
+          "bieu_tuong": "🏹",
+          "noi_dung": "Người La Hủ truyền thống sống chủ yếu bằng săn bắt và hái lượm trên rừng núi cao. Kỹ thuật bẫy thú, bắn nỏ và sử dụng chó săn rất thành thục. Họ có kiến thức sâu về hành vi động vật hoang dã, biết đọc dấu vết và tiên đoán nơi thú xuất hiện theo mùa.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Kiến trúc nhà tạm",
+          "bieu_tuong": "🏕️",
+          "noi_dung": "Do lối sống du canh, người La Hủ có kỹ năng dựng nhà tạm nhanh chóng từ vật liệu rừng. Nhà lợp lá chuối rừng hoặc lá dong, khung bằng tre nứa. Ngôi nhà có thể được dựng xong trong 1 ngày. Kỹ thuật lựa chọn địa điểm dựng nhà theo hướng gió, nguồn nước và địa thế núi thể hiện tri thức sinh tồn sâu sắc.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học bản địa",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Tri thức cây thuốc của người La Hủ gắn liền với môi trường rừng già nguyên sinh nơi họ sinh sống. Một số bài thuốc chữa vết thương từ tai nạn săn bắt, điều trị sốt rét và bệnh đường tiêu hóa được truyền khẩu trong gia đình. Thầy thuốc (khủ phé) có vai trò kết hợp chữa bệnh thể chất và tâm linh.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "lu",
+      "ten": "Dân tộc Lự",
+      "mau": "#2a9d8f",
+      "dan_so_ca_nuoc": 6757,
+      "ngon_ngu": "Ngữ hệ Tai-Kadai",
+      "mo_ta": "Người Lự (còn gọi Lự Đen, Phu Lự) sinh sống ở huyện Tam Đường, Sìn Hồ tỉnh Lai Châu. Họ có quan hệ gần với người Thái Lự ở Vân Nam (Trung Quốc) và Lào, duy trì nền văn hóa Phật giáo Nam Tông đặc sắc.",
+      "tri_thuc": [
+        {
+          "chu_de": "Phật giáo Nam Tông",
+          "bieu_tuong": "☸️",
+          "noi_dung": "Người Lự theo Phật giáo Nam Tông, có hệ thống chùa chiền và tăng đoàn. Con trai đến tuổi trưởng thành phải vào chùa tu học ít nhất một thời gian. Chữ viết Lự (phát triển từ chữ Thái cổ) dùng để chép kinh Phật và tri thức dân gian. Đây là nét văn hóa đặc biệt hiếm có trong các dân tộc thiểu số Việt Nam.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Dệt thổ cẩm",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Vải thổ cẩm Lự nổi tiếng với hoa văn tinh tế và màu sắc thanh nhã. Phụ nữ Lự mặc váy đen, áo cài khuy bên phải, đầu vấn khăn trắng. Nghề dệt gắn liền với văn hóa tâm linh: mỗi tấm vải đều mang ý nghĩa riêng, dùng trong các nghi lễ Phật giáo và cúng tổ tiên.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Nông nghiệp lúa nước",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Lự canh tác lúa nước ở các thung lũng nhỏ. Hệ thống lịch nông nghiệp của họ kết hợp giữa tri thức bản địa và lịch Phật giáo. Giống lúa địa phương (khảu lự) cho gạo dẻo thơm đặc trưng. Kỹ thuật trồng lúa nếp than tím (khảu khăm) độc đáo là sản phẩm nông nghiệp quý.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "mang",
+      "ten": "Dân tộc Mảng",
+      "mau": "#8338ec",
+      "dan_so_ca_nuoc": 3700,
+      "ngon_ngu": "Ngữ hệ Nam Á (nhánh Môn-Khmer)",
+      "mo_ta": "Người Mảng là dân tộc rất ít người, cư trú ở huyện Mường Tè và Nậm Nhùn, tỉnh Lai Châu. Họ có hệ thống tri thức sinh tồn độc đáo thích nghi với rừng núi nguyên sinh và đang được hỗ trợ bảo tồn văn hóa.",
+      "tri_thuc": [
+        {
+          "chu_de": "Săn bắt hái lượm",
+          "bieu_tuong": "🌲",
+          "noi_dung": "Người Mảng có tri thức sâu sắc về tài nguyên rừng: nhận biết cây ăn quả, cây thuốc, mùa của từng loại lâm sản. Kỹ thuật câu cá suối bằng thuốc cá tự nhiên (cây co tam khảo) là đặc trưng. Họ biết dự báo thời tiết qua quan sát cây rừng và hành vi động vật.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Âm nhạc dân gian",
+          "bieu_tuong": "🎵",
+          "noi_dung": "Người Mảng có nhiều loại nhạc cụ độc đáo làm từ vật liệu tự nhiên: đàn ting ning làm từ tre và dây mây, tù và làm từ sừng trâu, trống da thú. Hát giao duyên (hát pi nọng) là hình thức giao tiếp tình cảm giữa nam nữ, thường diễn ra vào các buổi tối trăng sáng.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "kinh",
+      "ten": "Người Kinh",
+      "mau": "#e63946",
+      "dan_so_ca_nuoc": 82085826,
+      "ngon_ngu": "Ngữ hệ Nam Á (Việt-Mường)",
+      "mo_ta": "Người Kinh sinh sống tại các trung tâm hành chính, thị trấn và vùng thấp của các tỉnh Tây Bắc. Họ là lực lượng lao động, cán bộ và thương nhân quan trọng, đóng góp vào phát triển kinh tế và văn hóa vùng.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp thương phẩm",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Kinh tại Tây Bắc phát triển mô hình nông nghiệp hàng hóa: trồng cây ăn quả ôn đới (mận, đào, lê), rau vụ đông xuất khẩu, và các mô hình trang trại kết hợp. Kỹ thuật canh tác hiện đại kết hợp với kiến thức địa phương tạo ra các sản phẩm đặc sản vùng miền.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Giao lưu văn hóa",
+          "bieu_tuong": "🤝",
+          "noi_dung": "Người Kinh tại Tây Bắc đóng vai trò cầu nối giao lưu văn hóa, tiếp thu và truyền bá tri thức giữa các dân tộc. Nhiều phong tục địa phương của các dân tộc thiểu số đã được người Kinh tiếp nhận và phổ biến rộng rãi như: tắm thuốc lá, ăn xôi nếp, tham gia lễ hội xuống đồng.",
+          "bai_thuoc": []
+        }
+      ]
+    }
+  ]
+}

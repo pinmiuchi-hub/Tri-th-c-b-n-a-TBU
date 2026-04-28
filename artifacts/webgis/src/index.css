@@ -547,3 +547,266 @@ html, body, #root {
   background: rgba(82, 183, 136, 0.3);
   border-radius: 2px;
 }
+
+/* ---- Ethnic groups section ---- */
+.ethnic-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(82, 183, 136, 0.15);
+}
+
+.ethnic-section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #74c69d;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 4px;
+}
+
+.ethnic-section-title svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.ethnic-hint {
+  font-size: 10px;
+  color: rgba(149, 213, 178, 0.6);
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.ethnic-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ethnic-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 5px 7px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #d8f3dc;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.ethnic-tag:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--tag-color, #52b788);
+  transform: translateY(-1px);
+}
+
+.ethnic-tag.active {
+  background: color-mix(in srgb, var(--tag-color, #52b788) 15%, transparent);
+  border-color: var(--tag-color, #52b788);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tag-color, #52b788) 20%, transparent);
+}
+
+.tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tag-name {
+  font-weight: 600;
+}
+
+.tag-pct {
+  font-size: 10px;
+  color: rgba(149, 213, 178, 0.7);
+  font-weight: 500;
+}
+
+/* ---- Ethnic proportion bar ---- */
+.ethnic-bar-wrap {
+  display: flex;
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  gap: 1px;
+  margin-bottom: 2px;
+}
+
+.ethnic-bar-seg {
+  border-radius: 2px;
+  transition: flex 0.3s;
+}
+
+/* ---- Knowledge panel ---- */
+.knowledge-panel {
+  margin-top: 14px;
+  background: rgba(10, 20, 10, 0.5);
+  border: 1px solid rgba(82, 183, 136, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.knowledge-header {
+  padding: 14px 14px 12px;
+  border-left: 3px solid #52b788;
+  background: rgba(255,255,255,0.02);
+}
+
+.knowledge-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.knowledge-meta {
+  font-size: 10px;
+  color: rgba(149, 213, 178, 0.7);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.knowledge-desc {
+  font-size: 11px;
+  color: #95d5b2;
+  line-height: 1.6;
+}
+
+/* ---- Knowledge tabs ---- */
+.knowledge-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 12px 6px;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(82, 183, 136, 0.1);
+  border-bottom: 1px solid rgba(82, 183, 136, 0.1);
+}
+
+.knowledge-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 10px;
+  color: #95d5b2;
+  transition: all 0.15s;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.knowledge-tab:hover {
+  background: rgba(255,255,255,0.08);
+  color: #d8f3dc;
+}
+
+.knowledge-tab.active {
+  background: color-mix(in srgb, var(--tab-color, #52b788) 18%, transparent);
+  border-color: var(--tab-color, #52b788);
+  color: #d8f3dc;
+  font-weight: 600;
+}
+
+/* ---- Knowledge content ---- */
+.knowledge-content {
+  padding: 12px 14px;
+}
+
+.knowledge-topic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #d8f3dc;
+  margin-bottom: 8px;
+}
+
+.knowledge-text {
+  font-size: 12px;
+  color: #95d5b2;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+/* ---- Recipe cards ---- */
+.recipes-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #74c69d;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.recipe-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.recipe-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #d8f3dc;
+  margin-bottom: 8px;
+}
+
+.recipe-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.recipe-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #74c69d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recipe-val {
+  font-size: 11px;
+  color: #95d5b2;
+  line-height: 1.5;
+}
+
+.recipe-val.highlight {
+  font-weight: 600;
+}
+
+/* ---- Close button ---- */
+.knowledge-close {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: rgba(255,255,255,0.03);
+  border: none;
+  border-top: 1px solid rgba(82, 183, 136, 0.1);
+  cursor: pointer;
+  font-size: 11px;
+  color: rgba(149, 213, 178, 0.6);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.knowledge-close:hover {
+  background: rgba(255,255,255,0.06);
+  color: #95d5b2;
+}
