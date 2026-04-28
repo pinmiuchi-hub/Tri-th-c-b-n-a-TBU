@@ -1,23 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import EditableValue from "../components/EditableValue";
+import ImportModal, { type WardOverrides, type EthnicOverride, type PdfFile, type DanTocTyLe } from "../components/ImportModal";
 
 /* ─── Types ─── */
-interface DanTocTyLe { dan_toc: string; ty_le: number; }
 interface WardProperties {
   ma_xa: string; ten_xa: string; loai?: string;
   dtich_km2?: number; dan_so?: number; matdo_km2?: number;
-  ten_tinh?: string; sap_nhap?: string; tru_so?: string;
-  dan_toc?: DanTocTyLe[];
+  ten_tinh?: string; dan_toc?: DanTocTyLe[];
 }
-interface GeoJsonData { type: string; features: { type: string; properties: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }[]; }
+interface GeoJsonData { type: string; features: { type: string; properties: Record<string, unknown>; geometry: unknown }[]; }
 interface BaiThuoc { ten: string; nguyen_lieu: string; cong_dung: string; }
 interface TriThuc { chu_de: string; bieu_tuong: string; noi_dung: string; bai_thuoc: BaiThuoc[]; }
 interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: number; ngon_ngu: string; mo_ta: string; tri_thuc: TriThuc[]; }
 interface DanTocData { dan_toc: DanTocInfo[]; }
-interface CustomWardData { ghi_chu?: string; san_pham?: string; tinh_trang?: string; dan_toc_csv?: DanTocTyLe[]; extra?: Record<string, string>; }
-interface PdfFile { name: string; url: string; size: string; }
-interface CsvPreview { headers: string[]; rows: string[][]; matched: number; total: number; }
+interface ProvinceStat { dien_tich: string; dan_so: string; don_vi: number; }
 
 /* ─── Constants ─── */
 const PROVINCE_FILES: Record<string, string> = {
@@ -25,42 +23,16 @@ const PROVINCE_FILES: Record<string, string> = {
   "Điện Biên": "/data/xa_dienbien.geojson",
   "Lai Châu": "/data/xa_laichau.geojson",
 };
-const PROVINCE_STATS: Record<string, { dien_tich: string; dan_so: string; don_vi: number }> = {
+const DEFAULT_STATS: Record<string, ProvinceStat> = {
   "Sơn La":    { dien_tich: "14.174", dan_so: "1,25M", don_vi: 75 },
   "Điện Biên": { dien_tich: "9.541",  dan_so: "599K",  don_vi: 45 },
   "Lai Châu":  { dien_tich: "9.068",  dan_so: "460K",  don_vi: 38 },
 };
-const ETHNIC_COLS = ["thai","mong","dao","kho_mu","muong","kinh","la_hu","lu","mang"];
 const ETHNIC_LABELS: Record<string,string> = {
-  thai:"Thái", mong:"Mông", dao:"Dao", kho_mu:"Khơ Mú",
-  muong:"Mường", kinh:"Kinh", la_hu:"La Hủ", lu:"Lự", mang:"Mảng",
+  thai:"Thái",mong:"Mông",dao:"Dao",kho_mu:"Khơ Mú",muong:"Mường",kinh:"Kinh",la_hu:"La Hủ",lu:"Lự",mang:"Mảng"
 };
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-/* ─── CSV helpers ─── */
-function parseCSVText(text: string): { headers: string[]; rows: string[][] } {
-  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return { headers: [], rows: [] };
-  const parse = (line: string) => line.split(",").map(c => c.trim().replace(/^"|"$/g, ""));
-  return { headers: parse(lines[0]), rows: lines.slice(1).map(parse) };
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-}
-
-function generateCSVTemplate(wards: WardProperties[]): string {
-  const header = ["ma_xa","ten_xa","ghi_chu","san_pham","tinh_trang",...ETHNIC_COLS].join(",");
-  const rows = wards.slice(0, 5).map(w => [
-    w.ma_xa, w.ten_xa, "", "", "",
-    ...ETHNIC_COLS.map(() => "0")
-  ].join(","));
-  return [header, ...rows].join("\n");
-}
-
-/* ─── Main component ─── */
 export default function WebGIS() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -68,6 +40,7 @@ export default function WebGIS() {
   const wardsLayerRef = useRef<L.GeoJSON | null>(null);
   const allWardsRef = useRef<WardProperties[]>([]);
 
+  /* ─── Core state ─── */
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [selectedWard, setSelectedWard] = useState<WardProperties | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,16 +49,16 @@ export default function WebGIS() {
   const [selectedDanToc, setSelectedDanToc] = useState<DanTocInfo | null>(null);
   const [activeTriThuc, setActiveTriThuc] = useState(0);
 
-  /* Import state */
-  const [showImport, setShowImport] = useState(false);
-  const [importTab, setImportTab] = useState<"csv" | "pdf">("csv");
-  const [csvPreview, setCsvPreview] = useState<CsvPreview | null>(null);
-  const [csvRaw, setCsvRaw] = useState<{ headers: string[]; rows: string[][] } | null>(null);
-  const [customData, setCustomData] = useState<Map<string, CustomWardData>>(new Map());
+  /* ─── Editable data ─── */
+  const [wardOverrides, setWardOverrides] = useState<Map<string, WardOverrides>>(new Map());
+  const [ethnicOverrides, setEthnicOverrides] = useState<Map<string, EthnicOverride>>(new Map());
+  const [provinceEdits, setProvinceEdits] = useState<Map<string, Partial<ProvinceStat>>>(new Map());
   const [pdfFiles, setPdfFiles] = useState<Map<string, PdfFile[]>>(new Map());
-  const [pdfWardCode, setPdfWardCode] = useState("");
+
+  /* ─── UI state ─── */
+  const [showImport, setShowImport] = useState(false);
   const [pdfViewer, setPdfViewer] = useState<PdfFile | null>(null);
-  const [importMsg, setImportMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [editingEthnicPct, setEditingEthnicPct] = useState<string | null>(null); // ethnic id being edited
 
   const fetchGeoJson = async (url: string): Promise<GeoJsonData> => {
     const res = await fetch(BASE_PATH + url);
@@ -97,9 +70,86 @@ export default function WebGIS() {
     fetch(BASE_PATH + "/data/dan_toc.json").then(r => r.json()).then(setDanTocData).catch(console.error);
   }, []);
 
-  const getDanTocInfo = (id: string) => danTocData?.dan_toc.find(d => d.id === id);
+  /* ─── Merge helpers ─── */
+  const getWardValue = <K extends keyof WardProperties>(ward: WardProperties, field: K): WardProperties[K] => {
+    const ov = wardOverrides.get(ward.ma_xa);
+    if (ov && field in ov) return ov[field as string] as WardProperties[K];
+    return ward[field];
+  };
 
-  /* ─── Map init ─── */
+  const getDanTocInfo = (id: string): DanTocInfo | undefined => {
+    const base = danTocData?.dan_toc.find(d => d.id === id);
+    if (!base) return undefined;
+    const ov = ethnicOverrides.get(id);
+    if (!ov) return base;
+    return { ...base, ...ov };
+  };
+
+  const getProvinceStat = (tinh: string): ProvinceStat => {
+    const base = DEFAULT_STATS[tinh] || { dien_tich: "—", dan_so: "—", don_vi: 0 };
+    const ov = provinceEdits.get(tinh);
+    return { ...base, ...ov };
+  };
+
+  /* ─── Ward override helpers ─── */
+  const updateWardField = (ma_xa: string, field: string, value: unknown) => {
+    setWardOverrides(prev => {
+      const next = new Map(prev);
+      next.set(ma_xa, { ...next.get(ma_xa), [field]: value });
+      return next;
+    });
+  };
+
+  const updateWardEthnicPct = (ma_xa: string, danTocId: string, rawVal: string) => {
+    const pct = Math.max(0, Math.min(100, parseFloat(rawVal) || 0));
+    const currentList: DanTocTyLe[] = (wardOverrides.get(ma_xa)?.dan_toc ?? selectedWard?.dan_toc ?? []).map(d => ({ ...d }));
+    const idx = currentList.findIndex(d => d.dan_toc === danTocId);
+    if (idx >= 0) currentList[idx].ty_le = pct; else currentList.push({ dan_toc: danTocId, ty_le: pct });
+    const total = currentList.reduce((s, d) => s + d.ty_le, 0);
+    const normalized = total > 0 ? currentList.map(d => ({ ...d, ty_le: Math.round(d.ty_le * 100 / total) })) : currentList;
+    updateWardField(ma_xa, "dan_toc", normalized.filter(d => d.ty_le > 0).sort((a,b) => b.ty_le - a.ty_le));
+    setEditingEthnicPct(null);
+  };
+
+  /* ─── Ethnic override helpers ─── */
+  const updateEthnicField = (id: string, field: keyof EthnicOverride, value: string | number) => {
+    setEthnicOverrides(prev => {
+      const next = new Map(prev);
+      next.set(id, { ...next.get(id), [field]: value });
+      return next;
+    });
+  };
+
+  /* ─── Province stat helpers ─── */
+  const updateProvinceStat = (tinh: string, field: keyof ProvinceStat, value: string) => {
+    setProvinceEdits(prev => {
+      const next = new Map(prev);
+      next.set(tinh, { ...next.get(tinh), [field]: field === "don_vi" ? (parseInt(value)||0) : value });
+      return next;
+    });
+  };
+
+  /* ─── PDF helpers ─── */
+  const addPdf = (key: string, files: PdfFile[]) => {
+    setPdfFiles(prev => {
+      const next = new Map(prev);
+      next.set(key, [...(next.get(key) || []), ...files]);
+      return next;
+    });
+  };
+
+  const removePdf = (key: string, idx: number) => {
+    setPdfFiles(prev => {
+      const next = new Map(prev);
+      const list = [...(next.get(key) || [])];
+      URL.revokeObjectURL(list[idx].url);
+      list.splice(idx, 1);
+      if (list.length === 0) next.delete(key); else next.set(key, list);
+      return next;
+    });
+  };
+
+  /* ─── Map ─── */
   const initMap = useCallback(async () => {
     if (!mapContainerRef.current || mapRef.current) return;
     const map = L.map(mapContainerRef.current, { center: [21.7, 103.5], zoom: 7, zoomControl: false });
@@ -127,7 +177,7 @@ export default function WebGIS() {
           mouseout:  e => { (e.target as L.Path).setStyle({ fillOpacity: 0.25, color: "#2d6a4f", weight: 3 }); },
           click: () => handleProvinceClick(p.ten_tinh),
         });
-        lyr.bindTooltip(`<div class="province-tooltip"><strong>${p.ten_tinh}</strong></div>`, { sticky: true, className: "custom-tooltip" });
+        lyr.bindTooltip(`<strong>${p.ten_tinh}</strong>`, { sticky: true, className: "custom-tooltip" });
       },
     });
     layer.addTo(map);
@@ -139,7 +189,7 @@ export default function WebGIS() {
     setLoading(true); setSelectedProvince(name); setSelectedWard(null); setSelectedDanToc(null);
     try {
       const data = await fetchGeoJson(PROVINCE_FILES[name]);
-      allWardsRef.current = data.features.map(f => f.properties as WardProperties);
+      allWardsRef.current = data.features.map(f => f.properties as unknown as WardProperties);
       if (provincesLayerRef.current) { mapRef.current.removeLayer(provincesLayerRef.current); provincesLayerRef.current = null; }
       if (wardsLayerRef.current) { mapRef.current.removeLayer(wardsLayerRef.current); wardsLayerRef.current = null; }
       const wl = L.geoJSON(data as GeoJSON.FeatureCollection, {
@@ -149,7 +199,7 @@ export default function WebGIS() {
           (lyr as L.Path).on({
             mouseover: e => { (e.target as L.Path).setStyle({ fillOpacity: 0.6, color: "#3d1f0d", weight: 2.5, fillColor: "#52b788" }); (e.target as L.Path).bringToFront(); },
             mouseout:  e => { (e.target as L.Path).setStyle({ fillOpacity: 0.3, color: "#6b4226", weight: 1.5, fillColor: "#a8d5a2" }); },
-            click: () => { setSelectedWard(p); setSelectedDanToc(null); setActiveTriThuc(0); },
+            click: () => { setSelectedWard(p); setSelectedDanToc(null); setActiveTriThuc(0); setEditingEthnicPct(null); },
           });
           lyr.bindTooltip(`<div class="ward-tooltip">${p.ten_xa}</div>`, { sticky: true, className: "custom-tooltip ward-tip" });
         },
@@ -162,7 +212,7 @@ export default function WebGIS() {
     finally { setLoading(false); }
   };
 
-  const handleBackToRegion = async () => {
+  const handleBack = async () => {
     if (!mapRef.current) return;
     setLoading(true);
     if (wardsLayerRef.current) { mapRef.current.removeLayer(wardsLayerRef.current); wardsLayerRef.current = null; }
@@ -182,99 +232,30 @@ export default function WebGIS() {
     return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
   }, [initMap]);
 
-  /* ─── CSV import ─── */
-  const handleCSVFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const text = e.target?.result as string;
-      const { headers, rows } = parseCSVText(text);
-      const maIdx = headers.indexOf("ma_xa");
-      if (maIdx === -1) { setImportMsg({ type: "err", text: "File CSV thiếu cột 'ma_xa'. Vui lòng dùng đúng template." }); return; }
-      const allMaCodes = new Set(allWardsRef.current.map(w => w.ma_xa));
-      const matched = rows.filter(r => allMaCodes.has(r[maIdx])).length;
-      const preview: CsvPreview = { headers, rows: rows.slice(0, 8), matched, total: rows.length };
-      setCsvPreview(preview); setCsvRaw({ headers, rows }); setImportMsg(null);
-    };
-    reader.readAsText(file, "utf-8");
-  };
-
-  const applyCSV = () => {
-    if (!csvRaw) return;
-    const { headers, rows } = csvRaw;
-    const maIdx = headers.indexOf("ma_xa");
-    const newMap = new Map(customData);
-    let count = 0;
-    for (const row of rows) {
-      const ma = row[maIdx];
-      if (!ma) continue;
-      const entry: CustomWardData = { extra: {} };
-      const danTocArr: DanTocTyLe[] = [];
-      let totalPct = 0;
-      for (let i = 0; i < headers.length; i++) {
-        const h = headers[i]; const v = row[i] || "";
-        if (h === "ma_xa" || h === "ten_xa") continue;
-        if (h === "ghi_chu") { entry.ghi_chu = v; continue; }
-        if (h === "san_pham") { entry.san_pham = v; continue; }
-        if (h === "tinh_trang") { entry.tinh_trang = v; continue; }
-        if (ETHNIC_COLS.includes(h)) {
-          const pct = parseFloat(v) || 0;
-          if (pct > 0) { danTocArr.push({ dan_toc: h, ty_le: pct }); totalPct += pct; }
-          continue;
-        }
-        if (v) entry.extra![h] = v;
-      }
-      if (danTocArr.length > 0) {
-        // Normalize to 100%
-        const sorted = danTocArr.sort((a, b) => b.ty_le - a.ty_le);
-        if (totalPct !== 100) sorted.forEach(d => { d.ty_le = Math.round(d.ty_le * 100 / totalPct); });
-        entry.dan_toc_csv = sorted;
-      }
-      newMap.set(ma, entry); count++;
-    }
-    setCustomData(newMap);
-    setCsvPreview(null); setCsvRaw(null);
-    setImportMsg({ type: "ok", text: `Đã cập nhật dữ liệu cho ${count} xã thành công.` });
-  };
-
-  const downloadTemplate = () => {
-    const wards = allWardsRef.current.length > 0 ? allWardsRef.current : [{ ma_xa: "03856", ten_xa: "Ví dụ Xã" } as WardProperties];
-    const csv = generateCSVTemplate(wards);
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "template_dan_toc.csv"; a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  /* ─── PDF upload ─── */
-  const handlePDFFile = (files: FileList | null) => {
-    if (!files || !pdfWardCode.trim()) { setImportMsg({ type: "err", text: "Vui lòng nhập mã xã trước khi tải PDF." }); return; }
-    const code = pdfWardCode.trim();
-    const newMap = new Map(pdfFiles);
-    const existing = newMap.get(code) || [];
-    Array.from(files).forEach(file => {
-      if (file.type !== "application/pdf") return;
-      const url = URL.createObjectURL(file);
-      existing.push({ name: file.name, url, size: formatBytes(file.size) });
-    });
-    newMap.set(code, existing);
-    setPdfFiles(newMap);
-    setImportMsg({ type: "ok", text: `Đã đính kèm ${files.length} file PDF cho mã xã ${code}.` });
-  };
-
-  const removePDF = (maXa: string, idx: number) => {
-    const newMap = new Map(pdfFiles);
-    const list = [...(newMap.get(maXa) || [])];
-    URL.revokeObjectURL(list[idx].url);
-    list.splice(idx, 1);
-    if (list.length === 0) newMap.delete(maXa); else newMap.set(maXa, list);
-    setPdfFiles(newMap);
-  };
-
-  /* ─── Derived ward data ─── */
-  const wardCustom = selectedWard ? customData.get(selectedWard.ma_xa) : undefined;
+  /* ─── Derived values ─── */
+  const wardDanToc: DanTocTyLe[] = selectedWard
+    ? (wardOverrides.get(selectedWard.ma_xa)?.dan_toc ?? selectedWard.dan_toc ?? [])
+    : [];
   const wardPdfs = selectedWard ? (pdfFiles.get(selectedWard.ma_xa) || []) : [];
-  const wardDanToc: DanTocTyLe[] = wardCustom?.dan_toc_csv ?? selectedWard?.dan_toc ?? [];
-  const stats = selectedProvince ? PROVINCE_STATS[selectedProvince] : null;
+  const stats = selectedProvince ? getProvinceStat(selectedProvince) : null;
+  const wardCustom = selectedWard ? wardOverrides.get(selectedWard.ma_xa) : undefined;
+
+  /* Helper to show editable ward field */
+  const EditWard = ({ field, suffix = "", type = "text" as "text" | "number", decimals }: { field: keyof WardProperties & string; suffix?: string; type?: "text" | "number"; decimals?: number }) => {
+    if (!selectedWard) return null;
+    const raw = getWardValue(selectedWard, field);
+    const val = raw != null ? raw : "";
+    return (
+      <EditableValue
+        value={val as string | number}
+        suffix={suffix}
+        type={type}
+        decimals={decimals}
+        placeholder="Chưa có — click để nhập"
+        onSave={v => updateWardField(selectedWard.ma_xa, field, type === "number" ? parseFloat(v) : v)}
+      />
+    );
+  };
 
   return (
     <div className="webgis-container">
@@ -295,14 +276,14 @@ export default function WebGIS() {
               <span className="breadcrumb-item active">Toàn vùng</span>
             ) : (
               <>
-                <button className="breadcrumb-item link" onClick={handleBackToRegion}>Toàn vùng</button>
+                <button className="breadcrumb-item link" onClick={handleBack}>Toàn vùng</button>
                 <span className="breadcrumb-sep">›</span>
                 <span className="breadcrumb-item active">{selectedProvince}</span>
-                {selectedWard && <><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{selectedWard.ten_xa}</span></>}
+                {selectedWard && <><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{getWardValue(selectedWard,"ten_xa") as string || selectedWard.ten_xa}</span></>}
               </>
             )}
           </div>
-          <button className="import-btn" onClick={() => { setShowImport(true); setImportMsg(null); setCsvPreview(null); setCsvRaw(null); }}>
+          <button className="import-btn" onClick={() => setShowImport(true)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Nhập dữ liệu
           </button>
@@ -313,11 +294,9 @@ export default function WebGIS() {
         {/* ─── Map ─── */}
         <div className="map-wrapper">
           <div ref={mapContainerRef} className="map-canvas" />
-          {loading && (
-            <div className="map-overlay"><div className="loading-spinner"/><span>Đang tải dữ liệu...</span></div>
-          )}
+          {loading && <div className="map-overlay"><div className="loading-spinner"/><span>Đang tải dữ liệu...</span></div>}
           {viewMode === "ward" && (
-            <button className="back-button" onClick={handleBackToRegion}>
+            <button className="back-button" onClick={handleBack}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="back-icon"><polyline points="15 18 9 12 15 6"/></svg>
               Quay lại bản đồ vùng
             </button>
@@ -346,78 +325,132 @@ export default function WebGIS() {
 
             {selectedWard ? (
               <div className="ward-info">
-                <div className="ward-name">{selectedWard.ten_xa}</div>
-                {selectedWard.loai && <div className="ward-badge">{selectedWard.loai}</div>}
-
-                <div className="info-grid">
-                  <div className="info-row"><div className="info-label">Mã đơn vị</div><div className="info-value">{selectedWard.ma_xa || "—"}</div></div>
-                  <div className="info-row"><div className="info-label">Diện tích</div><div className="info-value">{selectedWard.dtich_km2 != null ? `${selectedWard.dtich_km2.toFixed(2)} km²` : "—"}</div></div>
-                  <div className="info-row"><div className="info-label">Dân số</div><div className="info-value">{selectedWard.dan_so != null ? selectedWard.dan_so.toLocaleString("vi-VN") + " người" : "—"}</div></div>
-                  <div className="info-row"><div className="info-label">Mật độ</div><div className="info-value">{selectedWard.matdo_km2 != null ? `${selectedWard.matdo_km2.toFixed(1)} ng/km²` : "—"}</div></div>
+                {/* Ward name — editable */}
+                <div className="ward-name-wrap">
+                  <EditableValue
+                    value={getWardValue(selectedWard, "ten_xa") as string || selectedWard.ten_xa}
+                    className="ward-name-editable"
+                    onSave={v => updateWardField(selectedWard.ma_xa, "ten_xa", v)}
+                  />
+                </div>
+                <div className="ward-badge-row">
+                  <EditableValue
+                    value={getWardValue(selectedWard, "loai") as string || selectedWard.loai || ""}
+                    placeholder="Loại đơn vị"
+                    className="ward-badge-editable"
+                    onSave={v => updateWardField(selectedWard.ma_xa, "loai", v)}
+                  />
                 </div>
 
-                {/* Custom data from CSV */}
-                {wardCustom && (wardCustom.ghi_chu || wardCustom.san_pham || wardCustom.tinh_trang) && (
-                  <div className="custom-data-section">
-                    <div className="custom-data-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                      Dữ liệu bổ sung (từ CSV)
-                    </div>
-                    <div className="info-grid">
-                      {wardCustom.ghi_chu && <div className="info-row"><div className="info-label">Ghi chú</div><div className="info-value">{wardCustom.ghi_chu}</div></div>}
-                      {wardCustom.san_pham && <div className="info-row"><div className="info-label">Sản phẩm chính</div><div className="info-value">{wardCustom.san_pham}</div></div>}
-                      {wardCustom.tinh_trang && <div className="info-row"><div className="info-label">Tình trạng</div><div className="info-value">{wardCustom.tinh_trang}</div></div>}
-                      {wardCustom.extra && Object.entries(wardCustom.extra).map(([k, v]) => (
-                        <div key={k} className="info-row"><div className="info-label">{k}</div><div className="info-value">{v}</div></div>
-                      ))}
-                    </div>
-                    {wardCustom.dan_toc_csv && <div className="csv-override-badge">Tỷ lệ dân tộc từ CSV</div>}
+                {/* Core stats — all editable */}
+                <div className="info-grid">
+                  <div className="info-row">
+                    <div className="info-label">Mã đơn vị</div>
+                    <div className="info-value">{selectedWard.ma_xa}</div>
                   </div>
-                )}
+                  <div className="info-row">
+                    <div className="info-label">Diện tích</div>
+                    <div className="info-value">
+                      <EditWard field="dtich_km2" suffix=" km²" type="number" decimals={2}/>
+                    </div>
+                  </div>
+                  <div className="info-row">
+                    <div className="info-label">Dân số</div>
+                    <div className="info-value">
+                      <EditWard field="dan_so" suffix=" người" type="number"/>
+                    </div>
+                  </div>
+                  <div className="info-row">
+                    <div className="info-label">Mật độ</div>
+                    <div className="info-value">
+                      <EditWard field="matdo_km2" suffix=" ng/km²" type="number" decimals={1}/>
+                    </div>
+                  </div>
+                </div>
 
-                {/* PDF documents */}
+                {/* Custom text fields — editable */}
+                <div className="custom-fields">
+                  <div className="info-row">
+                    <div className="info-label">Ghi chú</div>
+                    <div className="info-value">
+                      <EditableValue value={wardCustom?.ghi_chu || ""} placeholder="Click để thêm ghi chú" onSave={v => updateWardField(selectedWard.ma_xa, "ghi_chu", v)}/>
+                    </div>
+                  </div>
+                  <div className="info-row">
+                    <div className="info-label">Sản phẩm chính</div>
+                    <div className="info-value">
+                      <EditableValue value={wardCustom?.san_pham || ""} placeholder="VD: Ngô, Sắn, Lúa" onSave={v => updateWardField(selectedWard.ma_xa, "san_pham", v)}/>
+                    </div>
+                  </div>
+                  <div className="info-row">
+                    <div className="info-label">Tình trạng</div>
+                    <div className="info-value">
+                      <EditableValue value={wardCustom?.tinh_trang || ""} placeholder="VD: Đang phát triển" onSave={v => updateWardField(selectedWard.ma_xa, "tinh_trang", v)}/>
+                    </div>
+                  </div>
+                  {/* Extra custom fields from CSV */}
+                  {wardCustom && Object.entries(wardCustom).filter(([k]) => !["ten_xa","loai","dtich_km2","dan_so","matdo_km2","ghi_chu","san_pham","tinh_trang","dan_toc"].includes(k)).map(([k,v]) => (
+                    <div key={k} className="info-row">
+                      <div className="info-label">{k}</div>
+                      <div className="info-value">
+                        <EditableValue value={v as string} onSave={nv => updateWardField(selectedWard.ma_xa, k, nv)}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Ward PDFs */}
                 {wardPdfs.length > 0 && (
                   <div className="pdf-section">
                     <div className="pdf-section-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                       Tài liệu đính kèm ({wardPdfs.length})
                     </div>
                     {wardPdfs.map((pdf, i) => (
                       <div key={i} className="pdf-item">
-                        <div className="pdf-info">
-                          <span className="pdf-name">{pdf.name}</span>
-                          <span className="pdf-size">{pdf.size}</span>
-                        </div>
+                        <div className="pdf-info"><span className="pdf-name">{pdf.name}</span><span className="pdf-size">{pdf.size}</span></div>
                         <div className="pdf-actions">
                           <button className="pdf-btn view" onClick={() => setPdfViewer(pdf)}>Xem</button>
-                          <button className="pdf-btn remove" onClick={() => removePDF(selectedWard.ma_xa, i)}>✕</button>
+                          <button className="pdf-btn remove" onClick={() => removePdf(selectedWard.ma_xa, i)}>✕</button>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Ethnic groups */}
+                {/* ─── Ethnic groups section ─── */}
                 {wardDanToc.length > 0 && (
                   <div className="ethnic-section">
                     <div className="ethnic-section-title">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                       Các dân tộc sinh sống
                     </div>
-                    <p className="ethnic-hint">Click vào dân tộc để xem tri thức bản địa</p>
+                    <p className="ethnic-hint">Click tên → xem tri thức bản địa · Click % → chỉnh tỷ lệ</p>
                     <div className="ethnic-tags">
                       {wardDanToc.map(({ dan_toc, ty_le }) => {
                         const info = getDanTocInfo(dan_toc);
                         if (!info) return null;
                         const isActive = selectedDanToc?.id === dan_toc;
+                        const isEditingPct = editingEthnicPct === dan_toc;
                         return (
-                          <button key={dan_toc} className={`ethnic-tag ${isActive ? "active" : ""}`}
-                            style={{ "--tag-color": info.mau } as React.CSSProperties}
-                            onClick={() => { setSelectedDanToc(isActive ? null : info); setActiveTriThuc(0); }}>
+                          <div key={dan_toc} className={`ethnic-tag ${isActive ? "active" : ""}`} style={{ "--tag-color": info.mau } as React.CSSProperties}>
                             <span className="tag-dot" style={{ background: info.mau }}/>
-                            <span className="tag-name">{info.ten.replace("Dân tộc ", "").replace("Người ", "")}</span>
-                            <span className="tag-pct">{ty_le}%</span>
-                          </button>
+                            <button className="tag-name-btn" onClick={() => { setSelectedDanToc(isActive ? null : info); setActiveTriThuc(0); }}>
+                              {info.ten.replace("Dân tộc ", "").replace("Người ", "")}
+                            </button>
+                            {isEditingPct ? (
+                              <input
+                                className="pct-input" type="number" min="0" max="100"
+                                defaultValue={ty_le} autoFocus
+                                onBlur={e => updateWardEthnicPct(selectedWard.ma_xa, dan_toc, e.target.value)}
+                                onKeyDown={e => { if (e.key === "Enter") updateWardEthnicPct(selectedWard.ma_xa, dan_toc, (e.target as HTMLInputElement).value); if (e.key === "Escape") setEditingEthnicPct(null); }}
+                              />
+                            ) : (
+                              <button className="tag-pct-btn" onClick={() => setEditingEthnicPct(dan_toc)} title="Click để chỉnh tỷ lệ">
+                                {ty_le}%
+                              </button>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -430,62 +463,116 @@ export default function WebGIS() {
                   </div>
                 )}
 
-                {/* Indigenous knowledge */}
-                {selectedDanToc && (
-                  <div className="knowledge-panel">
-                    <div className="knowledge-header" style={{ borderLeftColor: selectedDanToc.mau }}>
-                      <div className="knowledge-name" style={{ color: selectedDanToc.mau }}>{selectedDanToc.ten}</div>
-                      <div className="knowledge-meta">{selectedDanToc.ngon_ngu} · {selectedDanToc.dan_so_ca_nuoc.toLocaleString("vi-VN")} người</div>
-                      <p className="knowledge-desc">{selectedDanToc.mo_ta}</p>
-                    </div>
-                    <div className="knowledge-tabs">
-                      {selectedDanToc.tri_thuc.map((tt, i) => (
-                        <button key={i} className={`knowledge-tab ${activeTriThuc === i ? "active" : ""}`}
-                          style={{ "--tab-color": selectedDanToc.mau } as React.CSSProperties}
-                          onClick={() => setActiveTriThuc(i)}>
-                          <span>{tt.bieu_tuong}</span><span>{tt.chu_de}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {selectedDanToc.tri_thuc[activeTriThuc] && (
-                      <div className="knowledge-content">
-                        <div className="knowledge-topic">
-                          <span>{selectedDanToc.tri_thuc[activeTriThuc].bieu_tuong}</span>
-                          {selectedDanToc.tri_thuc[activeTriThuc].chu_de}
+                {/* ─── Indigenous knowledge panel ─── */}
+                {selectedDanToc && (() => {
+                  const info = getDanTocInfo(selectedDanToc.id)!;
+                  const ethnicPdfs = pdfFiles.get("ethnic_" + info.id) || [];
+                  return (
+                    <div className="knowledge-panel">
+                      <div className="knowledge-header" style={{ borderLeftColor: info.mau }}>
+                        <div className="knowledge-name" style={{ color: info.mau }}>{info.ten}</div>
+                        <div className="knowledge-meta-row">
+                          <EditableValue
+                            value={info.ngon_ngu}
+                            className="editable-meta"
+                            onSave={v => updateEthnicField(info.id, "ngon_ngu", v)}
+                          />
+                          <span> · </span>
+                          <EditableValue
+                            value={info.dan_so_ca_nuoc}
+                            suffix=" người"
+                            type="number"
+                            className="editable-meta"
+                            onSave={v => updateEthnicField(info.id, "dan_so_ca_nuoc", parseInt(v)||0)}
+                          />
                         </div>
-                        <p className="knowledge-text">{selectedDanToc.tri_thuc[activeTriThuc].noi_dung}</p>
-                        {selectedDanToc.tri_thuc[activeTriThuc].bai_thuoc.length > 0 && (
-                          <div className="recipes">
-                            <div className="recipes-title">Bài thuốc / Công thức truyền thống</div>
-                            {selectedDanToc.tri_thuc[activeTriThuc].bai_thuoc.map((bt, i) => (
-                              <div key={i} className="recipe-card" style={{ borderColor: selectedDanToc.mau + "50" }}>
-                                <div className="recipe-name">{bt.ten}</div>
-                                <div className="recipe-row"><span className="recipe-label">Nguyên liệu:</span><span className="recipe-val">{bt.nguyen_lieu}</span></div>
-                                <div className="recipe-row"><span className="recipe-label">Công dụng:</span><span className="recipe-val highlight" style={{ color: selectedDanToc.mau }}>{bt.cong_dung}</span></div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <EditableValue
+                          value={info.mo_ta}
+                          className="knowledge-desc-editable"
+                          onSave={v => updateEthnicField(info.id, "mo_ta", v)}
+                        />
                       </div>
-                    )}
-                    <button className="knowledge-close" onClick={() => setSelectedDanToc(null)}>Đóng thông tin dân tộc</button>
-                  </div>
-                )}
+
+                      {/* Ethnic PDFs */}
+                      {ethnicPdfs.length > 0 && (
+                        <div className="ethnic-pdf-list">
+                          {ethnicPdfs.map((pdf, i) => (
+                            <div key={i} className="pdf-item">
+                              <div className="pdf-info"><span className="pdf-name">{pdf.name}</span><span className="pdf-size">{pdf.size}</span></div>
+                              <div className="pdf-actions">
+                                <button className="pdf-btn view" onClick={() => setPdfViewer(pdf)}>Xem</button>
+                                <button className="pdf-btn remove" onClick={() => removePdf("ethnic_"+info.id, i)}>✕</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="knowledge-tabs">
+                        {info.tri_thuc.map((tt, i) => (
+                          <button key={i} className={`knowledge-tab ${activeTriThuc === i ? "active" : ""}`}
+                            style={{ "--tab-color": info.mau } as React.CSSProperties} onClick={() => setActiveTriThuc(i)}>
+                            <span>{tt.bieu_tuong}</span><span>{tt.chu_de}</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {info.tri_thuc[activeTriThuc] && (
+                        <div className="knowledge-content">
+                          <div className="knowledge-topic">
+                            <span>{info.tri_thuc[activeTriThuc].bieu_tuong}</span>
+                            {info.tri_thuc[activeTriThuc].chu_de}
+                          </div>
+                          <p className="knowledge-text">{info.tri_thuc[activeTriThuc].noi_dung}</p>
+                          {info.tri_thuc[activeTriThuc].bai_thuoc.length > 0 && (
+                            <div className="recipes">
+                              <div className="recipes-title">Bài thuốc / Công thức truyền thống</div>
+                              {info.tri_thuc[activeTriThuc].bai_thuoc.map((bt, i) => (
+                                <div key={i} className="recipe-card" style={{ borderColor: info.mau + "50" }}>
+                                  <div className="recipe-name">{bt.ten}</div>
+                                  <div className="recipe-row"><span className="recipe-label">Nguyên liệu:</span><span className="recipe-val">{bt.nguyen_lieu}</span></div>
+                                  <div className="recipe-row"><span className="recipe-label">Công dụng:</span><span className="recipe-val highlight" style={{ color: info.mau }}>{bt.cong_dung}</span></div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <button className="knowledge-close" onClick={() => setSelectedDanToc(null)}>Đóng thông tin dân tộc</button>
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="ward-empty">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="empty-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <p>Click vào một xã/phường trên bản đồ để xem thông tin chi tiết và các dân tộc sinh sống</p>
+                <p>Click vào một xã/phường trên bản đồ để xem và chỉnh sửa thông tin</p>
               </div>
             )}
 
-            {stats && (
+            {/* ─── Province stats — editable ─── */}
+            {stats && selectedProvince && (
               <div className="province-stats">
-                <div className="stats-title">Thống kê tỉnh {selectedProvince}</div>
+                <div className="stats-title">Thống kê tỉnh {selectedProvince} <span className="stats-edit-hint">— click để chỉnh sửa</span></div>
                 <div className="stats-grid">
-                  <div className="stat-item"><div className="stat-value">{stats.dien_tich}</div><div className="stat-label">km² Diện tích</div></div>
-                  <div className="stat-item"><div className="stat-value">{stats.dan_so}</div><div className="stat-label">Dân số</div></div>
-                  <div className="stat-item"><div className="stat-value">{stats.don_vi}</div><div className="stat-label">Xã/Phường</div></div>
+                  <div className="stat-item">
+                    <div className="stat-value">
+                      <EditableValue value={stats.dien_tich} onSave={v => updateProvinceStat(selectedProvince, "dien_tich", v)}/>
+                    </div>
+                    <div className="stat-label">km² Diện tích</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-value">
+                      <EditableValue value={stats.dan_so} onSave={v => updateProvinceStat(selectedProvince, "dan_so", v)}/>
+                    </div>
+                    <div className="stat-label">Dân số</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-value">
+                      <EditableValue value={stats.don_vi} type="number" onSave={v => updateProvinceStat(selectedProvince, "don_vi", v)}/>
+                    </div>
+                    <div className="stat-label">Xã/Phường</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -495,143 +582,24 @@ export default function WebGIS() {
 
       {/* ─── Import modal ─── */}
       {showImport && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowImport(false); }}>
-          <div className="import-modal">
-            <div className="modal-header">
-              <div className="modal-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Nhập dữ liệu tùy chỉnh
-              </div>
-              <button className="modal-close" onClick={() => setShowImport(false)}>✕</button>
-            </div>
-
-            <div className="modal-tabs">
-              <button className={`modal-tab ${importTab === "csv" ? "active" : ""}`} onClick={() => { setImportTab("csv"); setImportMsg(null); }}>
-                📊 Import CSV
-              </button>
-              <button className={`modal-tab ${importTab === "pdf" ? "active" : ""}`} onClick={() => { setImportTab("pdf"); setImportMsg(null); }}>
-                📄 Đính kèm PDF
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {importMsg && (
-                <div className={`import-message ${importMsg.type}`}>
-                  {importMsg.type === "ok" ? "✓" : "⚠"} {importMsg.text}
-                </div>
-              )}
-
-              {/* ── CSV tab ── */}
-              {importTab === "csv" && (
-                <div className="csv-tab">
-                  <div className="import-info">
-                    <strong>Định dạng file CSV:</strong>
-                    <p>File CSV cần có cột <code>ma_xa</code> để khớp với xã. Các cột dân tộc: <code>{ETHNIC_COLS.join(", ")}</code> (giá trị từ 0–100, tổng = 100).</p>
-                    <p>Các cột thông tin: <code>ghi_chu</code>, <code>san_pham</code>, <code>tinh_trang</code> và các cột tùy chỉnh khác.</p>
-                  </div>
-
-                  <div className="btn-row">
-                    <button className="action-btn secondary" onClick={downloadTemplate}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      Tải template CSV mẫu
-                    </button>
-                  </div>
-
-                  <label className="file-drop-zone">
-                    <input type="file" accept=".csv" hidden onChange={e => { if (e.target.files?.[0]) handleCSVFile(e.target.files[0]); }} />
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span>Click hoặc kéo thả file CSV vào đây</span>
-                    <span className="drop-sub">Hỗ trợ encoding UTF-8</span>
-                  </label>
-
-                  {csvPreview && (
-                    <div className="csv-preview">
-                      <div className="preview-stats">
-                        Đọc được <strong>{csvPreview.total}</strong> dòng · Khớp <strong className="match-ok">{csvPreview.matched}</strong> xã với dữ liệu hiện tại
-                        {viewMode !== "ward" && <span className="match-warn"> (mở tỉnh để kiểm tra khớp đầy đủ)</span>}
-                      </div>
-                      <div className="preview-table-wrap">
-                        <table className="preview-table">
-                          <thead><tr>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead>
-                          <tbody>{csvPreview.rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j}>{c || "—"}</td>)}</tr>)}</tbody>
-                        </table>
-                      </div>
-                      <div className="btn-row">
-                        <button className="action-btn primary" onClick={applyCSV}>✓ Áp dụng dữ liệu</button>
-                        <button className="action-btn ghost" onClick={() => { setCsvPreview(null); setCsvRaw(null); }}>Huỷ</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {customData.size > 0 && (
-                    <div className="applied-info">
-                      <span>✓ Đang áp dụng dữ liệu tùy chỉnh cho <strong>{customData.size}</strong> xã</span>
-                      <button className="clear-btn" onClick={() => { setCustomData(new Map()); setImportMsg({ type: "ok", text: "Đã xóa toàn bộ dữ liệu CSV." }); }}>Xóa tất cả</button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ── PDF tab ── */}
-              {importTab === "pdf" && (
-                <div className="pdf-tab">
-                  <div className="import-info">
-                    <strong>Đính kèm tài liệu PDF cho xã/phường:</strong>
-                    <p>Nhập mã xã (<code>ma_xa</code>) rồi chọn file PDF. Tài liệu sẽ hiển thị trong bảng thông tin khi click vào xã đó trên bản đồ.</p>
-                  </div>
-
-                  <div className="pdf-upload-form">
-                    <label className="form-label">Mã xã (ma_xa)</label>
-                    <div className="pdf-input-row">
-                      <input
-                        type="text" className="code-input" placeholder="Ví dụ: 03856"
-                        value={pdfWardCode} onChange={e => setPdfWardCode(e.target.value)}
-                      />
-                      {selectedWard && (
-                        <button className="fill-btn" onClick={() => setPdfWardCode(selectedWard.ma_xa)}>
-                          Dùng xã đang chọn ({selectedWard.ten_xa})
-                        </button>
-                      )}
-                    </div>
-                    <label className="file-drop-zone">
-                      <input type="file" accept=".pdf" multiple hidden
-                        onChange={e => handlePDFFile(e.target.files)}/>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                      <span>Click hoặc kéo thả file PDF vào đây</span>
-                      <span className="drop-sub">Có thể chọn nhiều file cùng lúc</span>
-                    </label>
-                  </div>
-
-                  {pdfFiles.size > 0 && (
-                    <div className="pdf-list-section">
-                      <div className="pdf-list-title">Tài liệu đã đính kèm</div>
-                      {Array.from(pdfFiles.entries()).map(([maXa, list]) => (
-                        <div key={maXa} className="pdf-ward-group">
-                          <div className="pdf-ward-code">Mã xã: {maXa}</div>
-                          {list.map((pdf, i) => (
-                            <div key={i} className="pdf-item">
-                              <div className="pdf-info">
-                                <span className="pdf-name">{pdf.name}</span>
-                                <span className="pdf-size">{pdf.size}</span>
-                              </div>
-                              <div className="pdf-actions">
-                                <button className="pdf-btn view" onClick={() => setPdfViewer(pdf)}>Xem</button>
-                                <button className="pdf-btn remove" onClick={() => removePDF(maXa, i)}>✕</button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          wardOverrides={wardOverrides}
+          onApplyWardCSV={setWardOverrides}
+          onClearWardData={() => setWardOverrides(new Map())}
+          ethnicOverrides={ethnicOverrides}
+          onApplyEthnicCSV={setEthnicOverrides}
+          onClearEthnicData={() => setEthnicOverrides(new Map())}
+          pdfFiles={pdfFiles}
+          onAddPdf={(key, files) => addPdf(key, files)}
+          onRemovePdf={removePdf}
+          onViewPdf={setPdfViewer}
+          currentWard={selectedWard ? { ma_xa: selectedWard.ma_xa, ten_xa: selectedWard.ten_xa } : null}
+          wardList={allWardsRef.current.map(w => ({ ma_xa: w.ma_xa, ten_xa: w.ten_xa }))}
+        />
       )}
 
-      {/* ─── PDF viewer modal ─── */}
+      {/* ─── PDF viewer ─── */}
       {pdfViewer && (
         <div className="modal-overlay pdf-viewer-overlay" onClick={e => { if (e.target === e.currentTarget) setPdfViewer(null); }}>
           <div className="pdf-viewer-modal">
