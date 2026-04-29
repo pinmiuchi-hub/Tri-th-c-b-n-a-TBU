@@ -35,21 +35,25 @@ const PROVINCE_FILES: Record<string, string> = { "Sơn La": "/data/xa_sonla.geoj
 const DEFAULT_STATS: Record<string, ProvinceStat> = { "Sơn La": { dien_tich: "14.174", dan_so: "1,25M", don_vi: 75 }, "Điện Biên": { dien_tich: "9.541", dan_so: "599K", don_vi: 45 }, "Lai Châu": { dien_tich: "9.068", dan_so: "460K", don_vi: 38 }, "Lào Cai": { dien_tich: "6.364", dan_so: "770K", don_vi: 99 } };
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam — Danh mục GEE
+// (10 chuyên đề, xem public/data/gee_catalog.json để tham khảo 278 dataset chuẩn)
 const LAYER_CATEGORIES = [
-  { id: "hydrology", ten: "Tài nguyên nước & Thủy văn", icon: "💧", layers: [
+  { id: "hydrology", ten: "03. Thủy văn & Tài nguyên nước", icon: "💧", layers: [
     { id: "rivers",     ten: "Sông suối chính",                    mau: "#4895ef", bieu_tuong: "〰️" },
     { id: "irrigation", ten: "Thủy lợi truyền thống (Mương·Phai)", mau: "#74c69d", bieu_tuong: "🚿" },
   ]},
-  { id: "settlement", ten: "Dân cư & Hạ tầng", icon: "🏘️", layers: [
-    { id: "ward_boundaries", ten: "Ranh giới xã/phường", mau: "#6b4226", bieu_tuong: "🗺️" },
-  ]},
-  { id: "landuse", ten: "Sử dụng đất & Sinh kế", icon: "🌾", layers: [
-    { id: "forests",    ten: "Phân vùng rừng",             mau: "#2d6a4f", bieu_tuong: "🌲" },
+  { id: "landcover", ten: "04. Lớp phủ & Sử dụng đất", icon: "🌾", layers: [
     { id: "vac_models", ten: "Mô hình VAC/VACR tuần hoàn", mau: "#b5e48c", bieu_tuong: "♻️" },
   ]},
-  { id: "culture", ten: "Tri thức & Văn hóa bản địa", icon: "🌿", layers: [
-    { id: "medicinal_plants", ten: "Khu vực cây thuốc quý",        mau: "#e63946", bieu_tuong: "🌿" },
-    { id: "customary_zones",  ten: "Ranh giới luật tục cộng đồng", mau: "#f4a261", bieu_tuong: "⚖️" },
+  { id: "forest", ten: "05. Rừng & Sinh thái", icon: "🌲", layers: [
+    { id: "forests",          ten: "Phân vùng rừng",          mau: "#2d6a4f", bieu_tuong: "🌲" },
+    { id: "medicinal_plants", ten: "Khu vực cây thuốc quý",   mau: "#e63946", bieu_tuong: "🌿" },
+  ]},
+  { id: "socio", ten: "09. Kinh tế - Xã hội & Dân cư", icon: "🏘️", layers: [
+    { id: "ward_boundaries", ten: "Ranh giới xã/phường", mau: "#6b4226", bieu_tuong: "🗺️" },
+  ]},
+  { id: "culture", ten: "Văn hóa & Tri thức bản địa", icon: "⚖️", layers: [
+    { id: "customary_zones", ten: "Ranh giới luật tục cộng đồng", mau: "#f4a261", bieu_tuong: "⚖️" },
   ]},
 ];
 
