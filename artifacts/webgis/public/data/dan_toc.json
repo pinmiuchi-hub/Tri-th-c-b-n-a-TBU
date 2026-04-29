@@ -19,8 +19,16 @@
           "bieu_tuong": "🌿",
           "noi_dung": "Người Thái sử dụng hàng trăm loài thực vật để chữa bệnh. Một số bài thuốc nổi tiếng: lá ngải cứu rừng (nghệ sen) chữa đau bụng; vỏ cây mò hoa trắng chữa phong thấp; lá cây thuốc tím chữa viêm da; rễ cây hà thủ ô chữa thiếu máu. Thầy thuốc dân gian (mo thuốc) có vai trò quan trọng trong cộng đồng.",
           "bai_thuoc": [
-            { "ten": "Bài thuốc tắm thảo dược sau sinh", "nguyen_lieu": "Lá ngải cứu, cành sả, lá bưởi, gừng tươi, muối hạt", "cong_dung": "Phục hồi sức khỏe sản phụ, giữ ấm cơ thể, phòng tránh phong hàn" },
-            { "ten": "Bài thuốc chữa đau xương khớp", "nguyen_lieu": "Vỏ cây gắm, rễ đinh lăng, cành dâu tằm, rượu trắng", "cong_dung": "Giảm đau, tiêu viêm, thông kinh lạc" }
+            {
+              "ten": "Bài thuốc tắm thảo dược sau sinh",
+              "nguyen_lieu": "Lá ngải cứu, cành sả, lá bưởi, gừng tươi, muối hạt",
+              "cong_dung": "Phục hồi sức khỏe sản phụ, giữ ấm cơ thể, phòng tránh phong hàn"
+            },
+            {
+              "ten": "Bài thuốc chữa đau xương khớp",
+              "nguyen_lieu": "Vỏ cây gắm, rễ đinh lăng, cành dâu tằm, rượu trắng",
+              "cong_dung": "Giảm đau, tiêu viêm, thông kinh lạc"
+            }
           ]
         },
         {
@@ -68,8 +76,16 @@
           "bieu_tuong": "🌿",
           "noi_dung": "Người Mông sử dụng cây thuốc rừng rất thành thạo. Thầy thuốc Mông (tu giáo) có kiến thức sâu về cây thuốc núi cao. Cây chùa dù (actiso rừng) chữa bệnh gan; tam thất rừng cầm máu, bổ huyết; hà thủ ô đỏ bổ thận; hoàng liên chữa viêm nhiễm. Bài thuốc gia truyền thường kết hợp nhiều loại cây, giữ bí quyết trong gia đình.",
           "bai_thuoc": [
-            { "ten": "Thuốc chữa đau bụng cấp", "nguyen_lieu": "Lá cây nhọ nồi, rễ gừng gió, lá ngải cứu, muối", "cong_dung": "Giảm đau bụng, tiêu chảy, rối loạn tiêu hóa" },
-            { "ten": "Bài thuốc bổ thận tráng dương", "nguyen_lieu": "Rễ hà thủ ô đỏ, tam thất, đỗ trọng, rượu ngô 40 độ", "cong_dung": "Bổ thận, tăng cường sinh lực, chữa đau lưng mỏi gối" }
+            {
+              "ten": "Thuốc chữa đau bụng cấp",
+              "nguyen_lieu": "Lá cây nhọ nồi, rễ gừng gió, lá ngải cứu, muối",
+              "cong_dung": "Giảm đau bụng, tiêu chảy, rối loạn tiêu hóa"
+            },
+            {
+              "ten": "Bài thuốc bổ thận tráng dương",
+              "nguyen_lieu": "Rễ hà thủ ô đỏ, tam thất, đỗ trọng, rượu ngô 40 độ",
+              "cong_dung": "Bổ thận, tăng cường sinh lực, chữa đau lưng mỏi gối"
+            }
           ]
         },
         {
@@ -117,7 +133,11 @@
           "bieu_tuong": "🌿",
           "noi_dung": "Tri thức y học dân gian Mường rất phong phú. Cây bồ công anh chữa viêm gan; lá lốt chữa đau xương; rễ cỏ tranh lợi tiểu; vỏ núc nác hạ sốt. Người Mường có tục dùng lá cây tắm thảo dược (tắm mường) để phòng bệnh và phục hồi sức khỏe, đặc biệt sau khi sinh nở.",
           "bai_thuoc": [
-            { "ten": "Bài thuốc chữa cảm mạo", "nguyen_lieu": "Lá tía tô, gừng tươi, sả, lá bưởi, kinh giới", "cong_dung": "Giải cảm, ra mồ hôi, hạ sốt, thông mũi" }
+            {
+              "ten": "Bài thuốc chữa cảm mạo",
+              "nguyen_lieu": "Lá tía tô, gừng tươi, sả, lá bưởi, kinh giới",
+              "cong_dung": "Giải cảm, ra mồ hôi, hạ sốt, thông mũi"
+            }
           ]
         },
         {
@@ -147,8 +167,16 @@
           "bieu_tuong": "🌿",
           "noi_dung": "Người Dao Đỏ nổi danh với bài thuốc tắm thảo dược truyền thống sử dụng hơn 120 loại cây rừng. Bài thuốc này (lẩu pẩu) dùng để chữa đau nhức xương khớp, phục hồi sau chấn thương, tăng cường sức khỏe. Kiến thức thuốc nam được truyền trong dòng họ, thường chỉ truyền cho con trai trưởng.",
           "bai_thuoc": [
-            { "ten": "Bài thuốc tắm lá người Dao Đỏ", "nguyen_lieu": "Hơn 100 loại lá rừng gồm: chân chim, lá mú từn, cây sói rừng, cây gắm, nghệ đen, gừng gió, lá bưởi, sả, đinh lăng, ngải cứu rừng...", "cong_dung": "Chữa đau nhức xương khớp, phong thấp, mệt mỏi; tăng cường tuần hoàn máu; phục hồi sau sinh" },
-            { "ten": "Thuốc chữa rắn cắn", "nguyen_lieu": "Lá cây lưỡi hổ, rễ cây nam tinh, bồ công anh, muối", "cong_dung": "Hút độc, tiêu viêm, kháng khuẩn — dùng khi sơ cứu" }
+            {
+              "ten": "Bài thuốc tắm lá người Dao Đỏ",
+              "nguyen_lieu": "Hơn 100 loại lá rừng gồm: chân chim, lá mú từn, cây sói rừng, cây gắm, nghệ đen, gừng gió, lá bưởi, sả, đinh lăng, ngải cứu rừng...",
+              "cong_dung": "Chữa đau nhức xương khớp, phong thấp, mệt mỏi; tăng cường tuần hoàn máu; phục hồi sau sinh"
+            },
+            {
+              "ten": "Thuốc chữa rắn cắn",
+              "nguyen_lieu": "Lá cây lưỡi hổ, rễ cây nam tinh, bồ công anh, muối",
+              "cong_dung": "Hút độc, tiêu viêm, kháng khuẩn — dùng khi sơ cứu"
+            }
           ]
         },
         {
@@ -196,7 +224,11 @@
           "bieu_tuong": "🌲",
           "noi_dung": "Người Khơ Mú có hệ thống tri thức bản địa về rừng rất phong phú: phân biệt hàng trăm loại cây rừng, nhận biết địa điểm có nước ngầm, dự báo thời tiết qua tiếng động vật và quan sát thực vật. Tục kiêng chặt cây ăn quả trong rừng già và bảo vệ nguồn nước là nét văn hóa bảo tồn môi trường đặc sắc.",
           "bai_thuoc": [
-            { "ten": "Thuốc trị sốt rét dân gian", "nguyen_lieu": "Vỏ cây thường sơn, lá cây dây ký ninh rừng, rễ cỏ lào", "cong_dung": "Hạ sốt, điều trị sốt rét ở vùng núi xa trung tâm y tế" }
+            {
+              "ten": "Thuốc trị sốt rét dân gian",
+              "nguyen_lieu": "Vỏ cây thường sơn, lá cây dây ký ninh rừng, rễ cỏ lào",
+              "cong_dung": "Hạ sốt, điều trị sốt rét ở vùng núi xa trung tâm y tế"
+            }
           ]
         }
       ]
@@ -297,6 +329,211 @@
           "chu_de": "Giao lưu văn hóa",
           "bieu_tuong": "🤝",
           "noi_dung": "Người Kinh tại Tây Bắc đóng vai trò cầu nối giao lưu văn hóa, tiếp thu và truyền bá tri thức giữa các dân tộc. Nhiều phong tục địa phương của các dân tộc thiểu số đã được người Kinh tiếp nhận và phổ biến rộng rãi như: tắm thuốc lá, ăn xôi nếp, tham gia lễ hội xuống đồng.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "tay",
+      "ten": "Dân tộc Tày",
+      "mau": "#1d3557",
+      "dan_so_ca_nuoc": 1845492,
+      "ngon_ngu": "Ngữ hệ Tai-Kadai",
+      "mo_ta": "Người Tày là dân tộc thiểu số đông thứ hai cả nước, sinh sống tập trung ở các thung lũng và vùng đồi thấp Đông-Tây Bắc (Lào Cai, Yên Bái, Hà Giang, Tuyên Quang). Văn hóa Tày gắn với ruộng nước, nhà sàn dài và hát Then – Sli – Lượn được UNESCO công nhận là Di sản Văn hóa Phi vật thể.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Tày là bậc thầy canh tác lúa nước ở thung lũng và ruộng bậc thang. Lịch nông canh dựa vào \"lịch Tày\" 12 tháng âm lịch riêng, có tên gọi như \"đươn nhất\" (tháng giêng), \"đươn nhì\". Hệ thống mương phai dẫn nước từ suối về ruộng được tổ chức theo \"phường nước\" – mỗi gia đình có giờ lấy nước riêng theo quy ước cộng đồng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Y học Tày phong phú với hơn 200 cây thuốc nam: hà thủ ô đỏ chữa thiếu máu, gừng gió chống cảm cúm, lá khôi tía chữa đau dạ dày, sâm cau bổ thận. Bài thuốc tắm \"đẳng sâm – ngải cứu – sả\" cho phụ nữ sau sinh là nét đặc trưng. Thầy \"mạy\" (thầy thuốc) thường kế thừa nghề trong dòng họ.",
+          "bai_thuoc": [
+            {
+              "ten": "Bài thuốc bổ thận tráng dương",
+              "nguyen_lieu": "Sâm cau, ba kích, dâm dương hoắc, đỗ trọng",
+              "cong_dung": "Bồi bổ tinh khí, mạnh gân cốt, dùng cho nam giới trung niên"
+            },
+            {
+              "ten": "Bài thuốc cảm cúm Tày",
+              "nguyen_lieu": "Gừng gió, kinh giới, tía tô, sả, hành tăm",
+              "cong_dung": "Giải cảm, hạ sốt, đẩy mồ hôi độc tố"
+            }
+          ]
+        },
+        {
+          "chu_de": "Thủ công truyền thống",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Nghề dệt thổ cẩm Tày dùng khung cửi đứng, sợi tơ tằm và bông tự trồng nhuộm chàm. Hoa văn đặc trưng: rồng, phượng, hoa văn ô vuông. Túi nải thêu, áo chàm, gối hoa văn là vật cưới hỏi truyền thống. Nghề đan lát mây tre (gùi, ếp, mâm) cũng phát triển.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Kiến trúc nhà sàn",
+          "bieu_tuong": "🏠",
+          "noi_dung": "Nhà sàn Tày dài, lợp ngói âm dương hoặc lá cọ, sàn cao 1,5–2m. Cấu trúc 3 gian – 2 chái: gian giữa thờ tổ tiên + tiếp khách, hai gian bên là phòng ngủ. Cầu thang số bậc lẻ (5, 7, 9) theo phong thủy. Cột nhà là cây gỗ cứng nguyên cây, không dùng đinh sắt – ghép mộng truyền thống.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Ẩm thực",
+          "bieu_tuong": "🍜",
+          "noi_dung": "Cơm tẻ là chính, cơm nếp dùng vào lễ tết. Đặc sản: vịt quay lá mác mật (Lạng Sơn – Lào Cai), khâu nhục (thịt ba chỉ kho mềm), bánh khảo, bánh phồng tôm, lạp xưởng gác bếp. Rượu ngô men lá và rượu San Lùng (Lào Cai) nổi tiếng cả nước.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Hát Then – đàn tính là nghi lễ thiêng kết nối với thần linh, được UNESCO ghi danh năm 2019. Lễ Lồng Tồng (xuống đồng) đầu năm cầu mùa màng tươi tốt. Lễ Cấp sắc nam giới đánh dấu trưởng thành tâm linh. Tổ tiên thờ ở bàn thờ giữa nhà – cao nhất là Phật, dưới là gia tiên.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "giay",
+      "ten": "Dân tộc Giáy",
+      "mau": "#06a77d",
+      "dan_so_ca_nuoc": 67858,
+      "ngon_ngu": "Ngữ hệ Tai-Kadai",
+      "mo_ta": "Người Giáy (còn gọi Nhắng, Pâu Thìn) sinh sống chủ yếu ở Lào Cai (Bát Xát, Bảo Thắng, Sa Pa), Hà Giang. Bản Tả Van Giáy (Sa Pa) là điểm văn hóa du lịch cộng đồng nổi tiếng. Người Giáy giỏi canh tác lúa nước thung lũng và có nhiều bài hát \"vươn\" trữ tình.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Giáy thâm canh lúa nước ở thung lũng và làm ruộng bậc thang ở vùng cao. Truyền thống \"đổi công\" – các gia đình trong bản giúp nhau cấy gặt theo lịch luân phiên. Cây trồng phụ: ngô, khoai sọ, đậu tương; chăn nuôi trâu bò, lợn đen, gà ri.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Người Giáy giàu kinh nghiệm dùng cây thuốc rừng: lá lốt rừng chữa đau khớp, cây mật gấu giải độc, ngải cứu đắng chữa kinh nguyệt. Bài thuốc \"9 vị\" của người Giáy Tả Van Sa Pa nổi tiếng cho phụ nữ sau sinh.",
+          "bai_thuoc": [
+            {
+              "ten": "Thuốc tắm 9 vị Tả Van",
+              "nguyen_lieu": "Ngải cứu, lá bưởi, sả, gừng, lá tre, lá ổi, lá vối, củ riềng, muối hạt",
+              "cong_dung": "Phục hồi sản phụ, giảm đau lưng, kháng khuẩn da"
+            }
+          ]
+        },
+        {
+          "chu_de": "Thủ công truyền thống",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Phụ nữ Giáy mặc áo cổ tròn xẻ ngực, váy chàm với dải hoa văn ngang ở viền dưới. Khăn đội đầu thêu hoa văn hình thoi. Nghề rèn dao quắm, đan ếp đựng cơm là nghề phụ truyền thống của nam giới.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Lễ \"Roóng poọc\" (lễ xuống đồng) tháng giêng cầu mùa, có múa hát kéo co cộng đồng. Tín ngưỡng đa thần: thờ tổ tiên, thần đất (Thổ địa), thần nước (Long Vương). Bài \"vươn\" – hát giao duyên đối đáp giữa nam nữ – là di sản văn hóa quan trọng.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "ha_nhi",
+      "ten": "Dân tộc Hà Nhì",
+      "mau": "#a4243b",
+      "dan_so_ca_nuoc": 25539,
+      "ngon_ngu": "Ngữ hệ Hán-Tạng (Tạng-Miến)",
+      "mo_ta": "Người Hà Nhì sinh sống ở vùng cao biên giới Lào Cai (Y Tý, A Lù, Bát Xát) và Lai Châu (Mường Tè), độ cao 1.500–2.000m. Nổi tiếng với nhà trình tường đất kỳ lạ giữa biển mây Y Tý, ruộng bậc thang đẹp như tranh và lễ \"Khô Già Già\" – cấm rừng thiêng nghiêm ngặt.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Người Hà Nhì là bậc thầy ruộng bậc thang vùng cao – đôi khi chỉ rộng vài mét nhưng leo lên tận đỉnh núi. Trồng lúa nương, lúa nước, ngô, đậu tương, thảo quả dưới tán rừng. Lịch nông canh dựa theo chu kỳ mặt trăng và mùa hoa nở.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Vùng Y Tý có hơn 100 loài cây thuốc quý mọc tự nhiên ở độ cao 1.800m+: tam thất hoang, đỗ trọng, đẳng sâm, cẩu tích. Người Hà Nhì giữ bí truyền nhiều bài thuốc bồi bổ và chữa rối loạn tiêu hóa, viêm khớp do khí hậu lạnh ẩm.",
+          "bai_thuoc": [
+            {
+              "ten": "Trà tam thất hoang",
+              "nguyen_lieu": "Củ tam thất hoang, mật ong rừng",
+              "cong_dung": "Bồi bổ máu, chống mệt mỏi, tăng đề kháng vùng cao"
+            }
+          ]
+        },
+        {
+          "chu_de": "Kiến trúc nhà trình tường",
+          "bieu_tuong": "🏠",
+          "noi_dung": "Nhà trình tường đất là kiến trúc đặc trưng nhất – tường đất dày 40–60cm giữ ấm mùa đông, mát mùa hè. Mái lợp cỏ tranh hoặc ngói âm dương. Trong nhà có bếp lửa giữa nhà cháy quanh năm – là trung tâm sinh hoạt và tín ngưỡng. Cửa nhỏ, cửa sổ ít để giữ nhiệt vùng cao 2.000m.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Lễ \"Khô Già Già\" (cúng rừng thiêng) tháng 6 âm lịch là quan trọng nhất – cả bản kiêng vào rừng cấm 3 ngày. \"Gạ Ma Thú\" lễ cấm bản đầu năm. Tín ngưỡng đa thần: thần rừng, thần nguồn nước, tổ tiên. Quy ước \"luật tục\" về bảo vệ rừng cực kỳ nghiêm ngặt – ai phá rừng thiêng bị phạt nặng.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "nung",
+      "ten": "Dân tộc Nùng",
+      "mau": "#5a189a",
+      "dan_so_ca_nuoc": 1083298,
+      "ngon_ngu": "Ngữ hệ Tai-Kadai",
+      "mo_ta": "Người Nùng tập trung ở Đông Bắc (Lạng Sơn, Cao Bằng) và rải rác Tây Bắc (Lào Cai – Mường Khương, Bắc Hà, Bảo Yên). Văn hóa gần gũi người Tày nhưng có chữ Nôm Nùng riêng. Nổi tiếng với nghề rèn nông cụ, làm hương nén thủ công và hát Sli – Lượn đối đáp.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Canh tác lúa nước thung lũng + nương rẫy. Cây trồng đặc sản: hồi (Mường Khương), quế, thạch đen. Người Nùng giỏi nuôi trâu bò vùng cao và nghề trồng cây dược liệu xuất khẩu (hồi, quế thanh).",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Y học dân gian",
+          "bieu_tuong": "🌿",
+          "noi_dung": "Y học Nùng kế thừa từ y học Tày + ảnh hưởng Hán y. Dùng nhiều thảo dược: hồi (giảm đau bụng), quế (làm ấm), thạch xương bồ (an thần). Thầy thuốc Nùng còn dùng phương pháp châm cứu, giác hơi truyền thống.",
+          "bai_thuoc": [
+            {
+              "ten": "Tinh dầu hồi giảm đau",
+              "nguyen_lieu": "Quả hồi tươi, rượu trắng 40 độ",
+              "cong_dung": "Xoa bóp giảm đau bụng, nhức mỏi cơ"
+            }
+          ]
+        },
+        {
+          "chu_de": "Thủ công truyền thống",
+          "bieu_tuong": "🔨",
+          "noi_dung": "Nghề rèn dao Nùng An nổi tiếng – dao quắm Phúc Sen sắc bén, bền hàng chục năm. Nghề làm hương nén từ vỏ cây gỗ xay mịn + bột cây thông thơm. Trang phục Nùng nhuộm chàm đậm, áo cổ vuông xẻ ngực, không có hoa văn rực rỡ.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Lễ Lồng Tồng giống người Tày. Hát Sli Slình Làng đối đáp nam nữ trong các phiên chợ tình. Tín ngưỡng thờ \"ma nhà\" (tổ tiên), \"ma làng\" (thổ thần). Có chữ Nôm Nùng cổ ghi lại bài cúng và truyện cổ tích – đang được phục dựng.",
+          "bai_thuoc": []
+        }
+      ]
+    },
+    {
+      "id": "phu_la",
+      "ten": "Dân tộc Phù Lá",
+      "mau": "#ff8c42",
+      "dan_so_ca_nuoc": 12471,
+      "ngon_ngu": "Ngữ hệ Hán-Tạng (Tạng-Miến)",
+      "mo_ta": "Người Phù Lá (còn gọi Xá Phó) sinh sống ở Lào Cai (Bắc Hà, Si Ma Cai), Yên Bái với dân số rất nhỏ. Văn hóa độc đáo: trang phục thêu tay rực rỡ, lễ \"Cấp sắc\" cho thanh niên trưởng thành và nghề trồng dược liệu vùng cao.",
+      "tri_thuc": [
+        {
+          "chu_de": "Nông nghiệp",
+          "bieu_tuong": "🌾",
+          "noi_dung": "Canh tác lúa nương trên các sườn núi cao 800–1.500m. Trồng ngô, đậu tương, thảo quả. Hệ thống ruộng bậc thang nhỏ hẹp được duy trì qua nhiều thế hệ. Chăn nuôi bò vàng, lợn đen, gà rừng.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Thủ công truyền thống",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Trang phục Phù Lá nổi bật với áo chàm đen thêu hoa văn đỏ-vàng-trắng dày đặc trên ngực, vai, tay áo. Khăn đội đầu vuông gấp nhiều lớp, mỗi lớp là một mảng hoa văn. Việc thêu hoàn toàn thủ công, một bộ áo cưới mất 1–2 năm để hoàn thành.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Lễ hội & tín ngưỡng",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Lễ \"Cấp sắc\" cho nam giới khi đến tuổi trưởng thành – được công nhận là người lớn trong cộng đồng. Lễ cúng rừng đầu năm và lễ cúng hồn lúa sau vụ gặt. Tín ngưỡng đa thần với vai trò quan trọng của thầy mo trong các nghi lễ.",
           "bai_thuoc": []
         }
       ]

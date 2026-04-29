@@ -74,7 +74,7 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
 const FOREST_COLORS: Record<string, string> = { rung_thieng: "#1b4332", rung_ma: "#7209b7", rung_dau_nguon: "#023e8a", rung_trong: "#52b788", rung_tu_nhien: "#2d6a4f", rung_dac_san: "#b7791f", rung_ma_lang: "#7209b7", rung_kieng: "#9d0208" };
 const FOREST_LABELS: Record<string, string> = { rung_thieng: "Rừng thiêng", rung_ma: "Rừng ma", rung_dau_nguon: "Rừng đầu nguồn", rung_trong: "Rừng trồng", rung_tu_nhien: "Rừng tự nhiên", rung_dac_san: "Rừng đặc sản", rung_ma_lang: "Rừng ma làng", rung_kieng: "Rừng kiêng" };
 const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
-const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946" };
+const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946", tay: "#1d3557", giay: "#06a77d", ha_nhi: "#a4243b", nung: "#5a189a", phu_la: "#ff8c42", la_chi: "#ffc857" };
 const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲", canh_tac:"🌾", ban_lang:"🏘️", van_hoa:"🏺", cay_thuoc:"🌿", luat_tuc:"⚖️", vac_vacr:"♻️", khac:"📍" };
 
 function makeDivIcon(symbol: string, color: string, size = 28): L.DivIcon {
