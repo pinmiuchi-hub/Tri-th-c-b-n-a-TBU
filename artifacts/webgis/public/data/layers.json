@@ -1,0 +1,622 @@
+{
+  "rivers": [
+    {
+      "id": "song_da",
+      "ten": "Sông Đà (Đà Giang)",
+      "ten_dia_phuong": "Nặm Tè",
+      "coords": [
+        [
+          102.3,
+          22.8
+        ],
+        [
+          102.5,
+          22.5
+        ],
+        [
+          102.7,
+          22.1
+        ],
+        [
+          102.9,
+          21.8
+        ],
+        [
+          103.1,
+          21.5
+        ],
+        [
+          103.4,
+          21.3
+        ],
+        [
+          103.6,
+          21.2
+        ],
+        [
+          103.8,
+          21.1
+        ],
+        [
+          104,
+          20.9
+        ]
+      ]
+    },
+    {
+      "id": "song_ma",
+      "ten": "Sông Mã",
+      "ten_dia_phuong": "Nặm Ma",
+      "coords": [
+        [
+          103.2,
+          21.8
+        ],
+        [
+          103.5,
+          21.6
+        ],
+        [
+          103.8,
+          21.4
+        ],
+        [
+          104.1,
+          21.2
+        ],
+        [
+          104.4,
+          21
+        ],
+        [
+          104.7,
+          20.9
+        ]
+      ]
+    },
+    {
+      "id": "nam_rom",
+      "ten": "Sông Nậm Rốm",
+      "ten_dia_phuong": "Nặm Rốm",
+      "coords": [
+        [
+          103,
+          21.8
+        ],
+        [
+          103,
+          21.6
+        ],
+        [
+          103,
+          21.4
+        ],
+        [
+          103.05,
+          21.3
+        ],
+        [
+          103.1,
+          21.2
+        ]
+      ]
+    },
+    {
+      "id": "nam_na",
+      "ten": "Sông Nậm Na",
+      "ten_dia_phuong": "Nặm Nà",
+      "coords": [
+        [
+          103.5,
+          23.1
+        ],
+        [
+          103.4,
+          22.9
+        ],
+        [
+          103.3,
+          22.7
+        ],
+        [
+          103.2,
+          22.5
+        ],
+        [
+          103,
+          22.3
+        ],
+        [
+          102.9,
+          22
+        ]
+      ]
+    },
+    {
+      "id": "nam_mu",
+      "ten": "Sông Nậm Mu",
+      "ten_dia_phuong": "Nặm Mứ",
+      "coords": [
+        [
+          104.2,
+          22.1
+        ],
+        [
+          104,
+          21.8
+        ],
+        [
+          103.8,
+          21.6
+        ],
+        [
+          103.6,
+          21.4
+        ]
+      ]
+    }
+  ],
+  "irrigation": [
+    {
+      "id": "ir1",
+      "ten": "Phai Nậm Rốm",
+      "ten_dia_phuong": "Phai Nặm Rốm",
+      "loai": "phai",
+      "lat": 21.42,
+      "lng": 103.02,
+      "mo_ta": "Đập ngăn nước truyền thống của người Thái, điều tiết nước tưới cho cánh đồng Mường Thanh"
+    },
+    {
+      "id": "ir2",
+      "ten": "Hệ thống Mương Tân Châu",
+      "ten_dia_phuong": "Mương Tản Châu",
+      "loai": "muong",
+      "lat": 21.3,
+      "lng": 103.95,
+      "mo_ta": "Kênh tưới chính dẫn nước từ suối Nậm Pàn phục vụ 850ha lúa nước"
+    },
+    {
+      "id": "ir3",
+      "ten": "Phai Bản Pha",
+      "ten_dia_phuong": "Phai Bản Pha",
+      "loai": "phai",
+      "lat": 21.55,
+      "lng": 103.65,
+      "mo_ta": "Đập đá truyền thống người Thái Đen xây dựng từ thế kỷ 19"
+    },
+    {
+      "id": "ir4",
+      "ten": "Lịn Nậm Giải",
+      "ten_dia_phuong": "Lịn Nặm Giải",
+      "loai": "lin",
+      "lat": 22.38,
+      "lng": 103.42,
+      "mo_ta": "Hệ thống máng tre dẫn nước từ núi cao xuống bản Lự"
+    },
+    {
+      "id": "ir5",
+      "ten": "Mương Chiềng Bằng",
+      "ten_dia_phuong": "Mương Chiềng Băng",
+      "loai": "muong",
+      "lat": 21.15,
+      "lng": 103.7,
+      "mo_ta": "Kênh tưới truyền thống phục vụ ruộng bậc thang xã Chiềng Bằng"
+    },
+    {
+      "id": "ir6",
+      "ten": "Phai Mường Lay",
+      "ten_dia_phuong": "Phai Mường Lay",
+      "loai": "phai",
+      "lat": 22.07,
+      "lng": 102.99,
+      "mo_ta": "Đập nước cổ người Thái Trắng vùng Mường Lay, Điện Biên"
+    },
+    {
+      "id": "ir7",
+      "ten": "Hệ thống Lái Chiềng Khương",
+      "ten_dia_phuong": "Lái Chiềng Khương",
+      "loai": "lai",
+      "lat": 20.9,
+      "lng": 104.05,
+      "mo_ta": "Kênh phân phối nước nhỏ dẫn vào từng thửa ruộng bậc thang"
+    }
+  ],
+  "villages": [
+    {
+      "id": "v1",
+      "ten": "Bản Phiêng Ban",
+      "dan_toc": "thai",
+      "lat": 21.35,
+      "lng": 103.88,
+      "mo_ta": "Bản Thái Đen lâu đời, có trên 150 nóc nhà sàn truyền thống, nổi tiếng với nghề dệt thổ cẩm"
+    },
+    {
+      "id": "v2",
+      "ten": "Bản Huổi Lóng",
+      "dan_toc": "mong",
+      "lat": 21.68,
+      "lng": 103.55,
+      "mo_ta": "Bản Mông trên độ cao 1.200m, canh tác ngô đá và nuôi ong rừng"
+    },
+    {
+      "id": "v3",
+      "ten": "Bản Nậm Cần",
+      "dan_toc": "kho_mu",
+      "lat": 21.2,
+      "lng": 103.4,
+      "mo_ta": "Bản Khơ Mú ven sông Đà, sống bằng đánh cá và đan lát truyền thống"
+    },
+    {
+      "id": "v4",
+      "ten": "Bản Chiềng Lề",
+      "dan_toc": "thai",
+      "lat": 21.45,
+      "lng": 103.78,
+      "mo_ta": "Bản Thái lớn với hệ thống thủy lợi mương-phai hoàn chỉnh, 3 vụ lúa/năm"
+    },
+    {
+      "id": "v5",
+      "ten": "Bản Tả Phình",
+      "dan_toc": "dao",
+      "lat": 22.18,
+      "lng": 103.58,
+      "mo_ta": "Bản Dao Đỏ nổi tiếng với bài thuốc tắm lá và nghề thêu thổ cẩm"
+    },
+    {
+      "id": "v6",
+      "ten": "Bản Ka Lăng",
+      "dan_toc": "la_hu",
+      "lat": 22.52,
+      "lng": 102.58,
+      "mo_ta": "Bản La Hủ xa xôi nhất tỉnh Lai Châu, đang định canh định cư từ năm 2015"
+    },
+    {
+      "id": "v7",
+      "ten": "Bản Bum Nưa",
+      "dan_toc": "lu",
+      "lat": 22.35,
+      "lng": 103.2,
+      "mo_ta": "Bản Lự có chùa Phật giáo Nam Tông, dệt vải đen truyền thống"
+    },
+    {
+      "id": "v8",
+      "ten": "Bản Chiềng Hắc",
+      "dan_toc": "thai",
+      "lat": 20.98,
+      "lng": 104.2,
+      "mo_ta": "Bản Thái vùng thấp, mô hình VAC kết hợp cá-lúa-vịt nổi tiếng"
+    },
+    {
+      "id": "v9",
+      "ten": "Bản Pá Khoang",
+      "dan_toc": "thai",
+      "lat": 21.5,
+      "lng": 103.1,
+      "mo_ta": "Bản ven hồ Pá Khoang, phát triển du lịch cộng đồng và nghề cá"
+    },
+    {
+      "id": "v10",
+      "ten": "Bản Sái Lương",
+      "dan_toc": "mong",
+      "lat": 21.82,
+      "lng": 103.22,
+      "mo_ta": "Bản Mông trồng thảo quả dưới tán rừng già, thu nhập cao"
+    }
+  ],
+  "forests": [
+    {
+      "id": "f1",
+      "ten": "Rừng thiêng Hua Mường",
+      "ten_dia_phuong": "Đông Mường",
+      "loai": "rung_thieng",
+      "lat": 21.38,
+      "lng": 103.91,
+      "mo_ta": "Khu rừng cấm do bản Thái quản lý 200 năm qua. Cấm chặt cây, săn thú, bảo vệ đầu nguồn"
+    },
+    {
+      "id": "f2",
+      "ten": "Rừng ma Phiêng Khoang",
+      "ten_dia_phuong": "Đông Phi",
+      "loai": "rung_ma",
+      "lat": 22.25,
+      "lng": 103.45,
+      "mo_ta": "Rừng nghĩa địa người Dao, bảo vệ tuyệt đối theo phong tục. Hệ động thực vật phong phú"
+    },
+    {
+      "id": "f3",
+      "ten": "Rừng đầu nguồn Nặm Giải",
+      "ten_dia_phuong": "Pa Đẩu Nặm",
+      "loai": "rung_dau_nguon",
+      "lat": 21.62,
+      "lng": 103.72,
+      "mo_ta": "Rừng bảo vệ nguồn nước suối Nậm Giải cấp cho 5 bản hạ lưu. Luật tục cấm khai thác gỗ"
+    },
+    {
+      "id": "f4",
+      "ten": "Rừng thảo quả Nậm Cần",
+      "ten_dia_phuong": "Pa Mác Kẻng",
+      "loai": "rung_trong",
+      "lat": 21.78,
+      "lng": 103.38,
+      "mo_ta": "Rừng thảo quả dưới tán cây gỗ lớn, diện tích 120ha. Thu hoạch tháng 9-11 hàng năm"
+    },
+    {
+      "id": "f5",
+      "ten": "Rừng già La Hủ",
+      "ten_dia_phuong": "Pa Á Hủ",
+      "loai": "rung_tu_nhien",
+      "lat": 22.61,
+      "lng": 102.62,
+      "mo_ta": "Rừng nguyên sinh vùng La Hủ, chưa bị khai thác. Nơi sinh sống của nhiều loài thú quý"
+    },
+    {
+      "id": "f6",
+      "ten": "Rừng Chè Shan Tuyết Tủa Chùa",
+      "ten_dia_phuong": "Pa Ché Bạo",
+      "loai": "rung_dac_san",
+      "lat": 21.58,
+      "lng": 103.48,
+      "mo_ta": "Vùng chè Shan tuyết cổ thụ hàng trăm năm tuổi. Sản phẩm OCOP 4 sao của Điện Biên"
+    },
+    {
+      "id": "f7",
+      "ten": "Rừng thiêng Mường La",
+      "ten_dia_phuong": "Đông Mương La",
+      "loai": "rung_thieng",
+      "lat": 21.45,
+      "lng": 104.02,
+      "mo_ta": "Khu rừng cấm người Thái tại Mường La. Tổ chức lễ Xên Đông hàng năm tại đây"
+    }
+  ],
+  "vac_models": [
+    {
+      "id": "vac1",
+      "ten": "Mô hình VACR bản Phiêng Ban",
+      "loai": "vacr",
+      "lat": 21.36,
+      "lng": 103.87,
+      "mo_ta": "Kết hợp: 0.5ha vườn cây ăn quả + ao cá 1.500m² + chuồng lợn đen + 2ha rừng keo. Thu nhập 85 triệu/năm",
+      "thanh_phan": [
+        "Vườn mận, đào, lê",
+        "Ao cá rô phi, trắm",
+        "Lợn đen bản địa",
+        "Rừng keo lai"
+      ]
+    },
+    {
+      "id": "vac2",
+      "ten": "Trang trại sinh thái Nậm Pồ",
+      "loai": "vac",
+      "lat": 21.92,
+      "lng": 102.85,
+      "mo_ta": "Mô hình VAC quy mô lớn: vườn chuối, sắn xen canh + ao cá chép + đàn vịt 500 con",
+      "thanh_phan": [
+        "Vườn chuối",
+        "Sắn xen canh",
+        "Ao cá chép",
+        "Vịt bầu bản địa"
+      ]
+    },
+    {
+      "id": "vac3",
+      "ten": "Mô hình lúa-cá-vịt Chiềng Hắc",
+      "loai": "lua_ca_vit",
+      "lat": 20.97,
+      "lng": 104.19,
+      "mo_ta": "Canh tác kết hợp: lúa nếp đặc sản + cá nuôi trong ruộng + vịt cỏ thả vườn. Không dùng thuốc trừ sâu",
+      "thanh_phan": [
+        "Lúa nếp Điện Biên",
+        "Cá chép ruộng",
+        "Vịt cỏ"
+      ]
+    },
+    {
+      "id": "vac4",
+      "ten": "Mô hình thảo quả-ong-rừng",
+      "loai": "vacr",
+      "lat": 21.75,
+      "lng": 103.4,
+      "mo_ta": "Kết hợp trồng thảo quả dưới rừng già + nuôi ong ruồi bản địa + khai thác lâm sản phụ",
+      "thanh_phan": [
+        "Thảo quả",
+        "Ong ruồi bản địa",
+        "Nấm rừng",
+        "Rừng già bảo vệ"
+      ]
+    }
+  ],
+  "medicinal_plants": [
+    {
+      "id": "mp1",
+      "ten": "Vùng Tam thất rừng",
+      "ten_khoa_hoc": "Panax notoginseng",
+      "lat": 22.42,
+      "lng": 103.52,
+      "cong_dung": "Cầm máu, bổ huyết, tăng tuần hoàn",
+      "tình_trang": "Nguy cấp",
+      "dan_toc_dung": [
+        "dao",
+        "mong"
+      ]
+    },
+    {
+      "id": "mp2",
+      "ten": "Vùng Hoàng liên gai",
+      "ten_khoa_hoc": "Berberis wallichiana",
+      "lat": 22.68,
+      "lng": 103.38,
+      "cong_dung": "Kháng khuẩn, chữa tiêu chảy, viêm nhiễm",
+      "tình_trang": "Sắp nguy cấp",
+      "dan_toc_dung": [
+        "mong",
+        "dao"
+      ]
+    },
+    {
+      "id": "mp3",
+      "ten": "Rừng Sơn tra (Táo mèo)",
+      "ten_khoa_hoc": "Docynia indica",
+      "lat": 21.6,
+      "lng": 103.45,
+      "cong_dung": "Hỗ trợ tiêu hóa, tim mạch, sản phẩm thực phẩm đặc sản",
+      "tình_trang": "Bảo tồn tốt",
+      "dan_toc_dung": [
+        "mong",
+        "thai"
+      ]
+    },
+    {
+      "id": "mp4",
+      "ten": "Vùng Đẳng sâm núi cao",
+      "ten_khoa_hoc": "Codonopsis javanica",
+      "lat": 21.95,
+      "lng": 103.62,
+      "cong_dung": "Bổ khí, tăng sức đề kháng, bổ phế",
+      "tình_trang": "Bình thường",
+      "dan_toc_dung": [
+        "dao",
+        "muong"
+      ]
+    },
+    {
+      "id": "mp5",
+      "ten": "Khu vực Hà thủ ô đỏ",
+      "ten_khoa_hoc": "Fallopia multiflora",
+      "lat": 22.15,
+      "lng": 103.7,
+      "cong_dung": "Bổ thận, đen tóc, chống lão hóa",
+      "tình_trang": "Sắp nguy cấp",
+      "dan_toc_dung": [
+        "dao",
+        "mong",
+        "muong"
+      ]
+    },
+    {
+      "id": "mp6",
+      "ten": "Vùng cây thuốc tắm Dao Đỏ",
+      "ten_khoa_hoc": "Hỗn hợp >100 loài",
+      "lat": 22.2,
+      "lng": 103.55,
+      "cong_dung": "Chữa đau nhức, phục hồi sau sinh, tăng sức khỏe",
+      "tình_trang": "Bảo tồn tốt",
+      "dan_toc_dung": [
+        "dao"
+      ]
+    }
+  ],
+  "customary_zones": [
+    {
+      "id": "cz1",
+      "ten": "Vùng cấm săn bắn Mường Tè",
+      "loai": "cam_san_ban",
+      "mo_ta": "Khu vực cấm săn thú lớn theo luật tục La Hủ. Vi phạm bị phạt theo Hương ước bản",
+      "coords": [
+        [
+          102.45,
+          22.65
+        ],
+        [
+          102.65,
+          22.65
+        ],
+        [
+          102.65,
+          22.45
+        ],
+        [
+          102.45,
+          22.45
+        ],
+        [
+          102.45,
+          22.65
+        ]
+      ]
+    },
+    {
+      "id": "cz2",
+      "ten": "Vùng bảo vệ nguồn nước Chiềng Yên",
+      "loai": "bao_ve_nuoc",
+      "mo_ta": "Khu bảo vệ đầu nguồn suối Chiềng Yên. Cộng đồng Thái cấm chặt cây trong bán kính 500m từ mó nước",
+      "coords": [
+        [
+          103.55,
+          21.55
+        ],
+        [
+          103.75,
+          21.55
+        ],
+        [
+          103.75,
+          21.4
+        ],
+        [
+          103.55,
+          21.4
+        ],
+        [
+          103.55,
+          21.55
+        ]
+      ]
+    },
+    {
+      "id": "cz3",
+      "ten": "Vùng luật tục khai thác rừng Điện Biên Đông",
+      "loai": "luat_tuc_rung",
+      "mo_ta": "Quy ước bản: chỉ khai thác gỗ vào tháng 12-2 âm lịch, mỗi nhà tối đa 2 cây/năm",
+      "coords": [
+        [
+          103.6,
+          21.38
+        ],
+        [
+          103.8,
+          21.38
+        ],
+        [
+          103.8,
+          21.22
+        ],
+        [
+          103.6,
+          21.22
+        ],
+        [
+          103.6,
+          21.38
+        ]
+      ]
+    },
+    {
+      "id": "cz4",
+      "ten": "Vùng luân canh truyền thống Mông",
+      "loai": "luan_canh",
+      "mo_ta": "Khu nương rẫy luân canh 5-7 năm của người Mông. Bỏ hoang để phục hồi đất tự nhiên",
+      "coords": [
+        [
+          103.4,
+          21.8
+        ],
+        [
+          103.6,
+          21.8
+        ],
+        [
+          103.6,
+          21.65
+        ],
+        [
+          103.4,
+          21.65
+        ],
+        [
+          103.4,
+          21.8
+        ]
+      ]
+    }
+  ]
+}

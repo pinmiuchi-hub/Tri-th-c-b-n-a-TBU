@@ -1,0 +1,43 @@
+1. Các lớp phủ cần thiết trên bản đồ (Map Layers)
+Để phục vụ quản lý tài nguyên và kinh tế tuần hoàn, bản đồ của em cần tích hợp các lớp phủ sau:
+Lớp phủ Tài nguyên Tự nhiên & Sinh thái:
+Địa hình và Độ dốc: Tích hợp mô hình độ cao số (DEM) để phân chia các vùng canh tác theo độ dốc, vì độ dốc ảnh hưởng trực tiếp đến quyết định sử dụng đất (ví dụ: trên 15-25 độ thường trồng cây lâu năm hoặc rừng)
+.
+Thủy văn: Thể hiện hệ thống sông, suối, mó nước và đặc biệt là hệ thống thủy lợi truyền thống của người Thái như mương, phai, lái, lìn
+.
+Thổ nhưỡng: Phân loại đất theo kinh nghiệm dân gian (dựa trên màu sắc, độ phì nhiêu) kết hợp với bản đồ đất khoa học
+.
+Lớp phủ Sử dụng Đất & Sinh kế:
+Vùng canh tác nông nghiệp: Đánh dấu các khu vực trồng lúa nước, ruộng bậc thang, và các rẫy trồng ngô, sắn
+.
+Phân vùng rừng: Phân định rõ rừng tự nhiên, rừng trồng, và đặc biệt là các khu rừng thiêng, rừng ma, rừng đầu nguồn do cộng đồng quản lý dựa trên luật tục
+.
+Hạ tầng và Dân cư: Vị trí các bản làng, đường giao thông và các công trình thủy lợi
+.
+Lớp phủ Kinh tế Tuần hoàn & Văn hóa:
+Mô hình VAC/VACR: Các điểm thực hành chu trình khép kín Vườn - Ao - Chuồng - Rừng
+.
+Các khu vực bảo tồn tri thức: Vị trí các cây thuốc quý, vùng trồng cây đặc sản bản địa (như Sơn tra, chè Shan tuyết)
+.
+Ranh giới luật tục: Các khu vực áp dụng quy ước bảo vệ nguồn nước hoặc cấm săn bắn của cộng đồng
+.
+2. Cách thể hiện các đối tượng trên bản đồ
+Các đối tượng tri thức bản địa cần được thể hiện một cách trực quan, dễ hiểu để cộng đồng có thể cùng tham gia ra quyết định:
+Sử dụng Màu sắc và Ký hiệu:
+Màu sắc: Sử dụng các tông màu khác nhau để phân biệt mức độ hoạt động của con người: màu xanh đậm cho rừng già tự nhiên ít tác động, màu xanh nhạt hoặc đỏ cho các khu vực có hoạt động canh tác và hạ tầng
+.
+Ký hiệu đặc trưng: Sử dụng các biểu tượng riêng cho các loại cây chỉ thị (ví dụ: cây báo hiệu đất tốt/xấu) hoặc các công trình văn hóa tâm linh như rừng thiêng
+.
+Lược đồ Mặt cắt (Transect Diagrams):
+Thể hiện sự phân bố tài nguyên theo độ cao từ thấp đến cao (ví dụ: dưới thung lũng là lúa nước, sườn đồi là cây ăn quả xen canh, trên đỉnh là rừng bảo vệ)
+. Điều này giúp cộng đồng nhìn thấy bức tranh tổng thể về mối liên kết giữa các hệ sinh thái
+.
+Tích hợp Ngôn ngữ Bản địa:
+Các đối tượng trên bản đồ (tên suối, tên rừng, tên loài cây) nên được ghi bằng cả tiếng phổ thông và tên gọi địa phương của người Thái, Mông hoặc Mường để thể hiện sự trân trọng và giúp người dân dễ dàng nhận diện
+.
+Gắn kết với Biểu đồ Thời gian (Seasonal Calendars):
+Bên cạnh các đối tượng tĩnh, bản đồ có thể đi kèm thông tin về nông lịch (thời điểm gieo trồng, thu hoạch, ủ phân hữu cơ) gắn liền với từng vị trí địa lý cụ thể để tối ưu hóa mô hình kinh tế tuần hoàn
+.
+Số hóa và Gắn vị trí (GPS/GIS):
+Sử dụng các điểm tọa độ để đánh dấu chính xác các nguồn tài nguyên quan trọng, tạo cơ sở pháp lý để cộng đồng đối thoại với chính quyền địa phương trong việc cấp quyền sử dụng đất hoặc bảo vệ rừng
+.
