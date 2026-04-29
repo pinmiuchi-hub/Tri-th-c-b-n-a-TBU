@@ -2270,6 +2270,60 @@ th.month-col { width: 36px; }
 .laf-input:focus { border-color: #74c69d; }
 .laf-symbol { flex: 0 0 36px; text-align: center; padding: 6px 4px; }
 .laf-color { width: 32px; height: 32px; padding: 0; border: 1px solid rgba(116, 198, 157, 0.3); border-radius: 5px; cursor: pointer; background: transparent; }
+
+/* Symbol cell with emoji input + image upload + image preview */
+.laf-symbol-cell { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.laf-symbol-preview {
+  position: relative;
+  width: 36px; height: 32px;
+  border-radius: 5px;
+  border: 1px solid rgba(116, 198, 157, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  flex: 0 0 36px;
+}
+.laf-symbol-preview img {
+  width: 26px; height: 26px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+}
+.laf-symbol-clear {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: #e63946;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.laf-symbol-upload {
+  width: 32px; height: 32px;
+  border-radius: 5px;
+  border: 1px solid rgba(116, 198, 157, 0.4);
+  background: rgba(116, 198, 157, 0.08);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+.laf-symbol-upload:hover { background: rgba(116, 198, 157, 0.2); }
+
+/* Image symbol shown in layer list */
+.layer-symbol-img {
+  width: 18px; height: 18px;
+  object-fit: contain;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: rgba(255,255,255,0.1);
+}
 .laf-cancel, .laf-save {
   border: none;
   padding: 6px 12px;
@@ -2749,4 +2803,97 @@ th.month-col { width: 36px; }
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
+}
+
+/* ─── Indigenous Knowledge: item images ─── */
+.ik-item-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  display: block;
+  cursor: zoom-in;
+  background: rgba(0,0,0,0.06);
+  transition: transform 0.2s ease;
+}
+.ik-item-image:hover { transform: scale(1.02); }
+
+.ik-item-image-edit { margin-top: 8px; }
+.ik-item-image-preview {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.04);
+}
+.ik-item-image-preview img {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  display: block;
+}
+.ik-item-image-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(0,0,0,0.55);
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  justify-content: flex-end;
+}
+.ik-item-image-actions button {
+  border: none;
+  background: rgba(255,255,255,0.95);
+  color: #2d6a4f;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ik-item-image-actions button:hover { background: #fff; }
+.ik-item-add-image {
+  width: 100%;
+  border: 1.5px dashed;
+  background: transparent;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+.ik-item-add-image:hover { background: rgba(0,0,0,0.04); }
+
+/* Lightbox for IK images */
+.ik-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+  cursor: zoom-out;
+  padding: 20px;
+}
+.ik-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.ik-lightbox-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.95);
+  color: #1a1a1a;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }

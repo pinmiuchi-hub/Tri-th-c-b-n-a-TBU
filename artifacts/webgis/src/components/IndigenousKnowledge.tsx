@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { fileToDataUrl, resizeDataUrl } from "../utils/imageUtils";
 
-export interface KnowledgeItem { id: string; title: string; text: string; }
+export interface KnowledgeItem { id: string; title: string; text: string; image?: string; }
 export interface KnowledgeSection { id: string; title: string; icon: string; color: string; items: KnowledgeItem[]; }
 
 export const DEFAULT_KNOWLEDGE: KnowledgeSection[] = [
@@ -61,6 +62,9 @@ const newId = () => Math.random().toString(36).slice(2, 9);
 
 export default function IndigenousKnowledge({ onClose, data, onChange }: Props) {
   const [editMode, setEditMode] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const pendingTarget = useRef<{ si: number; ii: number } | null>(null);
 
   const updateSection = (si: number, patch: Partial<KnowledgeSection>) => {
     onChange(data.map((s, i) => i === si ? { ...s, ...patch } : s));
@@ -68,6 +72,25 @@ export default function IndigenousKnowledge({ onClose, data, onChange }: Props) 
   const updateItem = (si: number, ii: number, patch: Partial<KnowledgeItem>) => {
     onChange(data.map((s, i) => i === si ? { ...s, items: s.items.map((it, j) => j === ii ? { ...it, ...patch } : it) } : s));
   };
+  const pickItemImage = (si: number, ii: number) => {
+    pendingTarget.current = { si, ii };
+    imgInputRef.current?.click();
+  };
+  const handleImgChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const target = pendingTarget.current;
+    pendingTarget.current = null;
+    if (!file || !target) return;
+    if (!file.type.startsWith("image/")) { alert("Vui lòng chọn tệp ảnh"); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("Ảnh quá lớn (tối đa 5 MB)"); return; }
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const small = await resizeDataUrl(dataUrl, 1024);
+      updateItem(target.si, target.ii, { image: small });
+    } catch { alert("Không đọc được tệp ảnh"); }
+  };
+  const removeItemImage = (si: number, ii: number) => updateItem(si, ii, { image: undefined });
   const addItem = (si: number) => {
     onChange(data.map((s, i) => i === si ? { ...s, items: [...s.items, { id: newId(), title: "Tiêu đề mới", text: "Mô tả nội dung..." }] } : s));
   };
@@ -134,9 +157,27 @@ export default function IndigenousKnowledge({ onClose, data, onChange }: Props) 
                             <button className="ik-item-del" onClick={() => removeItem(si, ii)} title="Xóa mục">✕</button>
                           </div>
                           <textarea className="ik-item-text-input" value={it.text} onChange={e => updateItem(si, ii, { text: e.target.value })} rows={3}/>
+                          <div className="ik-item-image-edit">
+                            {it.image ? (
+                              <div className="ik-item-image-preview">
+                                <img src={it.image} alt=""/>
+                                <div className="ik-item-image-actions">
+                                  <button type="button" onClick={() => pickItemImage(si, ii)} title="Đổi ảnh">🔄 Đổi</button>
+                                  <button type="button" onClick={() => removeItemImage(si, ii)} title="Xóa ảnh">🗑️ Xóa</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button type="button" className="ik-item-add-image" onClick={() => pickItemImage(si, ii)} style={{ borderColor: section.color, color: section.color }}>
+                                📷 Thêm ảnh minh họa
+                              </button>
+                            )}
+                          </div>
                         </>
                       ) : (
                         <>
+                          {it.image && (
+                            <img className="ik-item-image" src={it.image} alt={it.title} onClick={() => setLightbox(it.image!)} loading="lazy"/>
+                          )}
                           <div className="ik-item-title" style={{ color: section.color }}>{it.title}</div>
                           <div className="ik-item-text">{it.text}</div>
                         </>
@@ -160,6 +201,13 @@ export default function IndigenousKnowledge({ onClose, data, onChange }: Props) 
           )}
         </div>
       </div>
+      <input ref={imgInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" style={{ display: "none" }} onChange={handleImgChosen}/>
+      {lightbox && (
+        <div className="ik-lightbox" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt=""/>
+          <button className="ik-lightbox-close" onClick={() => setLightbox(null)}>✕</button>
+        </div>
+      )}
     </div>
   );
 }

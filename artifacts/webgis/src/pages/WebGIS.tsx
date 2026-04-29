@@ -73,8 +73,12 @@ const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong
 const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946" };
 const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲", canh_tac:"🌾", ban_lang:"🏘️", van_hoa:"🏺", cay_thuoc:"🌿", luat_tuc:"⚖️", vac_vacr:"♻️", khac:"📍" };
 
-function makeDivIcon(emoji: string, color: string, size = 28): L.DivIcon {
-  return L.divIcon({ html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${size*0.5}px;border:2px solid rgba(255,255,255,0.8);box-shadow:0 2px 6px rgba(0,0,0,0.4)">${emoji}</div>`, className: "", iconSize: [size,size], iconAnchor: [size/2,size/2] });
+function makeDivIcon(symbol: string, color: string, size = 28): L.DivIcon {
+  const isImg = typeof symbol === "string" && symbol.startsWith("data:image");
+  const inner = isImg
+    ? `<img src="${symbol}" alt="" style="width:${size*0.7}px;height:${size*0.7}px;object-fit:contain;border-radius:50%"/>`
+    : symbol;
+  return L.divIcon({ html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${size*0.5}px;border:2px solid rgba(255,255,255,0.8);box-shadow:0 2px 6px rgba(0,0,0,0.4);overflow:hidden">${inner}</div>`, className: "", iconSize: [size,size], iconAnchor: [size/2,size/2] });
 }
 
 // Normalize array-or-string fields to array
@@ -489,8 +493,10 @@ export default function WebGIS() {
   /* ─── Export layer to GeoJSON or KML ─── */
   const exportLayer = async (layerId: string, format: "geojson" | "kml") => {
     const { featuresToGeoJSON, featuresToKML, downloadFile } = await import("../utils/geoUtils");
+    const { symbolToBadgePng } = await import("../utils/imageUtils");
     const layerName = (layerDisplayAll[layerId]?.name) || layerId;
     const safeName = layerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "_").toLowerCase() || "layer";
+    const meta = layerSymbolAll[layerId] || { mau: "#4895ef", bieu_tuong: "📍" };
 
     // Special case: ward_boundaries is already a GeoJSON FeatureCollection
     if (layerId === "ward_boundaries") {
@@ -498,7 +504,6 @@ export default function WebGIS() {
       if (format === "geojson") {
         downloadFile(`${safeName}.geojson`, JSON.stringify(allWardsGeoJson, null, 2), "application/geo+json");
       } else {
-        // Convert wards (polygons) to KML by serializing each feature
         const features = allWardsGeoJson.features.map((f: any) => {
           const props = f.properties || {};
           const coords = f.geometry?.type === "Polygon" ? f.geometry.coordinates[0]
@@ -507,7 +512,7 @@ export default function WebGIS() {
           if (!coords) return null;
           return { ten: props.ten_xa || "", mo_ta: `${props.ten_huyen || ""} - ${props.ten_tinh || ""}`, coords };
         }).filter(Boolean) as any[];
-        downloadFile(`${safeName}.kml`, featuresToKML(layerName, features, "polygon"), "application/vnd.google-earth.kml+xml");
+        downloadFile(`${safeName}.kml`, featuresToKML(layerName, features, "polygon", { color: meta.mau }), "application/vnd.google-earth.kml+xml");
       }
       return;
     }
@@ -520,7 +525,11 @@ export default function WebGIS() {
       const fc = featuresToGeoJSON(features, geomType);
       downloadFile(`${safeName}.geojson`, JSON.stringify(fc, null, 2), "application/geo+json");
     } else {
-      const kml = featuresToKML(layerName, features, geomType);
+      // For KML, generate a colored badge PNG so the symbol stays visible in Google Earth etc.
+      const iconHref = geomType === "point"
+        ? await symbolToBadgePng(meta.bieu_tuong, meta.mau, 64)
+        : undefined;
+      const kml = featuresToKML(layerName, features, geomType, { color: meta.mau, iconHref });
       downloadFile(`${safeName}.kml`, kml, "application/vnd.google-earth.kml+xml");
     }
   };
@@ -649,6 +658,10 @@ export default function WebGIS() {
   customLayers.forEach(c => { customDisplay[c.id] = { name: c.ten, color: c.mau }; customGeom[c.id] = c.geomType; });
   const layerDisplayAll = { ...LAYER_DISPLAY, ...customDisplay };
   const layerGeomAll = { ...LAYER_GEOM_TYPE, ...customGeom };
+  // symbol+color per layer (built-in + custom + ward_boundaries)
+  const layerSymbolAll: Record<string, { mau: string; bieu_tuong: string }> = {};
+  LAYER_CATEGORIES.forEach(cat => cat.layers.forEach(l => { layerSymbolAll[l.id] = { mau: l.mau, bieu_tuong: l.bieu_tuong }; }));
+  customLayers.forEach(c => { layerSymbolAll[c.id] = { mau: c.mau, bieu_tuong: c.bieu_tuong }; });
 
   const featureCounts: Record<string, number> = layersData ? {
     rivers: layersData.rivers?.length || 0,

@@ -235,17 +235,77 @@ function geometryKML(f: InternalFeature, geomType: GeomType): string {
   return "";
 }
 
-export function featuresToKML(layerName: string, features: InternalFeature[], geomType: GeomType): string {
+/** Convert "#rrggbb" → KML "aabbggrr" (alpha + reversed-RGB). */
+function hexToKmlColor(hex: string, alphaPct = 1): string {
+  const c = (hex || "#888888").replace("#", "");
+  const r = c.slice(0, 2) || "88";
+  const g = c.slice(2, 4) || "88";
+  const b = c.slice(4, 6) || "88";
+  const a = Math.max(0, Math.min(255, Math.round(alphaPct * 255))).toString(16).padStart(2, "0");
+  return `${a}${b}${g}${r}`.toLowerCase();
+}
+
+export interface KmlStyle {
+  /** Hex color "#rrggbb" used for line/poly stroke and as fallback fill. */
+  color?: string;
+  /** Optional PNG/JPEG/SVG data URL or http(s) URL used as point icon image. */
+  iconHref?: string;
+  /** Icon scale (1.0 default). */
+  iconScale?: number;
+  /** Stroke width for lines and polygon outlines. */
+  lineWidth?: number;
+  /** Fill alpha (0–1) for polygons. Default 0.35. */
+  fillAlpha?: number;
+}
+
+export function featuresToKML(
+  layerName: string,
+  features: InternalFeature[],
+  geomType: GeomType,
+  style?: KmlStyle,
+): string {
+  const color = style?.color || "#4895ef";
+  const lineColor = hexToKmlColor(color, 1);
+  const fillColor = hexToKmlColor(color, style?.fillAlpha ?? 0.35);
+  const lineWidth = style?.lineWidth ?? 3;
+  const iconScale = style?.iconScale ?? 1.1;
+  const iconHref = style?.iconHref || "";
+
+  const styleId = "layer_style";
+  const styleBlock = `<Style id="${styleId}">
+  <IconStyle>
+    <color>${lineColor}</color>
+    <scale>${iconScale}</scale>
+    ${iconHref ? `<Icon><href>${escXml(iconHref)}</href></Icon>` : `<Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon>`}
+    <hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
+  </IconStyle>
+  <LabelStyle>
+    <color>ffffffff</color>
+    <scale>0.9</scale>
+  </LabelStyle>
+  <LineStyle>
+    <color>${lineColor}</color>
+    <width>${lineWidth}</width>
+  </LineStyle>
+  <PolyStyle>
+    <color>${fillColor}</color>
+    <outline>1</outline>
+    <fill>1</fill>
+  </PolyStyle>
+</Style>`;
+
   const placemarks = features.map(f => {
     const geom = geometryKML(f, geomType);
     if (!geom) return "";
     const name = escXml(String(f.ten || ""));
     const desc = escXml(String(f.mo_ta || ""));
-    return `<Placemark><name>${name}</name>${desc ? `<description>${desc}</description>` : ""}${geom}</Placemark>`;
+    return `<Placemark><name>${name}</name>${desc ? `<description>${desc}</description>` : ""}<styleUrl>#${styleId}</styleUrl>${geom}</Placemark>`;
   }).filter(Boolean).join("\n");
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document><name>${escXml(layerName)}</name>
+${styleBlock}
 ${placemarks}
 </Document></kml>`;
 }

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { isImageSymbol, fileToDataUrl, resizeDataUrl } from "../utils/imageUtils";
 
 interface LayerToggle {
   id: string;
@@ -50,7 +51,23 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
   const [draft, setDraft] = useState<NewLayerInput>({ ten: "", mau: PALETTE[0], bieu_tuong: "📌", geomType: "point" });
   const [exportMenuFor, setExportMenuFor] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const symbolInputRef = useRef<HTMLInputElement>(null);
   const [importingFor, setImportingFor] = useState<string | null>(null);
+
+  const pickSymbolImage = () => symbolInputRef.current?.click();
+  const handleSymbolFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { alert("Vui lòng chọn tệp ảnh (PNG, JPG, SVG, WebP)"); return; }
+    if (file.size > 2 * 1024 * 1024) { alert("Ảnh quá lớn (tối đa 2 MB)"); return; }
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const small = await resizeDataUrl(dataUrl, 256);
+      setDraft(d => ({ ...d, bieu_tuong: small }));
+    } catch { alert("Không đọc được tệp ảnh"); }
+  };
+  const clearSymbolImage = () => setDraft(d => ({ ...d, bieu_tuong: "📌" }));
 
   const startAdd = (catId: string) => {
     setAddingFor(catId);
@@ -93,7 +110,11 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
               <div key={layer.id} className={`layer-item ${layer.active ? "active" : ""}`}>
                 <div className="layer-item-left">
                   <div className="layer-dot" style={{ background: layer.mau }}/>
-                  <span className="layer-symbol">{layer.bieu_tuong}</span>
+                  <span className="layer-symbol">
+                    {isImageSymbol(layer.bieu_tuong)
+                      ? <img src={layer.bieu_tuong} alt="" className="layer-symbol-img"/>
+                      : layer.bieu_tuong}
+                  </span>
                   <span className="layer-name">{layer.ten}</span>
                   {layer.isCustom && <span className="layer-custom-badge" title="Lớp tự tạo">tự tạo</span>}
                   {featureCounts[layer.id] != null && featureCounts[layer.id] > 0 && (
@@ -132,7 +153,17 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
             {addingFor === cat.id ? (
               <div className="layer-add-form">
                 <div className="laf-row">
-                  <input className="laf-input laf-symbol" maxLength={2} value={draft.bieu_tuong} onChange={e => setDraft(d => ({ ...d, bieu_tuong: e.target.value }))} placeholder="📌" title="Biểu tượng (emoji)"/>
+                  <div className="laf-symbol-cell" title="Biểu tượng (emoji hoặc ảnh)">
+                    {isImageSymbol(draft.bieu_tuong) ? (
+                      <div className="laf-symbol-preview" style={{ background: draft.mau }}>
+                        <img src={draft.bieu_tuong} alt=""/>
+                        <button type="button" className="laf-symbol-clear" onClick={clearSymbolImage} title="Xóa ảnh, dùng emoji">✕</button>
+                      </div>
+                    ) : (
+                      <input className="laf-input laf-symbol" maxLength={2} value={draft.bieu_tuong} onChange={e => setDraft(d => ({ ...d, bieu_tuong: e.target.value }))} placeholder="📌"/>
+                    )}
+                    <button type="button" className="laf-symbol-upload" onClick={pickSymbolImage} title="Tải ảnh ký hiệu (PNG, JPG, SVG)">📷</button>
+                  </div>
                   <input className="laf-input laf-name" value={draft.ten} onChange={e => setDraft(d => ({ ...d, ten: e.target.value }))} placeholder="Tên lớp..."/>
                   <input type="color" className="laf-color" value={draft.mau} onChange={e => setDraft(d => ({ ...d, mau: e.target.value }))} title="Màu sắc"/>
                 </div>
@@ -155,6 +186,7 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
           </div>
         ))}
         <input ref={fileInputRef} type="file" accept=".geojson,.json,.kml,application/geo+json,application/vnd.google-earth.kml+xml" style={{ display: "none" }} onChange={handleFileChosen}/>
+        <input ref={symbolInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style={{ display: "none" }} onChange={handleSymbolFileChosen}/>
 
         <div className="layer-category">
           <div className="layer-cat-title">📊 Biểu đồ · Lịch · Tri thức</div>
