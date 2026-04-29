@@ -96,27 +96,25 @@ export default function SeasonalCalendar({ onClose }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {ACTIVITIES.map((group, gi) => (
-                  <>
-                    <tr key={`g${gi}`} className="group-row">
-                      <td colSpan={13} style={{ color: group.mau }}>{group.nhom}</td>
+                {ACTIVITIES.flatMap((group, gi) => [
+                  <tr key={`g${gi}`} className="group-row">
+                    <td colSpan={13} style={{ color: group.mau }}>{group.nhom}</td>
+                  </tr>,
+                  ...group.activities.map((act, ai) => (
+                    <tr key={`${gi}-${ai}`} className="act-row">
+                      <td className="act-name">{act.ten}</td>
+                      {Array.from({length:12},(_,m)=>{
+                        const monthNum = m + 1;
+                        const active = act.months.includes(monthNum);
+                        return (
+                          <td key={m} className="month-cell">
+                            {active && <div className="month-dot" style={{ background: act.color }}/>}
+                          </td>
+                        );
+                      })}
                     </tr>
-                    {group.activities.map((act, ai) => (
-                      <tr key={`${gi}-${ai}`} className="act-row">
-                        <td className="act-name">{act.ten}</td>
-                        {Array.from({length:12},(_,m)=>{
-                          const monthNum = m + 1;
-                          const active = act.months.includes(monthNum) || (act.months.includes(12) && monthNum === 12);
-                          return (
-                            <td key={m} className="month-cell">
-                              {active && <div className="month-dot" style={{ background: act.color }}/>}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </>
-                ))}
+                  ))
+                ])}
               </tbody>
             </table>
           </div>

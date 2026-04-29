@@ -1546,3 +1546,108 @@ th.month-col { width: 36px; }
   .zone-cards { grid-template-columns: 1fr; }
   .layer-panel { width: 100%; max-width: 100%; }
 }
+
+/* ─── Drawing toolbar ─── */
+.draw-toolbar {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  z-index: 600; display: flex; align-items: center; gap: 4px;
+  background: rgba(10,26,10,0.92); border: 1px solid rgba(82,183,136,0.25);
+  border-radius: 12px; padding: 5px 8px; backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.draw-btn {
+  background: transparent; border: none; cursor: pointer; padding: 5px 8px;
+  font-size: 15px; border-radius: 6px; color: #95d5b2; transition: all 0.15s;
+  display: flex; align-items: center; gap: 5px; font-family: inherit; font-size: 13px;
+}
+.draw-btn:hover, .draw-btn.active { background: rgba(82,183,136,0.15); color: #d8f3dc; }
+.draw-sep { width: 1px; height: 20px; background: rgba(82,183,136,0.2); margin: 0 2px; }
+.ann-count { background: #e63946; color: #fff; border-radius: 10px; padding: 1px 5px; font-size: 10px; font-weight: 700; margin-left: 2px; }
+.draw-active-bar { display: flex; align-items: center; gap: 12px; }
+.draw-hint { font-size: 11px; color: #74c69d; }
+.draw-cancel-btn { background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3); color: #e63946; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 11px; font-family: inherit; }
+
+/* ─── Annotation list panel ─── */
+.ann-list-panel {
+  position: absolute; top: 54px; left: 12px; z-index: 600;
+  background: rgba(10,26,10,0.95); border: 1px solid rgba(82,183,136,0.2);
+  border-radius: 10px; width: 260px; max-height: 320px; display: flex; flex-direction: column;
+  backdrop-filter: blur(8px); box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+.ann-list-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid rgba(82,183,136,0.12); font-size: 12px; font-weight: 700; color: #d8f3dc; }
+.ann-list-actions { display: flex; align-items: center; gap: 6px; }
+.ann-export-btn { background: rgba(82,183,136,0.12); border: 1px solid rgba(82,183,136,0.25); color: #74c69d; border-radius: 5px; padding: 3px 8px; font-size: 10px; cursor: pointer; font-family: inherit; }
+.ann-list-empty { padding: 20px 12px; text-align: center; font-size: 11px; color: rgba(149,213,178,0.5); line-height: 1.6; }
+.ann-list-body { flex: 1; overflow-y: auto; }
+.ann-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+.ann-list-item:hover { background: rgba(82,183,136,0.07); }
+.ann-list-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ann-list-info { flex: 1; min-width: 0; }
+.ann-list-name { font-size: 12px; color: #d8f3dc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ann-list-meta { font-size: 10px; color: rgba(149,213,178,0.6); margin-top: 1px; }
+.ann-list-delete { background: transparent; border: none; color: rgba(230,57,70,0.5); cursor: pointer; padding: 2px 4px; font-size: 12px; flex-shrink: 0; }
+.ann-list-delete:hover { color: #e63946; }
+
+/* ─── Annotation modal ─── */
+.annotation-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 10002; display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.annotation-modal {
+  background: #0f1f0f; border: 1px solid rgba(82,183,136,0.25); border-radius: 12px;
+  width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+.ann-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid rgba(82,183,136,0.12); font-size: 13px; font-weight: 700; color: #d8f3dc; }
+.ann-modal-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.ann-coord-badge { background: rgba(72,149,239,0.1); border: 1px solid rgba(72,149,239,0.2); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #74b9ff; font-family: monospace; }
+.ann-field { display: flex; flex-direction: column; gap: 5px; }
+.ann-field label { font-size: 11px; color: rgba(149,213,178,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.ann-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(82,183,136,0.2); border-radius: 7px; padding: 8px 10px; color: #d8f3dc; font-size: 13px; font-family: inherit; }
+.ann-input:focus { outline: none; border-color: #52b788; background: rgba(82,183,136,0.08); }
+.ann-select { background: rgba(255,255,255,0.06); border: 1px solid rgba(82,183,136,0.2); border-radius: 7px; padding: 8px 10px; color: #d8f3dc; font-size: 13px; font-family: inherit; cursor: pointer; }
+.ann-textarea { background: rgba(255,255,255,0.06); border: 1px solid rgba(82,183,136,0.2); border-radius: 7px; padding: 8px 10px; color: #d8f3dc; font-size: 12px; font-family: inherit; resize: vertical; }
+.ann-textarea:focus, .ann-select:focus { outline: none; border-color: #52b788; }
+.ann-colors { display: flex; gap: 8px; flex-wrap: wrap; }
+.ann-color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: transform 0.15s; border: 2px solid transparent; }
+.ann-color-dot:hover { transform: scale(1.2); }
+.ann-color-dot.selected { border-color: #fff; transform: scale(1.25); }
+.ann-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.ann-btn-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: rgba(149,213,178,0.6); border-radius: 7px; padding: 7px 14px; cursor: pointer; font-size: 12px; font-family: inherit; }
+.ann-btn-save { background: #52b788; border: none; color: #0a1a0a; border-radius: 7px; padding: 7px 16px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+.ann-btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+.ann-btn-save svg { width: 13px; height: 13px; }
+
+/* ─── Editable knowledge panel additions ─── */
+.knowledge-topic-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.topic-delete-btn { background: transparent; border: none; cursor: pointer; font-size: 14px; opacity: 0.5; padding: 2px 5px; }
+.topic-delete-btn:hover { opacity: 1; }
+.add-tab { background: rgba(82,183,136,0.1) !important; border: 1px dashed rgba(82,183,136,0.3) !important; color: #52b788 !important; font-size: 16px !important; }
+.recipes-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.add-recipe-btn { background: rgba(82,183,136,0.1); border: 1px solid rgba(82,183,136,0.25); color: #74c69d; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; }
+.recipe-name-row { display: flex; align-items: center; justify-content: space-between; }
+.recipe-delete-btn { background: transparent; border: none; color: rgba(230,57,70,0.5); cursor: pointer; font-size: 11px; padding: 2px 4px; }
+.recipe-delete-btn:hover { color: #e63946; }
+.recipe-val-edit { font-size: 11px; color: #95d5b2; }
+
+/* ─── New topic form ─── */
+.new-topic-form { background: rgba(82,183,136,0.05); border: 1px solid rgba(82,183,136,0.15); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.ntf-row { display: flex; gap: 6px; }
+.ntf-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(82,183,136,0.2); border-radius: 6px; padding: 6px 8px; color: #d8f3dc; font-size: 12px; font-family: inherit; flex: 1; }
+.ntf-input.small { width: 40px; flex: none; text-align: center; }
+.ntf-textarea { background: rgba(255,255,255,0.06); border: 1px solid rgba(82,183,136,0.2); border-radius: 6px; padding: 6px 8px; color: #d8f3dc; font-size: 11px; font-family: inherit; resize: vertical; }
+.ntf-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.ntf-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(149,213,178,0.6); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 11px; font-family: inherit; }
+.ntf-save { background: #2d6a4f; border: none; color: #d8f3dc; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 11px; font-weight: 700; font-family: inherit; }
+.ntf-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Editable symbol/topic name ─── */
+.editable-symbol { font-size: 16px; min-width: 28px; text-align: center; }
+.editable-topic-name { font-size: 13px; font-weight: 700; color: #d8f3dc; }
+.knowledge-text-editable { font-size: 12px; color: #95d5b2; line-height: 1.6; width: 100%; }
+.editable-textarea {
+  width: 100%; min-height: 70px; resize: vertical;
+  background: rgba(82,183,136,0.08); border: 1px solid rgba(82,183,136,0.3);
+  border-radius: 6px; padding: 6px 8px; color: #d8f3dc; font-size: 12px;
+  font-family: inherit; line-height: 1.6;
+}
+.editable-textarea:focus { outline: none; border-color: #52b788; }
