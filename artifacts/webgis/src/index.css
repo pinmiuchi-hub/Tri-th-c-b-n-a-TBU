@@ -1852,6 +1852,62 @@ th.month-col { width: 36px; }
   font-weight: 700;
 }
 .lde-btn-primary:hover { background: linear-gradient(135deg, #74c69d, #40916c); }
+.lde-btn-pick {
+  display: block;
+  width: 100%;
+  margin: 6px 0 10px;
+  background: rgba(72, 149, 239, 0.15);
+  color: #4895ef;
+  border: 1px dashed rgba(72, 149, 239, 0.55);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.lde-btn-pick:hover { background: rgba(72, 149, 239, 0.28); border-color: rgba(72, 149, 239, 0.85); }
+.lde-btn-pick-sm { padding: 6px 10px; font-size: 11px; margin-top: 8px; }
+
+/* Banner shown while user is picking a coordinate on the map */
+.pick-point-banner {
+  position: fixed;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: linear-gradient(135deg, #4895ef, #2d6a4f);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: calc(100vw - 24px);
+  animation: pickPulse 1.6s ease-in-out infinite;
+}
+@keyframes pickPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(72, 149, 239, 0.45); }
+  50%      { box-shadow: 0 6px 28px rgba(72, 149, 239, 0.85); }
+}
+.pick-point-cancel {
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.pick-point-cancel:hover { background: rgba(255,255,255,0.32); }
+@media (max-width: 600px) {
+  .pick-point-banner { font-size: 12px; padding: 8px 12px; gap: 8px; top: 8px; }
+}
 
 .lde-count {
   margin-left: auto;

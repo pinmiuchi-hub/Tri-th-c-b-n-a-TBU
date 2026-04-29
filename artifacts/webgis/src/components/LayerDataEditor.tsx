@@ -22,6 +22,10 @@ interface Props {
   onClose: () => void;
   mapCenter: [number, number];
   onFlyTo: (lat: number, lng: number) => void;
+  /** Activate map-pick mode: parent listens for next map click and calls cb with the coords. */
+  onPickPoint: (cb: (lat: number, lng: number) => void) => void;
+  /** When true, the editor visually hides itself (still mounted) so the map is clickable. */
+  hidden?: boolean;
 }
 
 const FIELD_CONFIG: Record<string, FieldDef[]> = {
@@ -107,7 +111,7 @@ function emptyFeature(layerId: string, mapCenter: [number, number], geomType: "p
 }
 
 export default function LayerDataEditor(props: Props) {
-  const { layerId, layerName, layerColor, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo } = props;
+  const { layerId, layerName, layerColor, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo, onPickPoint, hidden } = props;
   const fields = getFields(layerId, geomType);
   const [showAdd, setShowAdd] = useState(false);
   const [newFeat, setNewFeat] = useState<any>(() => emptyFeature(layerId, mapCenter, geomType));
@@ -142,7 +146,7 @@ export default function LayerDataEditor(props: Props) {
   };
 
   return (
-    <div className="lde-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="lde-overlay" style={hidden ? { display: "none" } : undefined} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="lde-modal">
         <div className="lde-header">
           <div className="lde-header-left">
@@ -176,6 +180,16 @@ export default function LayerDataEditor(props: Props) {
                 {renderField(f, newFeat[f.key], v => setNewFeat({ ...newFeat, [f.key]: v }))}
               </div>
             ))}
+            {geomType === "point" && (
+              <button
+                type="button"
+                className="lde-btn lde-btn-pick"
+                onClick={() => onPickPoint((lat, lng) => setNewFeat((prev: any) => ({ ...prev, lat, lng })))}
+                title="Click vào vị trí trên bản đồ để lấy tọa độ"
+              >
+                📍 Chọn vị trí trên bản đồ
+              </button>
+            )}
             {geomType !== "point" && (
               <div className="lde-hint">
                 💡 Đối tượng dạng đường/vùng được tạo với hình mặc định nhỏ tại trung tâm bản đồ. Sau khi thêm, hãy dùng công cụ vẽ tay để vẽ chính xác hơn.
@@ -223,6 +237,14 @@ export default function LayerDataEditor(props: Props) {
                     {geomType === "point" && (
                       <div className="lde-coord-info">
                         📍 Vị trí: {feat.lat?.toFixed(6)}, {feat.lng?.toFixed(6)}
+                        <button
+                          type="button"
+                          className="lde-btn lde-btn-pick lde-btn-pick-sm"
+                          onClick={() => onPickPoint((lat, lng) => onUpdate(idx, { ...feat, lat, lng }))}
+                          title="Click vào vị trí mới trên bản đồ"
+                        >
+                          📍 Đổi vị trí trên bản đồ
+                        </button>
                         {dragMode && <div className="lde-drag-hint">✋ Đang ở chế độ kéo thả — kéo điểm trên bản đồ để di chuyển</div>}
                       </div>
                     )}

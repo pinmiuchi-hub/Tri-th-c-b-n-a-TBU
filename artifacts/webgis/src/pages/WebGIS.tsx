@@ -132,6 +132,9 @@ export default function WebGIS() {
   const [editingEthnicPct, setEditingEthnicPct] = useState<string|null>(null);
   const [editingLayer, setEditingLayer] = useState<string | null>(null);
   const [layerDragMode, setLayerDragMode] = useState<string | null>(null);
+  // Map-pick mode for selecting a point coordinate by clicking on the map.
+  const pickPointCbRef = useRef<((lat: number, lng: number) => void) | null>(null);
+  const [pickingPoint, setPickingPoint] = useState(false);
 
   /* ─── Annotation state ─── */
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -325,6 +328,33 @@ export default function WebGIS() {
       }
     });
   }, [annotations]);
+
+  /* ─── Map-pick mode: capture next click for layer-editor coords ─── */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !pickingPoint) return;
+    const container = map.getContainer();
+    container.style.cursor = "crosshair";
+    const onClick = (e: L.LeafletMouseEvent) => {
+      const cb = pickPointCbRef.current;
+      pickPointCbRef.current = null;
+      setPickingPoint(false);
+      if (cb) cb(e.latlng.lat, e.latlng.lng);
+    };
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        pickPointCbRef.current = null;
+        setPickingPoint(false);
+      }
+    };
+    map.on("click", onClick);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      map.off("click", onClick);
+      window.removeEventListener("keydown", onKey);
+      container.style.cursor = "";
+    };
+  }, [pickingPoint]);
 
   /* ─── Drawing mode map listeners ─── */
   useEffect(() => {
@@ -969,10 +999,21 @@ export default function WebGIS() {
           onAdd={f => addLayerFeature(editingLayer, f)}
           onUpdate={(idx, f) => updateLayerFeature(editingLayer, idx, f)}
           onDelete={idx => deleteLayerFeature(editingLayer, idx)}
-          onClose={() => { setEditingLayer(null); setLayerDragMode(null); }}
+          onClose={() => { setEditingLayer(null); setLayerDragMode(null); pickPointCbRef.current = null; setPickingPoint(false); }}
           mapCenter={mapCenter}
           onFlyTo={(lat, lng) => mapRef.current?.flyTo([lat, lng], 13, { duration: 1.2 })}
+          onPickPoint={cb => { pickPointCbRef.current = cb; setPickingPoint(true); }}
+          hidden={pickingPoint}
         />
+      )}
+
+      {pickingPoint && (
+        <div className="pick-point-banner">
+          <span>📍 Click vào vị trí mong muốn trên bản đồ để chọn tọa độ</span>
+          <button className="pick-point-cancel" onClick={() => { pickPointCbRef.current = null; setPickingPoint(false); }}>
+            ✕ Hủy
+          </button>
+        </div>
       )}
 
       {/* Add recipe modal */}
