@@ -17,7 +17,7 @@ interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_k
 interface GeoJsonData { type: string; features: { type: string; properties: Record<string, unknown>; geometry: unknown }[]; }
 interface BaiThuoc { ten: string; nguyen_lieu: string; cong_dung: string; }
 interface TriThuc { chu_de: string; bieu_tuong: string; noi_dung: string; bai_thuoc: BaiThuoc[]; }
-interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: number; ngon_ngu: string; mo_ta: string; tri_thuc: TriThuc[]; }
+interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: number; ngon_ngu: string; mo_ta: string; tri_thuc: TriThuc[]; anh?: string; }
 interface DanTocData { dan_toc: DanTocInfo[]; }
 interface ProvinceStat { dien_tich: string; dan_so: string; don_vi: number; }
 interface LayersData {
@@ -135,6 +135,10 @@ export default function WebGIS() {
   // Map-pick mode for selecting a point coordinate by clicking on the map.
   const pickPointCbRef = useRef<((lat: number, lng: number) => void) | null>(null);
   const [pickingPoint, setPickingPoint] = useState(false);
+  // Ethnic-group photo upload
+  const ethnicPhotoInputRef = useRef<HTMLInputElement>(null);
+  const ethnicPhotoTargetRef = useRef<string | null>(null);
+  const [ethnicPhotoLightbox, setEthnicPhotoLightbox] = useState<string | null>(null);
 
   /* ─── Annotation state ─── */
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -412,6 +416,23 @@ export default function WebGIS() {
   const getProvinceStat = (t:string):ProvinceStat => ({...(DEFAULT_STATS[t]||{dien_tich:"—",dan_so:"—",don_vi:0}),...provinceEdits.get(t)});
   const updateWardField = (ma_xa:string,field:string,value:unknown) => setWardOverrides(p=>{const n=new Map(p);n.set(ma_xa,{...n.get(ma_xa),[field]:value});return n;});
   const updateEthnicField = (id:string,field:keyof EthnicOverride,value:string|number) => setEthnicOverrides(p=>{const n=new Map(p);n.set(id,{...n.get(id),[field]:value});return n;});
+  const setEthnicPhoto = (id:string, anh:string|undefined) => setEthnicOverrides(p=>{const n=new Map(p);n.set(id,{...n.get(id),anh});return n;});
+  const pickEthnicPhoto = (id:string) => { ethnicPhotoTargetRef.current = id; ethnicPhotoInputRef.current?.click(); };
+  const handleEthnicPhotoChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const target = ethnicPhotoTargetRef.current;
+    ethnicPhotoTargetRef.current = null;
+    if (!file || !target) return;
+    if (!file.type.startsWith("image/")) { alert("Vui lòng chọn tệp ảnh"); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("Ảnh quá lớn (tối đa 5 MB)"); return; }
+    try {
+      const { fileToDataUrl, resizeDataUrl } = await import("../utils/imageUtils");
+      const dataUrl = await fileToDataUrl(file);
+      const small = await resizeDataUrl(dataUrl, 1024);
+      setEthnicPhoto(target, small);
+    } catch { alert("Không đọc được tệp ảnh"); }
+  };
   const updateProvinceStat = (t:string,f:keyof ProvinceStat,v:string) => setProvinceEdits(p=>{const n=new Map(p);n.set(t,{...n.get(t),[f]:f==="don_vi"?(parseInt(v)||0):v});return n;});
   const addPdf = (key:string,files:PdfFile[]) => setPdfFiles(p=>{const n=new Map(p);n.set(key,[...(n.get(key)||[]),...files]);return n;});
   const removePdf = (key:string,idx:number) => setPdfFiles(p=>{const n=new Map(p);const l=[...(n.get(key)||[])];URL.revokeObjectURL(l[idx].url);l.splice(idx,1);if(l.length===0)n.delete(key);else n.set(key,l);return n;});
@@ -552,14 +573,14 @@ export default function WebGIS() {
     const geomType = layerGeomAll[layerId] || "point";
 
     if (format === "geojson") {
-      const fc = featuresToGeoJSON(features, geomType);
+      const fc = featuresToGeoJSON(features, geomType, { color: meta.mau, symbol: meta.bieu_tuong });
       downloadFile(`${safeName}.geojson`, JSON.stringify(fc, null, 2), "application/geo+json");
     } else {
-      // For KML, generate a colored badge PNG so the symbol stays visible in Google Earth etc.
+      // For KML, generate a high-res colored badge PNG so the symbol stays crisp in Google Earth etc.
       const iconHref = geomType === "point"
-        ? await symbolToBadgePng(meta.bieu_tuong, meta.mau, 64)
+        ? await symbolToBadgePng(meta.bieu_tuong, meta.mau, 96)
         : undefined;
-      const kml = featuresToKML(layerName, features, geomType, { color: meta.mau, iconHref });
+      const kml = featuresToKML(layerName, features, geomType, { color: meta.mau, iconHref, iconScale: 1.3 });
       downloadFile(`${safeName}.kml`, kml, "application/vnd.google-earth.kml+xml");
     }
   };
@@ -895,6 +916,19 @@ export default function WebGIS() {
                   const triThuc=getTriThuc(info.id);
 
                   return(<div className="knowledge-panel">
+                    {info.anh ? (
+                      <div className="ethnic-photo-wrap" style={{borderColor:info.mau+"55"}}>
+                        <img src={info.anh} alt={info.ten} className="ethnic-photo" onClick={()=>setEthnicPhotoLightbox(info.anh!)} loading="lazy"/>
+                        <div className="ethnic-photo-actions">
+                          <button className="ethnic-photo-btn" onClick={()=>pickEthnicPhoto(info.id)} title="Đổi ảnh">🔄</button>
+                          <button className="ethnic-photo-btn delete" onClick={()=>{ if (confirm("Xóa ảnh dân tộc này?")) setEthnicPhoto(info.id, undefined); }} title="Xóa ảnh">🗑️</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button className="ethnic-photo-add" onClick={()=>pickEthnicPhoto(info.id)} style={{borderColor:info.mau,color:info.mau}}>
+                        📷 Thêm ảnh minh họa cho {info.ten.replace("Dân tộc ","").replace("Người ","")}
+                      </button>
+                    )}
                     <div className="knowledge-header" style={{borderLeftColor:info.mau}}>
                       <div className="knowledge-name" style={{color:info.mau}}>{info.ten}</div>
                       <div className="knowledge-meta-row">
@@ -981,6 +1015,15 @@ export default function WebGIS() {
       </div>
 
       {/* ─── Modals ─── */}
+      {/* Hidden input + lightbox for ethnic-group photos */}
+      <input ref={ethnicPhotoInputRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleEthnicPhotoChosen}/>
+      {ethnicPhotoLightbox&&(
+        <div className="ik-lightbox" onClick={()=>setEthnicPhotoLightbox(null)}>
+          <button className="ik-lightbox-close" onClick={()=>setEthnicPhotoLightbox(null)} aria-label="Đóng">✕</button>
+          <img src={ethnicPhotoLightbox} alt="" onClick={e=>e.stopPropagation()}/>
+        </div>
+      )}
+
       {showImport&&<ImportModal onClose={()=>setShowImport(false)} wardOverrides={wardOverrides} onApplyWardCSV={setWardOverrides} onClearWardData={()=>setWardOverrides(new Map())} ethnicOverrides={ethnicOverrides} onApplyEthnicCSV={setEthnicOverrides} onClearEthnicData={()=>setEthnicOverrides(new Map())} pdfFiles={pdfFiles} onAddPdf={addPdf} onRemovePdf={removePdf} onViewPdf={setPdfViewer} currentWard={selectedWard?{ma_xa:selectedWard.ma_xa,ten_xa:selectedWard.ten_xa}:null} wardList={allWardsRef.current.map(w=>({ma_xa:w.ma_xa,ten_xa:w.ten_xa}))}/>}
       {showTransect&&<TransectDiagram onClose={()=>setShowTransect(false)} zones={transectZones} ethnicZones={transectEthnic} onChangeZones={setTransectZones} onChangeEthnicZones={setTransectEthnic}/>}
       {showCalendar&&<SeasonalCalendar onClose={()=>setShowCalendar(false)} data={calendarData} onChange={setCalendarData}/>}

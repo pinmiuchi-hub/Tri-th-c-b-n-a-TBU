@@ -198,7 +198,29 @@ function featureGeometry(f: InternalFeature, geomType: GeomType): any | null {
   return null;
 }
 
-export function featuresToGeoJSON(features: InternalFeature[], geomType: GeomType): any {
+export interface GeoJsonStyle {
+  /** Hex color "#rrggbb" – stroke + marker color. */
+  color?: string;
+  /** Emoji or data-URL preserved as a custom property `bieu_tuong`. */
+  symbol?: string;
+  /** Stroke width for lines / polygon outlines. */
+  lineWidth?: number;
+  /** Polygon fill alpha (0–1). Default 0.35. */
+  fillAlpha?: number;
+}
+
+export function featuresToGeoJSON(features: InternalFeature[], geomType: GeomType, style?: GeoJsonStyle): any {
+  // Mapbox "simplestyle-spec" properties so geojson.io, GitHub, QGIS, Mapbox etc.
+  // render the layer with the same color/marker as on our web map.
+  const styleProps: Record<string, any> = {};
+  if (style?.color) {
+    styleProps["marker-color"] = style.color;
+    styleProps["stroke"] = style.color;
+    styleProps["fill"] = style.color;
+  }
+  styleProps["stroke-width"] = style?.lineWidth ?? 3;
+  styleProps["fill-opacity"] = style?.fillAlpha ?? 0.35;
+  if (style?.symbol) styleProps["bieu_tuong"] = style.symbol;
   return {
     type: "FeatureCollection",
     features: features.map(f => {
@@ -206,7 +228,7 @@ export function featuresToGeoJSON(features: InternalFeature[], geomType: GeomTyp
       if (!geom) return null;
       const { lat, lng, coords, ...props } = f;
       void lat; void lng; void coords;
-      return { type: "Feature", properties: props, geometry: geom };
+      return { type: "Feature", properties: { ...styleProps, ...props }, geometry: geom };
     }).filter(Boolean)
   };
 }
@@ -272,9 +294,13 @@ export function featuresToKML(
   const iconHref = style?.iconHref || "";
 
   const styleId = "layer_style";
+  // IconStyle <color> = ffffffff (white) means "no tint" — preserves the PNG badge
+  // colors exactly as drawn (circle background + white outline + emoji or image inside).
+  // Without this, viewers like Google Earth multiply the icon RGB by the layer color
+  // and the symbol loses its distinctive look.
   const styleBlock = `<Style id="${styleId}">
   <IconStyle>
-    <color>${lineColor}</color>
+    <color>ffffffff</color>
     <scale>${iconScale}</scale>
     ${iconHref ? `<Icon><href>${escXml(iconHref)}</href></Icon>` : `<Icon><href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon>`}
     <hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>

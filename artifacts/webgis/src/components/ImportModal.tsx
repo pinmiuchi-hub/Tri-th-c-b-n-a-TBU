@@ -8,7 +8,7 @@ export interface WardOverrides {
   dan_toc?: DanTocTyLe[];
   [key: string]: unknown;
 }
-export interface EthnicOverride { dan_so_ca_nuoc?: number; ngon_ngu?: string; mo_ta?: string; }
+export interface EthnicOverride { dan_so_ca_nuoc?: number; ngon_ngu?: string; mo_ta?: string; anh?: string; }
 export interface PdfFile { name: string; url: string; size: string; }
 
 interface Props {

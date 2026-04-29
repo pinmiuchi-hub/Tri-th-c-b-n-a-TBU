@@ -2953,3 +2953,58 @@ th.month-col { width: 36px; }
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
+
+/* ── Ethnic-group photo banner (knowledge panel) ── */
+.ethnic-photo-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 2px solid;
+  background: #f5f5f5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.ethnic-photo {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform 0.25s ease;
+}
+.ethnic-photo:hover { transform: scale(1.02); }
+.ethnic-photo-actions {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: flex; gap: 6px;
+}
+.ethnic-photo-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.92);
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: background 0.15s, transform 0.15s;
+}
+.ethnic-photo-btn:hover { background: #fff; transform: scale(1.08); }
+.ethnic-photo-btn.delete:hover { background: #fee; color: #c33; }
+
+.ethnic-photo-add {
+  display: block;
+  width: 100%;
+  padding: 14px 12px;
+  margin-bottom: 12px;
+  border: 2px dashed;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.6);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.ethnic-photo-add:hover { background: rgba(255,255,255,0.95); transform: translateY(-1px); }
