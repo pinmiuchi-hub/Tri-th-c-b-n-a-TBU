@@ -214,9 +214,13 @@ export default function WebGIS() {
       if (id === "rivers") {
         layersData.rivers.forEach(r => {
           if (!r.coords || r.coords.length < 2) return;
-          const line = L.polyline(r.coords.map(([lng,lat])=>[lat,lng] as L.LatLngExpression), {color:"#4895ef",weight:3,opacity:0.8});
+          const latlngs = r.coords.map(([lng,lat])=>[lat,lng] as L.LatLngExpression);
+          // Halo: wider semi-transparent white outline so the river stays crisp on satellite imagery.
+          const halo = L.polyline(latlngs, { color: "#ffffff", weight: 6, opacity: 0.55, lineCap: "round", lineJoin: "round", interactive: false });
+          // Main blue line on top.
+          const line = L.polyline(latlngs, { color: "#1e88e5", weight: 3, opacity: 0.95, lineCap: "round", lineJoin: "round" });
           line.bindTooltip(`<b>${r.ten}</b><br><i>${r.ten_dia_phuong || ""}</i>`,{sticky:true,className:"custom-tooltip"});
-          ls.push(line);
+          ls.push(halo, line);
         });
       } else if (id === "irrigation") {
         layersData.irrigation.forEach((ir, idx) => {
@@ -632,7 +636,33 @@ export default function WebGIS() {
     if(!mapContainerRef.current||mapRef.current)return;
     const map=L.map(mapContainerRef.current,{center:[21.7,103.5],zoom:7,zoomControl:false,doubleClickZoom:false});
     L.control.zoom({position:"topright"}).addTo(map);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:'© <a href="https://www.openstreetmap.org">OpenStreetMap</a>',maxZoom:18}).addTo(map);
+    // ── Base layers: street / satellite / terrain ──
+    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org">OpenStreetMap</a>',
+      maxZoom: 19,
+    });
+    const satLayer = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, USDA, USGS, AeroGRID, IGN, and the GIS User Community',
+        maxZoom: 19,
+      }
+    );
+    const satLabels = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom: 19, opacity: 0.9 }
+    );
+    const hybridLayer = L.layerGroup([satLayer, satLabels]);
+    const topoLayer = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+      attribution: 'Map data: © OpenStreetMap, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+      maxZoom: 17,
+    });
+    osmLayer.addTo(map);
+    L.control.layers(
+      { "Bản đồ thường": osmLayer, "Vệ tinh": hybridLayer, "Địa hình": topoLayer },
+      undefined,
+      { position: "topright", collapsed: true }
+    ).addTo(map);
     const og=L.layerGroup().addTo(map);
     const ag=L.layerGroup().addTo(map);
     overlayGroupRef.current=og; annotationGroupRef.current=ag; mapRef.current=map;
