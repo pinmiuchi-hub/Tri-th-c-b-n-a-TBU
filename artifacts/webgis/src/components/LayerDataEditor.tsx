@@ -69,8 +69,22 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
   ],
 };
 
+function getFields(layerId: string, geomType: "point" | "line" | "polygon"): FieldDef[] {
+  if (FIELD_CONFIG[layerId]) return FIELD_CONFIG[layerId];
+  // Generic fallback for custom layers
+  const base: FieldDef[] = [
+    { key: "ten", label: "Tên", type: "text", required: true },
+    { key: "mo_ta", label: "Mô tả", type: "textarea" },
+  ];
+  if (geomType === "point") {
+    base.push({ key: "lat", label: "Vĩ độ", type: "number" });
+    base.push({ key: "lng", label: "Kinh độ", type: "number" });
+  }
+  return base;
+}
+
 function emptyFeature(layerId: string, mapCenter: [number, number], geomType: "point" | "line" | "polygon"): any {
-  const fields = FIELD_CONFIG[layerId] || [];
+  const fields = getFields(layerId, geomType);
   const obj: any = {};
   fields.forEach(f => {
     if (f.type === "number") obj[f.key] = 0;
@@ -94,7 +108,7 @@ function emptyFeature(layerId: string, mapCenter: [number, number], geomType: "p
 
 export default function LayerDataEditor(props: Props) {
   const { layerId, layerName, layerColor, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo } = props;
-  const fields = FIELD_CONFIG[layerId] || [{ key: "ten", label: "Tên", type: "text", required: true }];
+  const fields = getFields(layerId, geomType);
   const [showAdd, setShowAdd] = useState(false);
   const [newFeat, setNewFeat] = useState<any>(() => emptyFeature(layerId, mapCenter, geomType));
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);

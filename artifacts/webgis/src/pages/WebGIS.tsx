@@ -3,11 +3,14 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import EditableValue from "../components/EditableValue";
 import ImportModal, { type WardOverrides, type EthnicOverride, type PdfFile, type DanTocTyLe } from "../components/ImportModal";
-import LayerControl from "../components/LayerControl";
+import LayerControl, { type NewLayerInput } from "../components/LayerControl";
 import TransectDiagram, { DEFAULT_ZONES, DEFAULT_ETHNIC_ZONES, type TransectZone, type EthnicZone } from "../components/TransectDiagram";
 import SeasonalCalendar, { DEFAULT_ACTIVITIES, type CalendarGroup } from "../components/SeasonalCalendar";
+import IndigenousKnowledge, { DEFAULT_KNOWLEDGE, type KnowledgeSection } from "../components/IndigenousKnowledge";
 import AnnotationModal, { type Annotation } from "../components/AnnotationModal";
 import LayerDataEditor from "../components/LayerDataEditor";
+
+interface CustomLayer { id: string; categoryId: string; ten: string; mau: string; bieu_tuong: string; geomType: "point" | "line" | "polygon"; }
 
 /* ─── Types ─── */
 interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; }
@@ -110,12 +113,15 @@ export default function WebGIS() {
   const [calendarData, setCalendarData] = useState<CalendarGroup[]>(DEFAULT_ACTIVITIES);
   const [transectZones, setTransectZones] = useState<TransectZone[]>(DEFAULT_ZONES);
   const [transectEthnic, setTransectEthnic] = useState<EthnicZone[]>(DEFAULT_ETHNIC_ZONES);
+  const [knowledgeData, setKnowledgeData] = useState<KnowledgeSection[]>(DEFAULT_KNOWLEDGE);
+  const [customLayers, setCustomLayers] = useState<CustomLayer[]>([]);
 
   /* ─── UI state ─── */
   const [showImport, setShowImport] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [showTransect, setShowTransect] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showKnowledge, setShowKnowledge] = useState(false);
   const [showAnnotations, setShowAnnotations] = useState(false);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(["rivers"]));
   const [pdfViewer, setPdfViewer] = useState<PdfFile | null>(null);
@@ -234,6 +240,36 @@ export default function WebGIS() {
           poly.bindPopup(`<div class="map-popup"><div class="popup-title">${z.ten}</div><div class="popup-sub">Luật tục: ${(z.loai||"").replace(/_/g," ")}</div><p>${z.mo_ta||""}</p></div>`);
           ls.push(poly);
         });
+      } else if (id.startsWith("custom_")) {
+        const cl = customLayers.find(c => c.id === id);
+        const arr = (layersData as any)[id] as any[] | undefined;
+        if (cl && arr) {
+          if (cl.geomType === "point") {
+            arr.forEach((f, idx) => {
+              if (typeof f.lat !== "number" || typeof f.lng !== "number") return;
+              const popup = `<div class="map-popup"><div class="popup-title">${f.ten || "(chưa đặt tên)"}</div>${f.mo_ta ? `<p>${f.mo_ta}</p>` : ""}</div>`;
+              ls.push(makeDraggableMarker(f.lat, f.lng, makeDivIcon(cl.bieu_tuong || "📌", cl.mau, 26), id, idx, popup));
+            });
+          } else if (cl.geomType === "line") {
+            arr.forEach(f => {
+              const coords = f.coords;
+              if (!coords || coords.length < 2) return;
+              const line = L.polyline(coords.map(([lng, lat]: [number, number]) => [lat, lng] as L.LatLngExpression), { color: cl.mau, weight: 3, opacity: 0.85 });
+              line.bindTooltip(`<b>${f.ten || ""}</b>${f.mo_ta ? `<br>${f.mo_ta}` : ""}`, { sticky: true, className: "custom-tooltip" });
+              ls.push(line);
+            });
+          } else if (cl.geomType === "polygon") {
+            arr.forEach(f => {
+              const raw = f.coords;
+              if (!raw) return;
+              const coords = (Array.isArray(raw[0]) && Array.isArray(raw[0][0])) ? raw[0] : raw;
+              if (!coords || coords.length < 3) return;
+              const poly = L.polygon(coords.map(([lng, lat]: [number, number]) => [lat, lng] as L.LatLngExpression), { color: cl.mau, weight: 2, opacity: 0.85, fillColor: cl.mau, fillOpacity: 0.18 });
+              poly.bindPopup(`<div class="map-popup"><div class="popup-title">${f.ten || ""}</div>${f.mo_ta ? `<p>${f.mo_ta}</p>` : ""}</div>`);
+              ls.push(poly);
+            });
+          }
+        }
       } else if (id === "ward_boundaries" && allWardsGeoJson) {
         const layer = L.geoJSON(allWardsGeoJson as GeoJSON.FeatureCollection, {
           style: () => ({ color: "#6b4226", weight: 1, opacity: 0.55, fillColor: "#a8d5a2", fillOpacity: 0.06 }),
@@ -260,7 +296,7 @@ export default function WebGIS() {
       layerInstancesRef.current.set(id, built);
       built.forEach(l => og.addLayer(l));
     });
-  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson]);
+  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson, customLayers]);
 
   /* ─── Render annotations on map ─── */
   useEffect(() => {
@@ -413,6 +449,27 @@ export default function WebGIS() {
     });
   };
 
+  /* ─── Custom layer CRUD ─── */
+  const addCustomLayer = (categoryId: string, input: NewLayerInput) => {
+    const id = "custom_" + Math.random().toString(36).slice(2, 9);
+    const cl: CustomLayer = { id, categoryId, ten: input.ten, mau: input.mau, bieu_tuong: input.bieu_tuong, geomType: input.geomType };
+    setCustomLayers(prev => [...prev, cl]);
+    setLayersData(prev => ({ ...(prev || {} as LayersData), [id]: [] } as LayersData));
+    setActiveLayers(prev => new Set([...prev, id]));
+  };
+  const deleteCustomLayer = (id: string) => {
+    setCustomLayers(prev => prev.filter(c => c.id !== id));
+    setLayersData(prev => {
+      if (!prev) return prev;
+      const next = { ...prev } as any;
+      delete next[id];
+      return next;
+    });
+    setActiveLayers(prev => { const n = new Set(prev); n.delete(id); return n; });
+    if (editingLayer === id) setEditingLayer(null);
+    if (layerDragMode === id) setLayerDragMode(null);
+  };
+
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
     setActiveLayers(prev=>{
@@ -517,7 +574,23 @@ export default function WebGIS() {
   const wardPdfs=selectedWard?(pdfFiles.get(selectedWard.ma_xa)||[]):[];
   const wardCustom=selectedWard?wardOverrides.get(selectedWard.ma_xa):undefined;
   const stats=selectedProvince?getProvinceStat(selectedProvince):null;
-  const layerCategoriesWithState=LAYER_CATEGORIES.map(cat=>({...cat,layers:cat.layers.map(l=>({...l,active:activeLayers.has(l.id)}))}));
+  const layerCategoriesWithState = LAYER_CATEGORIES.map(cat => ({
+    ...cat,
+    layers: [
+      ...cat.layers.map(l => ({ ...l, active: activeLayers.has(l.id), isCustom: false })),
+      ...customLayers.filter(c => c.categoryId === cat.id).map(c => ({
+        id: c.id, ten: c.ten, mau: c.mau, bieu_tuong: c.bieu_tuong, active: activeLayers.has(c.id), isCustom: true
+      }))
+    ]
+  }));
+  const customLayerIds = customLayers.map(c => c.id);
+  const allEditableLayers = new Set<string>([...EDITABLE_LAYERS, ...customLayerIds]);
+  const customDisplay: Record<string, { name: string; color: string }> = {};
+  const customGeom: Record<string, "point" | "line" | "polygon"> = {};
+  customLayers.forEach(c => { customDisplay[c.id] = { name: c.ten, color: c.mau }; customGeom[c.id] = c.geomType; });
+  const layerDisplayAll = { ...LAYER_DISPLAY, ...customDisplay };
+  const layerGeomAll = { ...LAYER_GEOM_TYPE, ...customGeom };
+
   const featureCounts: Record<string, number> = layersData ? {
     rivers: layersData.rivers?.length || 0,
     irrigation: layersData.irrigation?.length || 0,
@@ -526,6 +599,7 @@ export default function WebGIS() {
     medicinal_plants: layersData.medicinal_plants?.length || 0,
     customary_zones: layersData.customary_zones?.length || 0,
     ward_boundaries: allWardsGeoJson?.features.length || 0,
+    ...Object.fromEntries(customLayerIds.map(id => [id, ((layersData as any)[id] || []).length]))
   } : {};
   const editingLayerFeatures = editingLayer && layersData ? ((layersData as any)[editingLayer] || []) : [];
   const mapCenter: [number, number] = mapRef.current ? [mapRef.current.getCenter().lat, mapRef.current.getCenter().lng] : [21.7, 103.5];
@@ -567,13 +641,17 @@ export default function WebGIS() {
           categories={layerCategoriesWithState}
           onToggle={toggleLayer}
           onEditLayer={openLayerEditor}
+          onAddCustomLayer={addCustomLayer}
+          onDeleteCustomLayer={deleteCustomLayer}
           featureCounts={featureCounts}
-          editableLayers={EDITABLE_LAYERS}
+          editableLayers={allEditableLayers}
           onClose={()=>setShowLayers(false)}
           showTransect={showTransect}
           onToggleTransect={()=>setShowTransect(s=>!s)}
           showCalendar={showCalendar}
           onToggleCalendar={()=>setShowCalendar(s=>!s)}
+          showKnowledge={showKnowledge}
+          onToggleKnowledge={()=>setShowKnowledge(s=>!s)}
         />}
 
         {/* ─── Map ─── */}
@@ -607,7 +685,7 @@ export default function WebGIS() {
           {/* Drag mode indicator banner */}
           {layerDragMode && (
             <div className="drag-mode-banner">
-              ✋ Đang ở chế độ kéo thả lớp <b>{LAYER_DISPLAY[layerDragMode]?.name}</b> — kéo các điểm trên bản đồ để di chuyển
+              ✋ Đang ở chế độ kéo thả lớp <b>{layerDisplayAll[layerDragMode]?.name || layerDragMode}</b> — kéo các điểm trên bản đồ để di chuyển
               <button className="drag-mode-off" onClick={() => setLayerDragMode(null)}>✕ Tắt</button>
             </div>
           )}
@@ -800,15 +878,16 @@ export default function WebGIS() {
       {showImport&&<ImportModal onClose={()=>setShowImport(false)} wardOverrides={wardOverrides} onApplyWardCSV={setWardOverrides} onClearWardData={()=>setWardOverrides(new Map())} ethnicOverrides={ethnicOverrides} onApplyEthnicCSV={setEthnicOverrides} onClearEthnicData={()=>setEthnicOverrides(new Map())} pdfFiles={pdfFiles} onAddPdf={addPdf} onRemovePdf={removePdf} onViewPdf={setPdfViewer} currentWard={selectedWard?{ma_xa:selectedWard.ma_xa,ten_xa:selectedWard.ten_xa}:null} wardList={allWardsRef.current.map(w=>({ma_xa:w.ma_xa,ten_xa:w.ten_xa}))}/>}
       {showTransect&&<TransectDiagram onClose={()=>setShowTransect(false)} zones={transectZones} ethnicZones={transectEthnic} onChangeZones={setTransectZones} onChangeEthnicZones={setTransectEthnic}/>}
       {showCalendar&&<SeasonalCalendar onClose={()=>setShowCalendar(false)} data={calendarData} onChange={setCalendarData}/>}
+      {showKnowledge&&<IndigenousKnowledge onClose={()=>setShowKnowledge(false)} data={knowledgeData} onChange={setKnowledgeData}/>}
       {pendingAnnotation&&<AnnotationModal coords={pendingAnnotation.coords} loai={pendingAnnotation.loai} onSave={saveAnnotation} onCancel={()=>setPendingAnnotation(null)}/>}
 
-      {editingLayer&&LAYER_DISPLAY[editingLayer]&&(
+      {editingLayer&&layerDisplayAll[editingLayer]&&(
         <LayerDataEditor
           layerId={editingLayer}
-          layerName={LAYER_DISPLAY[editingLayer].name}
-          layerColor={LAYER_DISPLAY[editingLayer].color}
+          layerName={layerDisplayAll[editingLayer].name}
+          layerColor={layerDisplayAll[editingLayer].color}
           features={editingLayerFeatures}
-          geomType={LAYER_GEOM_TYPE[editingLayer]}
+          geomType={layerGeomAll[editingLayer]}
           dragMode={layerDragMode === editingLayer}
           onToggleDrag={() => setLayerDragMode(prev => prev === editingLayer ? null : editingLayer)}
           onAdd={f => addLayerFeature(editingLayer, f)}
