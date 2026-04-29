@@ -2502,3 +2502,251 @@ th.month-col { width: 36px; }
   font-family: inherit;
 }
 .layer-export-menu button:hover { background: rgba(82, 183, 136, 0.18); color: #b7e4c7; }
+
+/* ──────────────────────────────────────────────
+   Mobile-friendly close button on the info panel
+   (always rendered in JSX, hidden on desktop)
+   ────────────────────────────────────────────── */
+.info-panel-titles { flex: 1; min-width: 0; }
+.info-panel-close {
+  display: none;
+  background: rgba(230, 57, 70, 0.18);
+  border: 1px solid rgba(230, 57, 70, 0.4);
+  color: #ff8a93;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-items: center; justify-content: center;
+}
+
+/* ──────────────────────────────────────────────
+   TABLET (≤900px)  ·  hide subtitle, slim header
+   ────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .header-subtitle { display: none; }
+  .header-title { font-size: 16px; line-height: 1.15; }
+  .map-header { padding: 10px 14px; }
+  .header-left { gap: 10px; min-width: 0; }
+  .header-right { gap: 8px; }
+  .header-breadcrumb { font-size: 12px; }
+  .info-panel { width: 280px; }
+}
+
+/* ──────────────────────────────────────────────
+   MOBILE (≤700px)  ·  full-width overlay panels
+   ────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  /* Header — compact */
+  .map-header { padding: 8px 10px; gap: 8px; }
+  .header-left { gap: 8px; min-width: 0; flex: 1; }
+  .header-icon { width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0; }
+  .header-icon svg { width: 18px; height: 18px; }
+  .header-title { font-size: 14px; }
+  .header-right { gap: 6px; flex-shrink: 0; }
+  .header-breadcrumb { display: none; }
+
+  /* Header buttons — icon-only */
+  .layer-toggle-btn, .import-btn {
+    padding: 8px 10px;
+    gap: 0;
+    border-radius: 8px;
+    min-width: 40px;
+    justify-content: center;
+  }
+  .layer-toggle-btn .btn-label, .import-btn .btn-label { display: none; }
+  .layer-toggle-btn svg, .import-btn svg { width: 16px; height: 16px; }
+  .layer-count {
+    margin-left: 4px;
+    background: #4895ef;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  /* Map body becomes positioning context for overlays */
+  .map-body { position: relative; }
+  .map-wrapper { width: 100%; }
+
+  /* Layer panel — full-screen overlay from the right */
+  .layer-panel {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 100%;
+    z-index: 900;
+    box-shadow: -6px 0 24px rgba(0,0,0,0.5);
+    animation: slideInRight 0.22s ease-out;
+  }
+  .layer-panel-header {
+    position: sticky; top: 0;
+    background: linear-gradient(135deg, #1b4332, #2d3d2d);
+    z-index: 1;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(82, 183, 136, 0.25);
+  }
+  .layer-panel-title { font-size: 15px; }
+  .layer-panel-close { font-size: 22px; padding: 4px 10px; }
+  .layer-panel-body { padding: 10px 0 80px; }
+  .layer-cat-title { font-size: 12px; padding: 8px 14px 4px; }
+  .layer-item { padding: 10px 14px !important; min-height: 48px; }
+  .layer-name { font-size: 13px; }
+  .layer-symbol { font-size: 16px; }
+  .layer-toggle { width: 38px !important; height: 22px !important; }
+  .layer-toggle-thumb { width: 16px !important; height: 16px !important; }
+  .layer-toggle.on .layer-toggle-thumb { transform: translateX(16px) !important; }
+  .layer-edit-btn, .layer-export-btn, .layer-delete-btn {
+    width: 30px !important; height: 30px !important;
+  }
+  .layer-edit-btn svg, .layer-export-btn svg { width: 14px !important; height: 14px !important; }
+  .layer-add-row { flex-direction: column; gap: 8px; padding: 0 14px; }
+  .layer-add-btn, .layer-import-btn { padding: 11px 10px; font-size: 13px; }
+  .layer-add-form { margin: 4px 14px 0; padding: 12px; }
+  .laf-row { flex-wrap: wrap; }
+  .laf-input { font-size: 14px; padding: 9px 10px; }
+  .laf-symbol { flex: 0 0 44px !important; }
+  .laf-color { width: 38px; height: 38px; }
+  .laf-cancel, .laf-save { padding: 9px 14px; font-size: 13px; }
+  .layer-export-menu { right: 0; min-width: 200px; }
+  .layer-export-menu button { padding: 12px 14px; font-size: 13px; }
+  .layer-legend-note { display: none; }
+
+  /* Info panel — bottom sheet */
+  .info-panel {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    max-height: 70vh;
+    border-left: none;
+    border-top: 2px solid rgba(82, 183, 136, 0.35);
+    border-radius: 16px 16px 0 0;
+    z-index: 800;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+    animation: slideUp 0.22s ease-out;
+  }
+  .info-panel-header {
+    position: sticky; top: 0;
+    z-index: 2;
+    padding: 10px 14px 10px 14px;
+    border-radius: 16px 16px 0 0;
+  }
+  .info-panel-header::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 5px;
+    transform: translateX(-50%);
+    width: 36px; height: 4px;
+    border-radius: 2px;
+    background: rgba(149, 213, 178, 0.4);
+  }
+  .info-panel-close { display: flex; }
+  .panel-title { font-size: 13px; }
+  .panel-subtitle { font-size: 11px; }
+  .ward-info { padding: 12px 14px 24px; }
+  .ward-name { font-size: 16px; }
+  .info-row { padding: 8px 0; }
+  .info-label { font-size: 11px; }
+  .info-value { font-size: 13px; }
+
+  /* Map legend — compact */
+  .map-legend {
+    bottom: 10px; right: 10px;
+    padding: 6px 8px;
+    font-size: 10px;
+    max-width: 140px;
+  }
+  .legend-title { font-size: 10px; }
+  .legend-item { font-size: 10px; }
+  .legend-color { width: 12px !important; height: 8px !important; }
+
+  /* Drawing toolbar — smaller */
+  .draw-toolbar { top: 8px; padding: 4px 6px; gap: 2px; max-width: 92vw; flex-wrap: wrap; justify-content: center; }
+  .draw-btn { padding: 5px 7px; font-size: 12px; }
+  .draw-sep { display: none; }
+
+  /* Drag mode banner */
+  .drag-mode-banner { font-size: 11px !important; padding: 8px 10px !important; line-height: 1.4; }
+  .drag-mode-banner b { display: block; margin: 2px 0; }
+
+  /* ─── Modals: full-screen on mobile ─── */
+  .transect-modal-overlay { padding: 0 !important; }
+  .transect-modal,
+  .calendar-modal,
+  .knowledge-modal,
+  .layer-data-modal,
+  .pdf-viewer-modal,
+  .import-modal {
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+  }
+  .transect-modal-header,
+  .calendar-modal-header,
+  .lde-header { padding: 12px 14px !important; }
+  .transect-modal-body,
+  .calendar-modal-body,
+  .lde-body { padding: 14px !important; }
+
+  /* IK grid → single column */
+  .ik-grid { grid-template-columns: 1fr; gap: 10px; }
+
+  /* Layer Data Editor — stack rows */
+  .lde-header { flex-wrap: wrap; gap: 8px; }
+  .lde-feature-row { flex-direction: column; align-items: stretch !important; gap: 8px; padding: 12px !important; }
+  .lde-field-input, .lde-field-textarea { font-size: 14px; padding: 10px; }
+  .lde-row-actions { width: 100%; justify-content: flex-end; }
+
+  /* PDF list rows stack */
+  .pdf-item { flex-wrap: wrap; }
+  .pdf-info { width: 100%; }
+  .pdf-actions { width: 100%; justify-content: flex-end; }
+
+  /* Larger Leaflet zoom controls for touch */
+  .leaflet-touch .leaflet-bar a {
+    width: 36px !important; height: 36px !important; line-height: 36px !important; font-size: 20px !important;
+  }
+  .leaflet-control-attribution { font-size: 9px !important; }
+
+  /* Map popups — wider on phone */
+  .map-popup { max-width: 240px; }
+  .leaflet-popup-content-wrapper { border-radius: 10px; }
+
+  /* Bottom hint that says "Click vào tỉnh để…" — sits above the legend */
+  .map-hint {
+    bottom: auto !important;
+    top: 70px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    font-size: 11px !important;
+    padding: 7px 12px !important;
+    max-width: calc(100% - 24px);
+    text-align: center;
+    white-space: normal !important;
+  }
+}
+
+/* Smaller phones — tighten further */
+@media (max-width: 380px) {
+  .header-title { font-size: 13px; }
+  .header-icon { width: 30px; height: 30px; }
+  .header-icon svg { width: 16px; height: 16px; }
+  .layer-toggle-btn, .import-btn { padding: 7px 8px; min-width: 36px; }
+  .layer-toggle-btn svg, .import-btn svg { width: 15px; height: 15px; }
+  .map-legend { display: none; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}

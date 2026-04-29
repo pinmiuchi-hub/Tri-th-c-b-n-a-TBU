@@ -684,13 +684,13 @@ export default function WebGIS() {
               <><button className="breadcrumb-item link" onClick={handleBack}>Toàn vùng</button><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{selectedProvince}</span>{selectedWard&&<><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{(getWardValue(selectedWard,"ten_xa") as string)||selectedWard.ten_xa}</span></>}</>
             )}
           </div>
-          <button className={`layer-toggle-btn ${showLayers?"active":""}`} onClick={()=>setShowLayers(s=>!s)}>
+          <button className={`layer-toggle-btn ${showLayers?"active":""}`} onClick={()=>setShowLayers(s=>!s)} title="Lớp bản đồ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-            Lớp bản đồ {activeLayers.size>0&&<span className="layer-count">{activeLayers.size}</span>}
+            <span className="btn-label">Lớp bản đồ</span> {activeLayers.size>0&&<span className="layer-count">{activeLayers.size}</span>}
           </button>
-          <button className="import-btn" onClick={()=>setShowImport(true)}>
+          <button className="import-btn" onClick={()=>setShowImport(true)} title="Nhập dữ liệu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Nhập dữ liệu
+            <span className="btn-label">Nhập dữ liệu</span>
           </button>
         </div>
       </div>
@@ -800,7 +800,8 @@ export default function WebGIS() {
           <div className="info-panel">
             <div className="info-panel-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="panel-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <div><div className="panel-title">Thông tin địa bàn</div><div className="panel-subtitle">{selectedProvince}</div></div>
+              <div className="info-panel-titles"><div className="panel-title">Thông tin địa bàn</div><div className="panel-subtitle">{selectedProvince}</div></div>
+              <button className="info-panel-close" onClick={handleBack} title="Đóng / quay lại bản đồ">✕</button>
             </div>
 
             {selectedWard?(
