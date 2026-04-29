@@ -31,8 +31,8 @@ interface LayersData {
 }
 
 /* ─── Constants ─── */
-const PROVINCE_FILES: Record<string, string> = { "Sơn La": "/data/xa_sonla.geojson", "Điện Biên": "/data/xa_dienbien.geojson", "Lai Châu": "/data/xa_laichau.geojson" };
-const DEFAULT_STATS: Record<string, ProvinceStat> = { "Sơn La": { dien_tich: "14.174", dan_so: "1,25M", don_vi: 75 }, "Điện Biên": { dien_tich: "9.541", dan_so: "599K", don_vi: 45 }, "Lai Châu": { dien_tich: "9.068", dan_so: "460K", don_vi: 38 } };
+const PROVINCE_FILES: Record<string, string> = { "Sơn La": "/data/xa_sonla.geojson", "Điện Biên": "/data/xa_dienbien.geojson", "Lai Châu": "/data/xa_laichau.geojson", "Lào Cai": "/data/xa_laocai.geojson" };
+const DEFAULT_STATS: Record<string, ProvinceStat> = { "Sơn La": { dien_tich: "14.174", dan_so: "1,25M", don_vi: 75 }, "Điện Biên": { dien_tich: "9.541", dan_so: "599K", don_vi: 45 }, "Lai Châu": { dien_tich: "9.068", dan_so: "460K", don_vi: 38 }, "Lào Cai": { dien_tich: "6.364", dan_so: "770K", don_vi: 99 } };
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const LAYER_CATEGORIES = [
@@ -169,7 +169,8 @@ export default function WebGIS() {
     Promise.all([
       { p: "Sơn La", f: "/data/xa_sonla.geojson" },
       { p: "Điện Biên", f: "/data/xa_dienbien.geojson" },
-      { p: "Lai Châu", f: "/data/xa_laichau.geojson" }
+      { p: "Lai Châu", f: "/data/xa_laichau.geojson" },
+      { p: "Lào Cai", f: "/data/xa_laocai.geojson" }
     ].map(({ p, f }) =>
       fetch(BASE_PATH + f).then(r => r.json()).then((d: GeoJsonData) => ({ p, d }))
     )).then(arr => {
