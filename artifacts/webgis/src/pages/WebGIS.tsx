@@ -4,9 +4,10 @@ import "leaflet/dist/leaflet.css";
 import EditableValue from "../components/EditableValue";
 import ImportModal, { type WardOverrides, type EthnicOverride, type PdfFile, type DanTocTyLe } from "../components/ImportModal";
 import LayerControl from "../components/LayerControl";
-import TransectDiagram from "../components/TransectDiagram";
-import SeasonalCalendar from "../components/SeasonalCalendar";
+import TransectDiagram, { DEFAULT_ZONES, DEFAULT_ETHNIC_ZONES, type TransectZone, type EthnicZone } from "../components/TransectDiagram";
+import SeasonalCalendar, { DEFAULT_ACTIVITIES, type CalendarGroup } from "../components/SeasonalCalendar";
 import AnnotationModal, { type Annotation } from "../components/AnnotationModal";
+import LayerDataEditor from "../components/LayerDataEditor";
 
 /* ─── Types ─── */
 interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; }
@@ -17,13 +18,13 @@ interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: num
 interface DanTocData { dan_toc: DanTocInfo[]; }
 interface ProvinceStat { dien_tich: string; dan_so: string; don_vi: number; }
 interface LayersData {
-  rivers: { id: string; ten: string; ten_dia_phuong: string; coords: number[][] }[];
-  irrigation: { id: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string }[];
-  villages: { id: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string }[];
-  forests: { id: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string }[];
-  vac_models: { id: string; ten: string; loai: string; lat: number; lng: number; mo_ta: string; thanh_phan: string[] }[];
-  medicinal_plants: { id: string; ten: string; ten_khoa_hoc: string; lat: number; lng: number; cong_dung: string; tình_trang: string; dan_toc_dung: string[] }[];
-  customary_zones: { id: string; ten: string; loai: string; mo_ta: string; coords: number[][] }[];
+  rivers: { id?: string; ten: string; ten_dia_phuong: string; coords: number[][] }[];
+  irrigation: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string }[];
+  villages?: { id?: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string }[];
+  forests: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string }[];
+  vac_models: { id?: string; ten: string; loai: string; lat: number; lng: number; mo_ta: string; thanh_phan: string[] | string }[];
+  medicinal_plants: { id?: string; ten: string; ten_khoa_hoc: string; lat: number; lng: number; cong_dung: string; tinh_trang?: string; "tình_trang"?: string; dan_toc_dung: string[] | string }[];
+  customary_zones: { id?: string; ten: string; loai: string; mo_ta: string; coords: number[][] }[];
 }
 
 /* ─── Constants ─── */
@@ -37,7 +38,7 @@ const LAYER_CATEGORIES = [
     { id: "irrigation", ten: "Thủy lợi truyền thống (Mương·Phai)", mau: "#74c69d", bieu_tuong: "🚿" },
   ]},
   { id: "settlement", ten: "Dân cư & Hạ tầng", icon: "🏘️", layers: [
-    { id: "villages", ten: "Bản làng", mau: "#f4a261", bieu_tuong: "🏘️" },
+    { id: "ward_boundaries", ten: "Ranh giới xã/phường", mau: "#6b4226", bieu_tuong: "🗺️" },
   ]},
   { id: "landuse", ten: "Sử dụng đất & Sinh kế", icon: "🌾", layers: [
     { id: "forests",    ten: "Phân vùng rừng",             mau: "#2d6a4f", bieu_tuong: "🌲" },
@@ -49,8 +50,22 @@ const LAYER_CATEGORIES = [
   ]},
 ];
 
-const FOREST_COLORS: Record<string, string> = { rung_thieng: "#1b4332", rung_ma: "#7209b7", rung_dau_nguon: "#023e8a", rung_trong: "#52b788", rung_tu_nhien: "#2d6a4f", rung_dac_san: "#b7791f" };
-const FOREST_LABELS: Record<string, string> = { rung_thieng: "Rừng thiêng", rung_ma: "Rừng ma", rung_dau_nguon: "Rừng đầu nguồn", rung_trong: "Rừng trồng", rung_tu_nhien: "Rừng tự nhiên", rung_dac_san: "Rừng đặc sản" };
+const EDITABLE_LAYERS = new Set(["rivers", "irrigation", "forests", "vac_models", "medicinal_plants", "customary_zones"]);
+const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
+  rivers: "line", irrigation: "point", forests: "point", vac_models: "point",
+  medicinal_plants: "point", customary_zones: "polygon",
+};
+const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
+  rivers: { name: "Sông suối chính", color: "#4895ef" },
+  irrigation: { name: "Thủy lợi truyền thống", color: "#74c69d" },
+  forests: { name: "Phân vùng rừng", color: "#2d6a4f" },
+  vac_models: { name: "Mô hình VAC/VACR", color: "#b5e48c" },
+  medicinal_plants: { name: "Cây thuốc quý", color: "#e63946" },
+  customary_zones: { name: "Luật tục cộng đồng", color: "#f4a261" },
+};
+
+const FOREST_COLORS: Record<string, string> = { rung_thieng: "#1b4332", rung_ma: "#7209b7", rung_dau_nguon: "#023e8a", rung_trong: "#52b788", rung_tu_nhien: "#2d6a4f", rung_dac_san: "#b7791f", rung_ma_lang: "#7209b7", rung_kieng: "#9d0208" };
+const FOREST_LABELS: Record<string, string> = { rung_thieng: "Rừng thiêng", rung_ma: "Rừng ma", rung_dau_nguon: "Rừng đầu nguồn", rung_trong: "Rừng trồng", rung_tu_nhien: "Rừng tự nhiên", rung_dac_san: "Rừng đặc sản", rung_ma_lang: "Rừng ma làng", rung_kieng: "Rừng kiêng" };
 const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
 const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946" };
 const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲", canh_tac:"🌾", ban_lang:"🏘️", van_hoa:"🏺", cay_thuoc:"🌿", luat_tuc:"⚖️", vac_vacr:"♻️", khac:"📍" };
@@ -58,6 +73,9 @@ const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲
 function makeDivIcon(emoji: string, color: string, size = 28): L.DivIcon {
   return L.divIcon({ html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${size*0.5}px;border:2px solid rgba(255,255,255,0.8);box-shadow:0 2px 6px rgba(0,0,0,0.4)">${emoji}</div>`, className: "", iconSize: [size,size], iconAnchor: [size/2,size/2] });
 }
+
+// Normalize array-or-string fields to array
+const toArr = (v: string[] | string | undefined): string[] => Array.isArray(v) ? v : (typeof v === "string" && v.trim() ? v.split(",").map(s => s.trim()) : []);
 
 export default function WebGIS() {
   const mapRef = useRef<L.Map | null>(null);
@@ -80,6 +98,8 @@ export default function WebGIS() {
   const [selectedDanToc, setSelectedDanToc] = useState<DanTocInfo | null>(null);
   const [activeTriThuc, setActiveTriThuc] = useState(0);
   const [layersData, setLayersData] = useState<LayersData | null>(null);
+  const [allWardsGeoJson, setAllWardsGeoJson] = useState<GeoJsonData | null>(null);
+  const [loadingWardBoundaries, setLoadingWardBoundaries] = useState(false);
 
   /* ─── Editable data state ─── */
   const [wardOverrides, setWardOverrides] = useState<Map<string,WardOverrides>>(new Map());
@@ -87,6 +107,9 @@ export default function WebGIS() {
   const [triThucOverrides, setTriThucOverrides] = useState<Map<string,TriThuc[]>>(new Map());
   const [provinceEdits, setProvinceEdits] = useState<Map<string,Partial<ProvinceStat>>>(new Map());
   const [pdfFiles, setPdfFiles] = useState<Map<string,PdfFile[]>>(new Map());
+  const [calendarData, setCalendarData] = useState<CalendarGroup[]>(DEFAULT_ACTIVITIES);
+  const [transectZones, setTransectZones] = useState<TransectZone[]>(DEFAULT_ZONES);
+  const [transectEthnic, setTransectEthnic] = useState<EthnicZone[]>(DEFAULT_ETHNIC_ZONES);
 
   /* ─── UI state ─── */
   const [showImport, setShowImport] = useState(false);
@@ -94,9 +117,11 @@ export default function WebGIS() {
   const [showTransect, setShowTransect] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAnnotations, setShowAnnotations] = useState(false);
-  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(["rivers","villages"]));
+  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set(["rivers"]));
   const [pdfViewer, setPdfViewer] = useState<PdfFile | null>(null);
   const [editingEthnicPct, setEditingEthnicPct] = useState<string|null>(null);
+  const [editingLayer, setEditingLayer] = useState<string | null>(null);
+  const [layerDragMode, setLayerDragMode] = useState<string | null>(null);
 
   /* ─── Annotation state ─── */
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -108,44 +133,134 @@ export default function WebGIS() {
   /* ─── Load data ─── */
   useEffect(() => {
     fetch(BASE_PATH+"/data/dan_toc.json").then(r=>r.json()).then(setDanTocData).catch(console.error);
-    fetch(BASE_PATH+"/data/layers.json").then(r=>r.json()).then(setLayersData).catch(console.error);
+    fetch(BASE_PATH+"/data/layers.json").then(r=>r.json()).then((d: any) => {
+      // Normalize "tình_trang" → "tinh_trang" for consistent editing
+      if (d.medicinal_plants) {
+        d.medicinal_plants = d.medicinal_plants.map((p: any) => {
+          const { ["tình_trang"]: tt, ...rest } = p;
+          return tt && !rest.tinh_trang ? { ...rest, tinh_trang: tt } : rest;
+        });
+      }
+      setLayersData(d);
+    }).catch(console.error);
   }, []);
 
-  /* ─── Build overlay layers ─── */
+  /* ─── Lazy load ward boundaries when toggled ─── */
+  useEffect(() => {
+    if (!activeLayers.has("ward_boundaries") || allWardsGeoJson) return;
+    setLoadingWardBoundaries(true);
+    Promise.all([
+      { p: "Sơn La", f: "/data/xa_sonla.geojson" },
+      { p: "Điện Biên", f: "/data/xa_dienbien.geojson" },
+      { p: "Lai Châu", f: "/data/xa_laichau.geojson" }
+    ].map(({ p, f }) =>
+      fetch(BASE_PATH + f).then(r => r.json()).then((d: GeoJsonData) => ({ p, d }))
+    )).then(arr => {
+      const merged: GeoJsonData = {
+        type: "FeatureCollection",
+        features: arr.flatMap(({ p, d }) =>
+          d.features.map(f => ({ ...f, properties: { ...f.properties, ten_tinh: p } }))
+        )
+      };
+      setAllWardsGeoJson(merged);
+    }).catch(console.error).finally(() => setLoadingWardBoundaries(false));
+  }, [activeLayers, allWardsGeoJson]);
+
+  /* ─── Build overlay layers (rebuild all on any data change) ─── */
   useEffect(() => {
     if (!layersData || !overlayGroupRef.current) return;
     const og = overlayGroupRef.current;
+
     const buildLayer = (id: string): L.Layer[] => {
       const ls: L.Layer[] = [];
+      const isDrag = layerDragMode === id;
+
+      const makeDraggableMarker = (lat: number, lng: number, icon: L.DivIcon, layerId: string, idx: number, popupHtml: string): L.Marker => {
+        const m = L.marker([lat, lng], { icon, draggable: isDrag });
+        m.bindPopup(popupHtml);
+        if (isDrag) {
+          m.on("dragend", (e: L.LeafletEvent) => {
+            const newLatLng = (e.target as L.Marker).getLatLng();
+            setLayersData(prev => {
+              if (!prev) return prev;
+              const next = { ...prev } as LayersData;
+              const arr = [...(next as any)[layerId]];
+              arr[idx] = { ...arr[idx], lat: newLatLng.lat, lng: newLatLng.lng };
+              (next as any)[layerId] = arr;
+              return next;
+            });
+          });
+        }
+        return m;
+      };
+
       if (id === "rivers") {
         layersData.rivers.forEach(r => {
+          if (!r.coords || r.coords.length < 2) return;
           const line = L.polyline(r.coords.map(([lng,lat])=>[lat,lng] as L.LatLngExpression), {color:"#4895ef",weight:3,opacity:0.8});
-          line.bindTooltip(`<b>${r.ten}</b><br><i>${r.ten_dia_phuong}</i>`,{sticky:true,className:"custom-tooltip"});
+          line.bindTooltip(`<b>${r.ten}</b><br><i>${r.ten_dia_phuong || ""}</i>`,{sticky:true,className:"custom-tooltip"});
           ls.push(line);
         });
       } else if (id === "irrigation") {
-        layersData.irrigation.forEach(ir => { const emoji=ir.loai==="phai"?"💧":ir.loai==="lin"?"〰️":"🚿"; const m=L.marker([ir.lat,ir.lng],{icon:makeDivIcon(emoji,"#74c69d",26)}); m.bindPopup(`<div class="map-popup"><div class="popup-title">${ir.ten}</div><div class="popup-sub">${IRRIGATION_LABELS[ir.loai]||ir.loai} · <i>${ir.ten_dia_phuong}</i></div><p>${ir.mo_ta}</p></div>`); ls.push(m); });
-      } else if (id === "villages") {
-        layersData.villages.forEach(v => { const color=ETHNIC_COLORS[v.dan_toc]||"#f4a261"; const m=L.marker([v.lat,v.lng],{icon:makeDivIcon("🏘️",color,28)}); m.bindPopup(`<div class="map-popup"><div class="popup-title">${v.ten}</div><div class="popup-sub" style="color:${color}">Dân tộc ${v.dan_toc.charAt(0).toUpperCase()+v.dan_toc.slice(1)}</div><p>${v.mo_ta}</p></div>`); ls.push(m); });
+        layersData.irrigation.forEach((ir, idx) => {
+          const emoji = ir.loai==="phai"?"💧":ir.loai==="lin"?"〰️":"🚿";
+          const popup = `<div class="map-popup"><div class="popup-title">${ir.ten}</div><div class="popup-sub">${IRRIGATION_LABELS[ir.loai]||ir.loai} · <i>${ir.ten_dia_phuong||""}</i></div><p>${ir.mo_ta||""}</p></div>`;
+          ls.push(makeDraggableMarker(ir.lat, ir.lng, makeDivIcon(emoji,"#74c69d",26), "irrigation", idx, popup));
+        });
       } else if (id === "forests") {
-        layersData.forests.forEach(f => { const color=FOREST_COLORS[f.loai]||"#2d6a4f"; const m=L.marker([f.lat,f.lng],{icon:makeDivIcon("🌲",color,26)}); m.bindPopup(`<div class="map-popup"><div class="popup-title">${f.ten}</div><div class="popup-sub" style="color:${color}">${FOREST_LABELS[f.loai]||f.loai} · <i>${f.ten_dia_phuong}</i></div><p>${f.mo_ta}</p></div>`); ls.push(m); });
+        layersData.forests.forEach((f, idx) => {
+          const color = FOREST_COLORS[f.loai]||"#2d6a4f";
+          const popup = `<div class="map-popup"><div class="popup-title">${f.ten}</div><div class="popup-sub" style="color:${color}">${FOREST_LABELS[f.loai]||f.loai} · <i>${f.ten_dia_phuong||""}</i></div><p>${f.mo_ta||""}</p></div>`;
+          ls.push(makeDraggableMarker(f.lat, f.lng, makeDivIcon("🌲",color,26), "forests", idx, popup));
+        });
       } else if (id === "vac_models") {
-        layersData.vac_models.forEach(v => { const m=L.marker([v.lat,v.lng],{icon:makeDivIcon("♻️","#40916c",28)}); m.bindPopup(`<div class="map-popup"><div class="popup-title">${v.ten}</div><div class="popup-sub">Mô hình ${v.loai.toUpperCase()}</div><p>${v.mo_ta}</p><ul>${v.thanh_phan.map(p=>`<li>${p}</li>`).join("")}</ul></div>`); ls.push(m); });
+        layersData.vac_models.forEach((v, idx) => {
+          const tp = toArr(v.thanh_phan);
+          const popup = `<div class="map-popup"><div class="popup-title">${v.ten}</div><div class="popup-sub">Mô hình ${(v.loai||"").toUpperCase()}</div><p>${v.mo_ta||""}</p>${tp.length?`<ul>${tp.map(p=>`<li>${p}</li>`).join("")}</ul>`:""}</div>`;
+          ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️","#40916c",28), "vac_models", idx, popup));
+        });
       } else if (id === "medicinal_plants") {
-        layersData.medicinal_plants.forEach(p => { const m=L.marker([p.lat,p.lng],{icon:makeDivIcon("🌿","#e63946",26)}); m.bindPopup(`<div class="map-popup"><div class="popup-title">${p.ten}</div><div class="popup-sub" style="font-style:italic">${p.ten_khoa_hoc}</div><p><b>Công dụng:</b> ${p.cong_dung}</p><p><b>Tình trạng:</b> <span style="color:${p.tình_trang==="Nguy cấp"?"#e63946":p.tình_trang.includes("Sắp")?"#f4a261":"#52b788"}">${p.tình_trang}</span></p></div>`); ls.push(m); });
+        layersData.medicinal_plants.forEach((p, idx) => {
+          const tinh_trang = p.tinh_trang || (p as any)["tình_trang"] || "";
+          const tinhTrangColor = tinh_trang.toLowerCase().includes("rất") || tinh_trang.toLowerCase().includes("nguy")?"#e63946":tinh_trang.toLowerCase().includes("hiem")||tinh_trang.toLowerCase().includes("hiếm")?"#f4a261":"#52b788";
+          const popup = `<div class="map-popup"><div class="popup-title">${p.ten}</div><div class="popup-sub" style="font-style:italic">${p.ten_khoa_hoc||""}</div><p><b>Công dụng:</b> ${p.cong_dung||""}</p>${tinh_trang?`<p><b>Tình trạng:</b> <span style="color:${tinhTrangColor}">${tinh_trang}</span></p>`:""}</div>`;
+          ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿","#e63946",26), "medicinal_plants", idx, popup));
+        });
       } else if (id === "customary_zones") {
-        layersData.customary_zones.forEach(z => { const poly=L.polygon(z.coords.map(([lng,lat])=>[lat,lng] as L.LatLngExpression),{color:"#f4a261",weight:2,opacity:0.8,fillColor:"#f4a261",fillOpacity:0.12,dashArray:"6,4"}); poly.bindPopup(`<div class="map-popup"><div class="popup-title">${z.ten}</div><div class="popup-sub">Luật tục: ${z.loai.replace(/_/g," ")}</div><p>${z.mo_ta}</p></div>`); ls.push(poly); });
+        layersData.customary_zones.forEach(z => {
+          const coords = (z.coords && Array.isArray(z.coords[0]) && Array.isArray((z.coords[0] as any)[0])) ? (z.coords as any)[0] : z.coords;
+          if (!coords || coords.length < 3) return;
+          const poly = L.polygon(coords.map(([lng,lat]: [number,number])=>[lat,lng] as L.LatLngExpression), {color:"#f4a261",weight:2,opacity:0.8,fillColor:"#f4a261",fillOpacity:0.12,dashArray:"6,4"});
+          poly.bindPopup(`<div class="map-popup"><div class="popup-title">${z.ten}</div><div class="popup-sub">Luật tục: ${(z.loai||"").replace(/_/g," ")}</div><p>${z.mo_ta||""}</p></div>`);
+          ls.push(poly);
+        });
+      } else if (id === "ward_boundaries" && allWardsGeoJson) {
+        const layer = L.geoJSON(allWardsGeoJson as GeoJSON.FeatureCollection, {
+          style: () => ({ color: "#6b4226", weight: 1, opacity: 0.55, fillColor: "#a8d5a2", fillOpacity: 0.06 }),
+          onEachFeature: (feat, lyr) => {
+            const p = feat.properties as any;
+            lyr.bindTooltip(`<div class="ward-tooltip"><b>${p.ten_xa}</b><br><span style="opacity:0.7">${p.ten_tinh||""}</span></div>`, { sticky: true, className: "custom-tooltip ward-tip" });
+            (lyr as L.Path).on({
+              mouseover: e => { (e.target as L.Path).setStyle({ fillOpacity: 0.25, color: "#3d1f0d", weight: 2 }); },
+              mouseout: e => { (e.target as L.Path).setStyle({ fillOpacity: 0.06, color: "#6b4226", weight: 1 }); },
+            });
+          }
+        });
+        ls.push(layer);
       }
       return ls;
     };
+
+    // Clear all current layer instances and rebuild
+    layerInstancesRef.current.forEach(layers => layers.forEach(l => og.removeLayer(l)));
+    layerInstancesRef.current.clear();
+
     activeLayers.forEach(id => {
-      if (!layerInstancesRef.current.has(id)) {
-        const built = buildLayer(id);
-        layerInstancesRef.current.set(id, built);
-        built.forEach(l => og.addLayer(l));
-      }
+      const built = buildLayer(id);
+      layerInstancesRef.current.set(id, built);
+      built.forEach(l => og.addLayer(l));
     });
-  }, [layersData, activeLayers]);
+  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson]);
 
   /* ─── Render annotations on map ─── */
   useEffect(() => {
@@ -190,11 +305,9 @@ export default function WebGIS() {
       drawingCoordsRef.current = [...drawingCoordsRef.current, coord];
 
       if (drawMode === "diem") {
-        // Immediately show modal
         setPendingAnnotation({coords:[coord], loai:"diem"});
         setDrawMode(null);
       } else {
-        // Update preview polyline
         if (drawingPolylineRef.current) { map.removeLayer(drawingPolylineRef.current); }
         const preview = L.polyline(drawingCoordsRef.current, {color:"#ffffff",weight:2,dashArray:"6,3",opacity:0.8});
         preview.addTo(map);
@@ -272,14 +385,57 @@ export default function WebGIS() {
   };
   const cancelDraw = () => { setDrawMode(null); if(drawingPolylineRef.current&&mapRef.current){mapRef.current.removeLayer(drawingPolylineRef.current);drawingPolylineRef.current=null;} };
 
+  /* ─── Layer data CRUD ─── */
+  const addLayerFeature = (layerId: string, feature: any) => {
+    setLayersData(prev => {
+      if (!prev) return prev;
+      const next = { ...prev } as any;
+      next[layerId] = [...(next[layerId] || []), feature];
+      return next;
+    });
+  };
+  const updateLayerFeature = (layerId: string, idx: number, feature: any) => {
+    setLayersData(prev => {
+      if (!prev) return prev;
+      const next = { ...prev } as any;
+      const arr = [...next[layerId]];
+      arr[idx] = feature;
+      next[layerId] = arr;
+      return next;
+    });
+  };
+  const deleteLayerFeature = (layerId: string, idx: number) => {
+    setLayersData(prev => {
+      if (!prev) return prev;
+      const next = { ...prev } as any;
+      next[layerId] = next[layerId].filter((_: any, i: number) => i !== idx);
+      return next;
+    });
+  };
+
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
     setActiveLayers(prev=>{
-      const next=new Set(prev); const og=overlayGroupRef.current;
-      if(next.has(id)){next.delete(id);layerInstancesRef.current.get(id)?.forEach(l=>og?.removeLayer(l));layerInstancesRef.current.delete(id);}
-      else next.add(id);
+      const next=new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        // turning off — also stop edit/drag for that layer
+        if (editingLayer === id) setEditingLayer(null);
+        if (layerDragMode === id) setLayerDragMode(null);
+      } else {
+        next.add(id);
+      }
       return next;
     });
+  };
+
+  const openLayerEditor = (layerId: string) => {
+    // Auto-activate the layer if not active
+    if (!activeLayers.has(layerId)) {
+      setActiveLayers(prev => new Set([...prev, layerId]));
+    }
+    setEditingLayer(layerId);
+    setShowLayers(false); // close layer list to give room
   };
 
   /* ─── Map initialization ─── */
@@ -362,6 +518,17 @@ export default function WebGIS() {
   const wardCustom=selectedWard?wardOverrides.get(selectedWard.ma_xa):undefined;
   const stats=selectedProvince?getProvinceStat(selectedProvince):null;
   const layerCategoriesWithState=LAYER_CATEGORIES.map(cat=>({...cat,layers:cat.layers.map(l=>({...l,active:activeLayers.has(l.id)}))}));
+  const featureCounts: Record<string, number> = layersData ? {
+    rivers: layersData.rivers?.length || 0,
+    irrigation: layersData.irrigation?.length || 0,
+    forests: layersData.forests?.length || 0,
+    vac_models: layersData.vac_models?.length || 0,
+    medicinal_plants: layersData.medicinal_plants?.length || 0,
+    customary_zones: layersData.customary_zones?.length || 0,
+    ward_boundaries: allWardsGeoJson?.features.length || 0,
+  } : {};
+  const editingLayerFeatures = editingLayer && layersData ? ((layersData as any)[editingLayer] || []) : [];
+  const mapCenter: [number, number] = mapRef.current ? [mapRef.current.getCenter().lat, mapRef.current.getCenter().lng] : [21.7, 103.5];
 
   const EditWard=({field,suffix="",type="text" as "text"|"number",decimals}:{field:keyof WardProperties&string;suffix?:string;type?:"text"|"number";decimals?:number})=>{
     if(!selectedWard)return null;
@@ -396,12 +563,23 @@ export default function WebGIS() {
       </div>
 
       <div className="map-body">
-        {showLayers&&<LayerControl categories={layerCategoriesWithState} onToggle={toggleLayer} onClose={()=>setShowLayers(false)} showTransect={showTransect} onToggleTransect={()=>setShowTransect(s=>!s)} showCalendar={showCalendar} onToggleCalendar={()=>setShowCalendar(s=>!s)}/>}
+        {showLayers&&<LayerControl
+          categories={layerCategoriesWithState}
+          onToggle={toggleLayer}
+          onEditLayer={openLayerEditor}
+          featureCounts={featureCounts}
+          editableLayers={EDITABLE_LAYERS}
+          onClose={()=>setShowLayers(false)}
+          showTransect={showTransect}
+          onToggleTransect={()=>setShowTransect(s=>!s)}
+          showCalendar={showCalendar}
+          onToggleCalendar={()=>setShowCalendar(s=>!s)}
+        />}
 
         {/* ─── Map ─── */}
         <div className="map-wrapper">
           <div ref={mapContainerRef} className="map-canvas"/>
-          {loading&&<div className="map-overlay"><div className="loading-spinner"/><span>Đang tải dữ liệu...</span></div>}
+          {(loading||loadingWardBoundaries)&&<div className="map-overlay"><div className="loading-spinner"/><span>{loadingWardBoundaries?"Đang tải ranh giới xã của 3 tỉnh...":"Đang tải dữ liệu..."}</span></div>}
           {viewMode==="ward"&&<button className="back-button" onClick={handleBack}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="back-icon"><polyline points="15 18 9 12 15 6"/></svg>Quay lại bản đồ vùng</button>}
           {viewMode==="province"&&!drawMode&&<div className="map-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Click vào tỉnh để xem ranh giới xã và dân tộc</div>}
 
@@ -425,6 +603,14 @@ export default function WebGIS() {
               </>
             )}
           </div>
+
+          {/* Drag mode indicator banner */}
+          {layerDragMode && (
+            <div className="drag-mode-banner">
+              ✋ Đang ở chế độ kéo thả lớp <b>{LAYER_DISPLAY[layerDragMode]?.name}</b> — kéo các điểm trên bản đồ để di chuyển
+              <button className="drag-mode-off" onClick={() => setLayerDragMode(null)}>✕ Tắt</button>
+            </div>
+          )}
 
           {/* Annotation list panel */}
           {showAnnotations&&(
@@ -458,11 +644,13 @@ export default function WebGIS() {
           <div className="map-legend">
             <div className="legend-title">Chú giải</div>
             {viewMode==="province"?<div className="legend-item"><div className="legend-color province-color"/><span>Ranh giới tỉnh</span></div>:<div className="legend-item"><div className="legend-color ward-color"/><span>Ranh giới xã/phường</span></div>}
+            {activeLayers.has("ward_boundaries")&&<div className="legend-item"><div className="legend-color" style={{background:"transparent",border:"1.5px solid #6b4226"}}/><span>Ranh giới xã (3 tỉnh)</span></div>}
             {activeLayers.has("rivers")&&<div className="legend-item"><div className="legend-color" style={{background:"#4895ef"}}/><span>Sông suối</span></div>}
             {activeLayers.has("irrigation")&&<div className="legend-item"><div className="legend-color" style={{background:"#74c69d"}}/><span>Thủy lợi</span></div>}
-            {activeLayers.has("villages")&&<div className="legend-item"><div className="legend-color" style={{background:"#f4a261"}}/><span>Bản làng</span></div>}
             {activeLayers.has("forests")&&<div className="legend-item"><div className="legend-color" style={{background:"#2d6a4f"}}/><span>Rừng</span></div>}
+            {activeLayers.has("vac_models")&&<div className="legend-item"><div className="legend-color" style={{background:"#40916c"}}/><span>VAC/VACR</span></div>}
             {activeLayers.has("medicinal_plants")&&<div className="legend-item"><div className="legend-color" style={{background:"#e63946"}}/><span>Cây thuốc</span></div>}
+            {activeLayers.has("customary_zones")&&<div className="legend-item"><div className="legend-color" style={{background:"#f4a261"}}/><span>Luật tục</span></div>}
             {annotations.length>0&&<div className="legend-item"><div className="legend-color" style={{background:"#e9c46a"}}/><span>Đối tượng của tôi</span></div>}
           </div>
         </div>
@@ -610,9 +798,27 @@ export default function WebGIS() {
 
       {/* ─── Modals ─── */}
       {showImport&&<ImportModal onClose={()=>setShowImport(false)} wardOverrides={wardOverrides} onApplyWardCSV={setWardOverrides} onClearWardData={()=>setWardOverrides(new Map())} ethnicOverrides={ethnicOverrides} onApplyEthnicCSV={setEthnicOverrides} onClearEthnicData={()=>setEthnicOverrides(new Map())} pdfFiles={pdfFiles} onAddPdf={addPdf} onRemovePdf={removePdf} onViewPdf={setPdfViewer} currentWard={selectedWard?{ma_xa:selectedWard.ma_xa,ten_xa:selectedWard.ten_xa}:null} wardList={allWardsRef.current.map(w=>({ma_xa:w.ma_xa,ten_xa:w.ten_xa}))}/>}
-      {showTransect&&<TransectDiagram onClose={()=>setShowTransect(false)}/>}
-      {showCalendar&&<SeasonalCalendar onClose={()=>setShowCalendar(false)}/>}
+      {showTransect&&<TransectDiagram onClose={()=>setShowTransect(false)} zones={transectZones} ethnicZones={transectEthnic} onChangeZones={setTransectZones} onChangeEthnicZones={setTransectEthnic}/>}
+      {showCalendar&&<SeasonalCalendar onClose={()=>setShowCalendar(false)} data={calendarData} onChange={setCalendarData}/>}
       {pendingAnnotation&&<AnnotationModal coords={pendingAnnotation.coords} loai={pendingAnnotation.loai} onSave={saveAnnotation} onCancel={()=>setPendingAnnotation(null)}/>}
+
+      {editingLayer&&LAYER_DISPLAY[editingLayer]&&(
+        <LayerDataEditor
+          layerId={editingLayer}
+          layerName={LAYER_DISPLAY[editingLayer].name}
+          layerColor={LAYER_DISPLAY[editingLayer].color}
+          features={editingLayerFeatures}
+          geomType={LAYER_GEOM_TYPE[editingLayer]}
+          dragMode={layerDragMode === editingLayer}
+          onToggleDrag={() => setLayerDragMode(prev => prev === editingLayer ? null : editingLayer)}
+          onAdd={f => addLayerFeature(editingLayer, f)}
+          onUpdate={(idx, f) => updateLayerFeature(editingLayer, idx, f)}
+          onDelete={idx => deleteLayerFeature(editingLayer, idx)}
+          onClose={() => { setEditingLayer(null); setLayerDragMode(null); }}
+          mapCenter={mapCenter}
+          onFlyTo={(lat, lng) => mapRef.current?.flyTo([lat, lng], 13, { duration: 1.2 })}
+        />
+      )}
 
       {/* Add recipe modal */}
       {editingRecipe&&(()=>{
@@ -639,7 +845,14 @@ export default function WebGIS() {
         );
       })()}
 
-      {pdfViewer&&<div className="modal-overlay pdf-viewer-overlay" onClick={e=>{if(e.target===e.currentTarget)setPdfViewer(null);}}><div className="pdf-viewer-modal"><div className="pdf-viewer-header"><span className="pdf-viewer-name">{pdfViewer.name}</span><button className="modal-close" onClick={()=>setPdfViewer(null)}>✕</button></div><iframe src={pdfViewer.url} className="pdf-frame" title={pdfViewer.name}/></div></div>}
+      {pdfViewer&&(
+        <div className="pdf-viewer-overlay" onClick={e=>{if(e.target===e.currentTarget)setPdfViewer(null);}}>
+          <div className="pdf-viewer-modal">
+            <div className="pdf-viewer-header"><span className="pdf-viewer-title">{pdfViewer.name}</span><button className="modal-close" onClick={()=>setPdfViewer(null)}>✕</button></div>
+            <iframe src={pdfViewer.url} className="pdf-viewer-iframe" title={pdfViewer.name}/>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
