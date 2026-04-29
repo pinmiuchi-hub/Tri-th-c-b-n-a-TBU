@@ -2434,3 +2434,71 @@ th.month-col { width: 36px; }
   transition: opacity .15s ease;
 }
 .ik-add-item-btn:hover { opacity: 1; }
+
+/* ─── Add/import row & export button ─── */
+.layer-add-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.layer-add-row .layer-add-btn { margin-top: 0; flex: 1; }
+.layer-import-btn {
+  flex: 1;
+  margin-top: 0;
+  padding: 8px 10px;
+  background: rgba(72, 149, 239, 0.1);
+  border: 1px dashed rgba(72, 149, 239, 0.45);
+  color: #8ecae6;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s ease;
+}
+.layer-import-btn:hover {
+  background: rgba(72, 149, 239, 0.18);
+  border-color: rgba(72, 149, 239, 0.7);
+  color: #c5e2ff;
+}
+
+.layer-export-wrap { position: relative; }
+.layer-export-btn {
+  background: transparent;
+  border: 1px solid rgba(116, 198, 157, 0.35);
+  color: #74c69d;
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  margin-right: 4px;
+  transition: all .15s ease;
+}
+.layer-export-btn:hover { background: rgba(82, 183, 136, 0.15); border-color: #52b788; color: #b7e4c7; }
+.layer-export-btn svg { width: 12px; height: 12px; }
+
+.layer-export-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 1000;
+  background: rgba(11, 24, 16, 0.98);
+  border: 1px solid rgba(116, 198, 157, 0.4);
+  border-radius: 6px;
+  min-width: 180px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  padding: 4px;
+  display: flex; flex-direction: column;
+}
+.layer-export-menu button {
+  background: transparent;
+  border: none;
+  color: #d8f3dc;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+}
+.layer-export-menu button:hover { background: rgba(82, 183, 136, 0.18); color: #b7e4c7; }

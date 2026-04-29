@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface LayerToggle {
   id: string;
@@ -28,9 +28,12 @@ interface Props {
   onToggle: (layerId: string) => void;
   onEditLayer: (layerId: string) => void;
   onAddCustomLayer: (categoryId: string, input: NewLayerInput) => void;
+  onImportLayerFile: (categoryId: string, file: File, color: string, symbol: string) => void;
   onDeleteCustomLayer: (layerId: string) => void;
+  onExportLayer: (layerId: string, format: "geojson" | "kml") => void;
   featureCounts: Record<string, number>;
   editableLayers: Set<string>;
+  exportableLayers: Set<string>;
   onClose: () => void;
   showTransect: boolean;
   onToggleTransect: () => void;
@@ -42,9 +45,12 @@ interface Props {
 
 const PALETTE = ["#4895ef", "#2d6a4f", "#e63946", "#f4a261", "#9b5de5", "#52b788", "#74c69d", "#ffd166", "#6b4226", "#8338ec", "#e76f51", "#457b9d"];
 
-export default function LayerControl({ categories, onToggle, onEditLayer, onAddCustomLayer, onDeleteCustomLayer, featureCounts, editableLayers, onClose, showTransect, onToggleTransect, showCalendar, onToggleCalendar, showKnowledge, onToggleKnowledge }: Props) {
+export default function LayerControl({ categories, onToggle, onEditLayer, onAddCustomLayer, onImportLayerFile, onDeleteCustomLayer, onExportLayer, featureCounts, editableLayers, exportableLayers, onClose, showTransect, onToggleTransect, showCalendar, onToggleCalendar, showKnowledge, onToggleKnowledge }: Props) {
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [draft, setDraft] = useState<NewLayerInput>({ ten: "", mau: PALETTE[0], bieu_tuong: "📌", geomType: "point" });
+  const [exportMenuFor, setExportMenuFor] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importingFor, setImportingFor] = useState<string | null>(null);
 
   const startAdd = (catId: string) => {
     setAddingFor(catId);
@@ -54,6 +60,19 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
     if (!draft.ten.trim()) { alert("Nhập tên lớp"); return; }
     onAddCustomLayer(catId, { ...draft, ten: draft.ten.trim() });
     setAddingFor(null);
+  };
+  const startImport = (catId: string) => {
+    setImportingFor(catId);
+    setDraft(d => ({ ...d, mau: PALETTE[Math.floor(Math.random() * PALETTE.length)], bieu_tuong: "📌" }));
+    fileInputRef.current?.click();
+  };
+  const handleFileChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const cat = importingFor;
+    e.target.value = "";
+    setImportingFor(null);
+    if (!file || !cat) return;
+    onImportLayerFile(cat, file, draft.mau, draft.bieu_tuong || "📌");
   };
 
   return (
@@ -87,6 +106,19 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                   )}
+                  {exportableLayers.has(layer.id) && (
+                    <div className="layer-export-wrap">
+                      <button className="layer-export-btn" onClick={() => setExportMenuFor(exportMenuFor === layer.id ? null : layer.id)} title="Tải xuống lớp này">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </button>
+                      {exportMenuFor === layer.id && (
+                        <div className="layer-export-menu" onMouseLeave={() => setExportMenuFor(null)}>
+                          <button onClick={() => { onExportLayer(layer.id, "geojson"); setExportMenuFor(null); }}>📄 GeoJSON (.geojson)</button>
+                          <button onClick={() => { onExportLayer(layer.id, "kml"); setExportMenuFor(null); }}>🌍 KML (.kml)</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {layer.isCustom && (
                     <button className="layer-delete-btn" onClick={() => { if (confirm(`Xóa lớp "${layer.ten}" và toàn bộ dữ liệu?`)) onDeleteCustomLayer(layer.id); }} title="Xóa lớp tự tạo">✕</button>
                   )}
@@ -115,10 +147,14 @@ export default function LayerControl({ categories, onToggle, onEditLayer, onAddC
                 </div>
               </div>
             ) : (
-              <button className="layer-add-btn" onClick={() => startAdd(cat.id)}>+ Thêm lớp vào nhóm này</button>
+              <div className="layer-add-row">
+                <button className="layer-add-btn" onClick={() => startAdd(cat.id)}>+ Thêm lớp trống</button>
+                <button className="layer-import-btn" onClick={() => startImport(cat.id)} title="Nhập lớp từ file GeoJSON hoặc KML">📁 Nhập GeoJSON / KML</button>
+              </div>
             )}
           </div>
         ))}
+        <input ref={fileInputRef} type="file" accept=".geojson,.json,.kml,application/geo+json,application/vnd.google-earth.kml+xml" style={{ display: "none" }} onChange={handleFileChosen}/>
 
         <div className="layer-category">
           <div className="layer-cat-title">📊 Biểu đồ · Lịch · Tri thức</div>

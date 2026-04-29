@@ -470,6 +470,61 @@ export default function WebGIS() {
     if (layerDragMode === id) setLayerDragMode(null);
   };
 
+  /* ─── Import GeoJSON / KML as a custom layer ─── */
+  const importLayerFile = async (categoryId: string, file: File, color: string, symbol: string) => {
+    const { parseGeoFile } = await import("../utils/geoUtils");
+    const parsed = await parseGeoFile(file);
+    if (!parsed) {
+      alert("Không đọc được file. Hãy chọn file GeoJSON (.geojson/.json) hoặc KML (.kml) hợp lệ.");
+      return;
+    }
+    const id = "custom_" + Math.random().toString(36).slice(2, 9);
+    const ten = parsed.suggestedName || file.name.replace(/\.[^.]+$/, "") || "Lớp nhập";
+    const cl: CustomLayer = { id, categoryId, ten, mau: color, bieu_tuong: symbol, geomType: parsed.geomType };
+    setCustomLayers(prev => [...prev, cl]);
+    setLayersData(prev => ({ ...(prev || {} as LayersData), [id]: parsed.features as any[] } as LayersData));
+    setActiveLayers(prev => new Set([...prev, id]));
+  };
+
+  /* ─── Export layer to GeoJSON or KML ─── */
+  const exportLayer = async (layerId: string, format: "geojson" | "kml") => {
+    const { featuresToGeoJSON, featuresToKML, downloadFile } = await import("../utils/geoUtils");
+    const layerName = (layerDisplayAll[layerId]?.name) || layerId;
+    const safeName = layerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "_").toLowerCase() || "layer";
+
+    // Special case: ward_boundaries is already a GeoJSON FeatureCollection
+    if (layerId === "ward_boundaries") {
+      if (!allWardsGeoJson) { alert("Chưa có dữ liệu ranh giới xã"); return; }
+      if (format === "geojson") {
+        downloadFile(`${safeName}.geojson`, JSON.stringify(allWardsGeoJson, null, 2), "application/geo+json");
+      } else {
+        // Convert wards (polygons) to KML by serializing each feature
+        const features = allWardsGeoJson.features.map((f: any) => {
+          const props = f.properties || {};
+          const coords = f.geometry?.type === "Polygon" ? f.geometry.coordinates[0]
+            : f.geometry?.type === "MultiPolygon" ? f.geometry.coordinates[0][0]
+            : null;
+          if (!coords) return null;
+          return { ten: props.ten_xa || "", mo_ta: `${props.ten_huyen || ""} - ${props.ten_tinh || ""}`, coords };
+        }).filter(Boolean) as any[];
+        downloadFile(`${safeName}.kml`, featuresToKML(layerName, features, "polygon"), "application/vnd.google-earth.kml+xml");
+      }
+      return;
+    }
+
+    const features = layersData ? ((layersData as any)[layerId] || []) : [];
+    if (features.length === 0) { alert("Lớp này chưa có dữ liệu để xuất."); return; }
+    const geomType = layerGeomAll[layerId] || "point";
+
+    if (format === "geojson") {
+      const fc = featuresToGeoJSON(features, geomType);
+      downloadFile(`${safeName}.geojson`, JSON.stringify(fc, null, 2), "application/geo+json");
+    } else {
+      const kml = featuresToKML(layerName, features, geomType);
+      downloadFile(`${safeName}.kml`, kml, "application/vnd.google-earth.kml+xml");
+    }
+  };
+
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
     setActiveLayers(prev=>{
@@ -585,6 +640,10 @@ export default function WebGIS() {
   }));
   const customLayerIds = customLayers.map(c => c.id);
   const allEditableLayers = new Set<string>([...EDITABLE_LAYERS, ...customLayerIds]);
+  const allExportableLayers = new Set<string>([
+    "rivers", "irrigation", "forests", "vac_models", "medicinal_plants", "customary_zones", "ward_boundaries",
+    ...customLayerIds,
+  ]);
   const customDisplay: Record<string, { name: string; color: string }> = {};
   const customGeom: Record<string, "point" | "line" | "polygon"> = {};
   customLayers.forEach(c => { customDisplay[c.id] = { name: c.ten, color: c.mau }; customGeom[c.id] = c.geomType; });
@@ -642,9 +701,12 @@ export default function WebGIS() {
           onToggle={toggleLayer}
           onEditLayer={openLayerEditor}
           onAddCustomLayer={addCustomLayer}
+          onImportLayerFile={importLayerFile}
           onDeleteCustomLayer={deleteCustomLayer}
+          onExportLayer={exportLayer}
           featureCounts={featureCounts}
           editableLayers={allEditableLayers}
+          exportableLayers={allExportableLayers}
           onClose={()=>setShowLayers(false)}
           showTransect={showTransect}
           onToggleTransect={()=>setShowTransect(s=>!s)}
