@@ -100,6 +100,8 @@ export default function WebGIS() {
   const drawingPolylineRef = useRef<L.Polyline | null>(null);
   const drawingCoordsRef = useRef<[number,number][]>([]);
   const rasterOverlayRef = useRef<L.ImageOverlay | null>(null);
+  const provinceMaskGeomRef = useRef<GeoJSON.FeatureCollection | null>(null);
+  const maskedRasterCacheRef = useRef<Map<string, string>>(new Map());
 
   /* ─── Core state ─── */
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -160,6 +162,10 @@ export default function WebGIS() {
   useEffect(() => {
     fetch(BASE_PATH+"/data/dan_toc.json").then(r=>r.json()).then(setDanTocData).catch(console.error);
     fetch(BASE_PATH+"/data/raster/meta.json").then(r=>r.json()).then(setRasterMeta).catch(console.error);
+    fetch(BASE_PATH+"/data/tinh.geojson").then(r=>r.json()).then((g: GeoJSON.FeatureCollection) => {
+      provinceMaskGeomRef.current = g;
+      maskedRasterCacheRef.current.clear();
+    }).catch(console.error);
     fetch(BASE_PATH+"/data/layers.json").then(r=>r.json()).then((d: any) => {
       // Normalize "tình_trang" → "tinh_trang" for consistent editing
       if (d.medicinal_plants) {
@@ -725,18 +731,70 @@ export default function WebGIS() {
 
   useEffect(()=>{initMap();return()=>{if(mapRef.current){mapRef.current.remove();mapRef.current=null;}};},[initMap]);
 
-  /* Thematic raster overlay management */
+  /* Thematic raster overlay management — clip raster to province polygons */
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !rasterMeta) return;
     if (rasterOverlayRef.current) { map.removeLayer(rasterOverlayRef.current); rasterOverlayRef.current = null; }
-    if (activeRaster && rasterMeta.layers[activeRaster]) {
-      const info = rasterMeta.layers[activeRaster];
-      const url = `${BASE_PATH}/data/raster/${info.file}`;
+    if (!activeRaster || !rasterMeta.layers[activeRaster]) return;
+
+    let cancelled = false;
+    const info = rasterMeta.layers[activeRaster];
+    const rawUrl = `${BASE_PATH}/data/raster/${info.file}`;
+    const cached = maskedRasterCacheRef.current.get(activeRaster);
+
+    const addOverlay = (url: string) => {
+      if (cancelled || !mapRef.current) return;
       const ov = L.imageOverlay(url, rasterMeta.bounds, { opacity: rasterOpacity, interactive: false, className: "thematic-raster" });
-      ov.addTo(map);
+      ov.addTo(mapRef.current);
       rasterOverlayRef.current = ov;
-    }
+    };
+
+    if (cached) { addOverlay(cached); return () => { cancelled = true; }; }
+
+    const provinces = provinceMaskGeomRef.current;
+    if (!provinces) { addOverlay(rawUrl); return () => { cancelled = true; }; }
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      if (cancelled) return;
+      const w = img.naturalWidth, h = img.naturalHeight;
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { addOverlay(rawUrl); return; }
+      ctx.drawImage(img, 0, 0);
+
+      const [[latS, lngW], [latN, lngE]] = rasterMeta.bounds;
+      const lon2x = (lng: number) => ((lng - lngW) / (lngE - lngW)) * w;
+      const lat2y = (lat: number) => ((latN - lat) / (latN - latS)) * h;
+
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      const drawRing = (ring: number[][]) => {
+        if (ring.length === 0) return;
+        ctx.moveTo(lon2x(ring[0][0]), lat2y(ring[0][1]));
+        for (let i = 1; i < ring.length; i++) ctx.lineTo(lon2x(ring[i][0]), lat2y(ring[i][1]));
+        ctx.closePath();
+      };
+      for (const f of provinces.features) {
+        const g = f.geometry;
+        if (!g) continue;
+        if (g.type === "Polygon") (g.coordinates as number[][][]).forEach(drawRing);
+        else if (g.type === "MultiPolygon") (g.coordinates as number[][][][]).forEach(poly => poly.forEach(drawRing));
+      }
+      ctx.fill("evenodd");
+
+      const dataUrl = canvas.toDataURL("image/png");
+      maskedRasterCacheRef.current.set(activeRaster, dataUrl);
+      addOverlay(dataUrl);
+    };
+    img.onerror = () => { if (!cancelled) addOverlay(rawUrl); };
+    img.src = rawUrl;
+
+    return () => { cancelled = true; };
   }, [activeRaster, rasterMeta, rasterOpacity]);
 
   /* ─── Derived ─── */
