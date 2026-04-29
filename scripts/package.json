@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "gen:rasters": "tsx ./src/generate-thematic-rasters.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "pngjs": "^7.0.0",
     "tsx": "catalog:"
   }
 }

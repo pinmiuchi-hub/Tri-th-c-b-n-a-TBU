@@ -99,6 +99,7 @@ export default function WebGIS() {
   const allWardsRef = useRef<WardProperties[]>([]);
   const drawingPolylineRef = useRef<L.Polyline | null>(null);
   const drawingCoordsRef = useRef<[number,number][]>([]);
+  const rasterOverlayRef = useRef<L.ImageOverlay | null>(null);
 
   /* ─── Core state ─── */
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -127,6 +128,10 @@ export default function WebGIS() {
   /* ─── UI state ─── */
   const [showImport, setShowImport] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
+  const [showThematic, setShowThematic] = useState(false);
+  const [activeRaster, setActiveRaster] = useState<string | null>(null);
+  const [rasterOpacity, setRasterOpacity] = useState(0.65);
+  const [rasterMeta, setRasterMeta] = useState<{ bounds: [[number,number],[number,number]]; layers: Record<string, { file: string; unit: string; label: string; source: string; stops: any }> } | null>(null);
   const [showTransect, setShowTransect] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showKnowledge, setShowKnowledge] = useState(false);
@@ -154,6 +159,7 @@ export default function WebGIS() {
   /* ─── Load data ─── */
   useEffect(() => {
     fetch(BASE_PATH+"/data/dan_toc.json").then(r=>r.json()).then(setDanTocData).catch(console.error);
+    fetch(BASE_PATH+"/data/raster/meta.json").then(r=>r.json()).then(setRasterMeta).catch(console.error);
     fetch(BASE_PATH+"/data/layers.json").then(r=>r.json()).then((d: any) => {
       // Normalize "tình_trang" → "tinh_trang" for consistent editing
       if (d.medicinal_plants) {
@@ -719,6 +725,20 @@ export default function WebGIS() {
 
   useEffect(()=>{initMap();return()=>{if(mapRef.current){mapRef.current.remove();mapRef.current=null;}};},[initMap]);
 
+  /* Thematic raster overlay management */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !rasterMeta) return;
+    if (rasterOverlayRef.current) { map.removeLayer(rasterOverlayRef.current); rasterOverlayRef.current = null; }
+    if (activeRaster && rasterMeta.layers[activeRaster]) {
+      const info = rasterMeta.layers[activeRaster];
+      const url = `${BASE_PATH}/data/raster/${info.file}`;
+      const ov = L.imageOverlay(url, rasterMeta.bounds, { opacity: rasterOpacity, interactive: false, className: "thematic-raster" });
+      ov.addTo(map);
+      rasterOverlayRef.current = ov;
+    }
+  }, [activeRaster, rasterMeta, rasterOpacity]);
+
   /* ─── Derived ─── */
   const wardDanToc:DanTocTyLe[]=selectedWard?(wardOverrides.get(selectedWard.ma_xa)?.dan_toc??selectedWard.dan_toc??[]):[];
   const wardPdfs=selectedWard?(pdfFiles.get(selectedWard.ma_xa)||[]):[];
@@ -783,6 +803,10 @@ export default function WebGIS() {
               <><button className="breadcrumb-item link" onClick={handleBack}>Toàn vùng</button><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{selectedProvince}</span>{selectedWard&&<><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{(getWardValue(selectedWard,"ten_xa") as string)||selectedWard.ten_xa}</span></>}</>
             )}
           </div>
+          <button className={`layer-toggle-btn ${showThematic?"active":""}`} onClick={()=>setShowThematic(s=>!s)} title="Bản đồ chuyên đề">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span className="btn-label">Chuyên đề</span> {activeRaster&&<span className="layer-count">1</span>}
+          </button>
           <button className={`layer-toggle-btn ${showLayers?"active":""}`} onClick={()=>setShowLayers(s=>!s)} title="Lớp bản đồ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
             <span className="btn-label">Lớp bản đồ</span> {activeLayers.size>0&&<span className="layer-count">{activeLayers.size}</span>}
@@ -814,6 +838,114 @@ export default function WebGIS() {
           showKnowledge={showKnowledge}
           onToggleKnowledge={()=>setShowKnowledge(s=>!s)}
         />}
+
+        {showThematic && rasterMeta && (
+          <div className="thematic-panel">
+            <div className="thematic-header">
+              <span className="thematic-title">Bản đồ chuyên đề</span>
+              <button className="thematic-close" onClick={()=>setShowThematic(false)} title="Đóng">×</button>
+            </div>
+            <div className="thematic-body">
+              <div className="thematic-group">
+                <div className="thematic-group-label">🌡️ Khí hậu</div>
+                {(["temperature","precipitation"] as const).map(k => {
+                  const info = rasterMeta.layers[k]; if (!info) return null;
+                  return (
+                    <label key={k} className={`thematic-row ${activeRaster===k?"active":""}`}>
+                      <input type="radio" name="thematic" checked={activeRaster===k} onChange={()=>setActiveRaster(k)} />
+                      <span className="thematic-row-label">{info.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="thematic-group">
+                <div className="thematic-group-label">⛰️ Địa hình</div>
+                {(["elevation","aspect"] as const).map(k => {
+                  const info = rasterMeta.layers[k]; if (!info) return null;
+                  return (
+                    <label key={k} className={`thematic-row ${activeRaster===k?"active":""}`}>
+                      <input type="radio" name="thematic" checked={activeRaster===k} onChange={()=>setActiveRaster(k)} />
+                      <span className="thematic-row-label">{info.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="thematic-group">
+                <div className="thematic-group-label">🌱 Thổ nhưỡng</div>
+                {(["soil_type","soil_ph"] as const).map(k => {
+                  const info = rasterMeta.layers[k]; if (!info) return null;
+                  return (
+                    <label key={k} className={`thematic-row ${activeRaster===k?"active":""}`}>
+                      <input type="radio" name="thematic" checked={activeRaster===k} onChange={()=>setActiveRaster(k)} />
+                      <span className="thematic-row-label">{info.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <button className="thematic-clear" disabled={!activeRaster} onClick={()=>setActiveRaster(null)}>
+                Tắt lớp chuyên đề
+              </button>
+              {activeRaster && (
+                <div className="thematic-opacity">
+                  <label>Độ trong suốt: {Math.round(rasterOpacity*100)}%</label>
+                  <input type="range" min={0.2} max={1} step={0.05} value={rasterOpacity}
+                    onChange={e=>setRasterOpacity(parseFloat(e.target.value))} />
+                </div>
+              )}
+              {activeRaster && rasterMeta.layers[activeRaster] && (
+                <div className="thematic-source">
+                  Nguồn: <em>{rasterMeta.layers[activeRaster].source}</em>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeRaster && rasterMeta && rasterMeta.layers[activeRaster] && (() => {
+          const info = rasterMeta.layers[activeRaster];
+          const stops = info.stops;
+          const isClass = Array.isArray(stops) && stops.length > 0 && (stops as any[])[0].name !== undefined;
+          const isWheel = stops === "wheel";
+          return (
+            <div className="thematic-legend">
+              <div className="legend-title">
+                {info.label} <span className="legend-unit">({info.unit})</span>
+              </div>
+              {isWheel ? (
+                <div className="legend-wheel">
+                  {[
+                    {dir:"B (Bắc)",  color:"#e63c3c"}, {dir:"ĐB", color:"#ffb43c"},
+                    {dir:"Đ (Đông)", color:"#fff550"}, {dir:"ĐN", color:"#82dc50"},
+                    {dir:"N (Nam)",  color:"#3cc882"}, {dir:"TN", color:"#3cb4dc"},
+                    {dir:"T (Tây)",  color:"#5064e6"}, {dir:"TB", color:"#c850dc"},
+                  ].map((d,i)=><div key={i} className="legend-wheel-row"><span className="legend-swatch" style={{background:d.color}}/><span>{d.dir}</span></div>)}
+                </div>
+              ) : isClass ? (
+                <div className="legend-classes">
+                  {(stops as {name:string;color:[number,number,number]}[]).map((s,i) => (
+                    <div key={i} className="legend-class-row">
+                      <span className="legend-swatch" style={{background:`rgb(${s.color[0]},${s.color[1]},${s.color[2]})`}}/>
+                      <span>{s.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="legend-ramp-wrap">
+                  <div className="legend-ramp" style={{
+                    background: `linear-gradient(to right, ${
+                      (stops as {v:number;r:number;g:number;b:number}[]).map(s=>`rgb(${s.r},${s.g},${s.b})`).join(", ")
+                    })`
+                  }}/>
+                  <div className="legend-ramp-labels">
+                    <span>{(stops as {v:number}[])[0].v}</span>
+                    <span>{(stops as {v:number}[])[Math.floor((stops as any[]).length/2)].v}</span>
+                    <span>{(stops as {v:number}[])[(stops as any[]).length-1].v}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ─── Map ─── */}
         <div className="map-wrapper">
