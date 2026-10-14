@@ -1,0 +1,171 @@
+.wen-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 13, 8, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.wen-modal {
+  width: min(620px, 100%);
+  max-height: min(88vh, 900px);
+  background: #0f1f0f;
+  border: 1px solid rgba(82, 183, 136, 0.24);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wen-header, .wen-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #1b4332, #2d6a4f);
+}
+
+.wen-title {
+  font-weight: 700;
+}
+
+.wen-subtitle {
+  margin-top: 2px;
+  color: #95d5b2;
+  font-size: 13px;
+}
+
+.wen-close, .wen-btn, .wen-remove {
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.wen-close {
+  background: transparent;
+  color: #f0fff4;
+  font-size: 18px;
+}
+
+.wen-body {
+  padding: 14px 16px 10px;
+  overflow: auto;
+}
+
+.wen-message {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(82, 183, 136, 0.16);
+  color: #d8f3dc;
+}
+
+.wen-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.wen-select, .wen-input, .wen-color {
+  border: 1px solid rgba(82, 183, 136, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0fff4;
+  padding: 8px 9px;
+}
+
+.wen-select {
+  color-scheme: dark;
+  min-width: 230px;
+}
+
+.wen-select option {
+  background: #102416;
+  color: #f0fff4;
+}
+
+.wen-input {
+  width: 72px;
+}
+
+.wen-color {
+  padding: 2px;
+  width: 40px;
+  height: 38px;
+}
+
+.wen-btn {
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.wen-btn.secondary {
+  background: rgba(82, 183, 136, 0.16);
+  color: #d8f3dc;
+}
+
+.wen-btn.primary {
+  background: #52b788;
+  color: #07210f;
+}
+
+.wen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wen-row {
+  border: 1px solid rgba(82, 183, 136, 0.16);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wen-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wen-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wen-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+}
+
+.wen-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wen-unit {
+  color: #95d5b2;
+}
+
+.wen-remove {
+  width: 34px;
+  height: 34px;
+  background: rgba(230, 57, 70, 0.2);
+  color: #ffb3b3;
+}
+
+.wen-summary {
+  margin-top: 12px;
+  text-align: right;
+  color: #95d5b2;
+}

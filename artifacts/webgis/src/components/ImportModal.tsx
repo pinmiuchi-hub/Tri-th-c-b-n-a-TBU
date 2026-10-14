@@ -6,9 +6,14 @@ export interface WardOverrides {
   ten_xa?: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number;
   ghi_chu?: string; san_pham?: string; tinh_trang?: string;
   dan_toc?: DanTocTyLe[];
+  mau_vung?: string;      // màu nền (fill) riêng cho xã này
+  do_dam_vung?: number;   // độ đậm/nhạt nền, 0..1
+  mau_vien?: string;      // màu đường ranh giới riêng
+  do_day_vien?: number;   // độ dày đường viền
+  do_dam_vien?: number;   // độ đậm/nhạt đường viền, 0..1
   [key: string]: unknown;
 }
-export interface EthnicOverride { dan_so_ca_nuoc?: number; ngon_ngu?: string; mo_ta?: string; anh?: string; }
+export interface EthnicOverride { dan_so_ca_nuoc?: number; ngon_ngu?: string; mo_ta?: string; anh?: string; mau?: string; }
 export interface PdfFile { name: string; url: string; size: string; }
 
 interface Props {
@@ -116,7 +121,7 @@ export default function ImportModal({
       }
       if (danTocArr.length > 0) {
         const sorted = danTocArr.sort((a,b) => b.ty_le - a.ty_le);
-        if (Math.abs(totalPct - 100) > 0.5) sorted.forEach(d => { d.ty_le = Math.round(d.ty_le * 100 / totalPct); });
+        if (Math.abs(totalPct - 100) > 0.5) sorted.forEach(d => { d.ty_le = Math.round(d.ty_le * 10000 / totalPct) / 100; });
         entry.dan_toc = sorted;
       }
       newMap.set(ma, entry); count++;

@@ -12,6 +12,7 @@ interface Props {
   layerId: string;
   layerName: string;
   layerColor: string;
+  onRenameLayer: (name: string) => void;
   features: any[];
   geomType: "point" | "line" | "polygon";
   dragMode: boolean;
@@ -111,7 +112,7 @@ function emptyFeature(layerId: string, mapCenter: [number, number], geomType: "p
 }
 
 export default function LayerDataEditor(props: Props) {
-  const { layerId, layerName, layerColor, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo, onPickPoint, hidden } = props;
+  const { layerId, layerName, layerColor, onRenameLayer, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo, onPickPoint, hidden } = props;
   const fields = getFields(layerId, geomType);
   const [showAdd, setShowAdd] = useState(false);
   const [newFeat, setNewFeat] = useState<any>(() => emptyFeature(layerId, mapCenter, geomType));
@@ -153,7 +154,7 @@ export default function LayerDataEditor(props: Props) {
             <div className="lde-color-dot" style={{ background: layerColor }}/>
             <div>
               <div className="lde-title">Sửa dữ liệu lớp</div>
-              <div className="lde-layer-name">{layerName}</div>
+              <div className="lde-layer-name"><input value={layerName} onChange={e => onRenameLayer(e.target.value)} aria-label="Tên lớp" /></div>
             </div>
           </div>
           <button className="lde-close" onClick={onClose}>✕</button>

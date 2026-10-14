@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.resolve(__dirname, '../../artifacts/webgis/public/data/raster');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-const BBOX = { lngMin: 102.0, lngMax: 105.1, latMin: 20.5, latMax: 22.95 };
+const BBOX = { lngMin: 101.5, lngMax: 105.5, latMin: 20.5, latMax: 23.5 };
 const GRID_W = 80;
 const GRID_H = 64;
 const PNG_W = 600;
@@ -18,7 +18,7 @@ type Grid = Float32Array;
 const idx = (x: number, y: number) => y * GRID_W + x;
 
 async function fetchElevations(): Promise<Grid> {
-  const cachePath = path.join(OUT_DIR, '.elev-cache.json');
+  const cachePath = path.join(OUT_DIR, '.elev-cache-v2.json');
   if (fs.existsSync(cachePath)) {
     const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8')) as { w: number; h: number; data: number[] };
     if (cached.w === GRID_W && cached.h === GRID_H) {
@@ -250,14 +250,23 @@ function generateSoilType(elev: Grid): { grid: Grid; legend: { code: number; nam
   return { grid: g, legend };
 }
 
-function renderSoilTypePng(g: Grid, legend: { code: number; color: [number, number, number] }[], outPath: string, alpha = 200) {
+function renderSoilTypePng(elev: Grid, legend: { code: number; color: [number, number, number] }[], outPath: string, alpha = 200) {
   const png = new PNG({ width: PNG_W, height: PNG_H });
   for (let py = 0; py < PNG_H; py++) {
     const fy = (py / (PNG_H - 1)) * (GRID_H - 1);
+    const lat = BBOX.latMax - (py / (PNG_H - 1)) * (BBOX.latMax - BBOX.latMin);
     for (let px = 0; px < PNG_W; px++) {
       const fx = (px / (PNG_W - 1)) * (GRID_W - 1);
-      const x0 = Math.round(fx), y0 = Math.round(fy);
-      const cls = g[idx(Math.min(GRID_W - 1, x0), Math.min(GRID_H - 1, y0))];
+      const lng = BBOX.lngMin + (px / (PNG_W - 1)) * (BBOX.lngMax - BBOX.lngMin);
+      const elevation = bilinear(elev, fx, fy);
+      const isLimestone = (lat > 22.5 && lng > 103.0 && lng < 104.5)
+                       || (lat > 21.0 && lat < 21.5 && lng > 104.5 && lng < 105.1);
+      let cls: number;
+      if (elevation < 200) cls = 0;
+      else if (elevation > 1700) cls = 3;
+      else if (isLimestone && elevation > 400 && elevation < 1500) cls = 4;
+      else if (elevation > 800) cls = 2;
+      else cls = 1;
       const e = legend.find(l => l.code === Math.round(cls)) || legend[0];
       const i = (py * PNG_W + px) << 2;
       png.data[i] = e.color[0]; png.data[i + 1] = e.color[1]; png.data[i + 2] = e.color[2]; png.data[i + 3] = alpha;
@@ -347,7 +356,7 @@ const PH_STOPS: ColorStop[] = [
   renderAspectPng(aspect, elev, path.join(OUT_DIR, 'aspect.png'));
   renderPng(temp, TEMP_STOPS, path.join(OUT_DIR, 'temperature.png'));
   renderPng(precip, PRECIP_STOPS, path.join(OUT_DIR, 'precipitation.png'));
-  renderSoilTypePng(soilType, soilLegend, path.join(OUT_DIR, 'soil_type.png'));
+  renderSoilTypePng(elev, soilLegend, path.join(OUT_DIR, 'soil_type.png'));
   renderPng(soilPh, PH_STOPS, path.join(OUT_DIR, 'soil_ph.png'));
 
   const meta = {

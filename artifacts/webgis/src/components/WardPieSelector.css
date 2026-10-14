@@ -1,0 +1,151 @@
+.wps-panel {
+  position: absolute;
+  top: 70px;
+  left: 16px;
+  z-index: 1000;
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 23, 14, 0.96);
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  color: #e9f8ee;
+}
+
+.wps-header, .wps-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #1b4332, #2d6a4f);
+}
+
+.wps-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.wps-close, .wps-done, .wps-act-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.wps-close {
+  background: transparent;
+  color: #d8f3dc;
+  font-size: 16px;
+}
+
+.wps-search-row {
+  padding: 10px 12px 0;
+}
+
+.wps-search {
+  width: 100%;
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0fff4;
+  padding: 9px 10px;
+  border-radius: 8px;
+}
+
+.wps-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+}
+
+.wps-act-btn {
+  padding: 7px 10px;
+  background: rgba(82, 183, 136, 0.2);
+  color: #d8f3dc;
+}
+
+.wps-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #95d5b2;
+}
+
+.wps-body {
+  padding: 8px 10px 10px;
+  overflow: auto;
+}
+
+.wps-province {
+  border: 1px solid rgba(82, 183, 136, 0.18);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wps-province-header {
+  padding: 8px 10px;
+  background: rgba(82, 183, 136, 0.1);
+}
+
+.wps-province-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.wps-province-name {
+  font-weight: 700;
+  flex: 1;
+}
+
+.wps-province-count {
+  font-size: 12px;
+  color: #95d5b2;
+}
+
+.wps-ward-list {
+  display: grid;
+  gap: 4px;
+  padding: 6px 8px 8px;
+}
+
+.wps-ward-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #f0fdf4;
+}
+
+.wps-ward-item.checked {
+  background: rgba(82, 183, 136, 0.16);
+}
+
+.wps-checkbox {
+  accent-color: #52b788;
+}
+
+.wps-empty {
+  padding: 20px 10px;
+  color: #95d5b2;
+  text-align: center;
+}
+
+.wps-hint {
+  font-size: 12px;
+  color: #95d5b2;
+}
+
+.wps-done {
+  padding: 8px 12px;
+  background: #52b788;
+  color: #08220f;
+}
