@@ -5,6 +5,7 @@ interface FieldDef {
   label: string;
   type: "text" | "number" | "textarea" | "select";
   options?: string[];
+  optionLabels?: Record<string, string>;
   required?: boolean;
 }
 
@@ -25,9 +26,15 @@ interface Props {
   onFlyTo: (lat: number, lng: number) => void;
   /** Activate map-pick mode: parent listens for next map click and calls cb with the coords. */
   onPickPoint: (cb: (lat: number, lng: number) => void) => void;
+  /** Activate draw mode: parent delivers completed geometry coords ([[lng, lat], ...]) via cb. */
+  onDrawGeom: (geom: "duong" | "vung", cb: (coords: [number, number][]) => void) => void;
   /** When true, the editor visually hides itself (still mounted) so the map is clickable. */
   hidden?: boolean;
 }
+
+const FOREST_LABELS: Record<string, string> = { rung_thieng: "Rừng thiêng", rung_ma: "Rừng ma", rung_dau_nguon: "Rừng đầu nguồn", rung_trong: "Rừng trồng", rung_tu_nhien: "Rừng tự nhiên", rung_dac_san: "Rừng đặc sản" };
+const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
+const ZONE_LABELS: Record<string, string> = { cam_san_ban: "Cấm săn bắt", bao_ve_nuoc: "Bảo vệ nguồn nước", luat_tuc_rung: "Luật tục rừng", luan_canh: "Luân canh", cam_rung: "Cấm chặt phá rừng", bao_ve_dac_san: "Bảo vệ sản vật đặc sản" };
 
 const FIELD_CONFIG: Record<string, FieldDef[]> = {
   rivers: [
@@ -37,7 +44,7 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
   irrigation: [
     { key: "ten", label: "Tên công trình", type: "text", required: true },
     { key: "ten_dia_phuong", label: "Tên địa phương", type: "text" },
-    { key: "loai", label: "Loại", type: "select", options: ["phai", "muong", "lin", "lai"] },
+    { key: "loai", label: "Loại", type: "select", options: ["phai", "muong", "lin", "lai"], optionLabels: IRRIGATION_LABELS },
     { key: "lat", label: "Vĩ độ", type: "number" },
     { key: "lng", label: "Kinh độ", type: "number" },
     { key: "mo_ta", label: "Mô tả", type: "textarea" },
@@ -45,14 +52,14 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
   forests: [
     { key: "ten", label: "Tên khu rừng", type: "text", required: true },
     { key: "ten_dia_phuong", label: "Tên địa phương", type: "text" },
-    { key: "loai", label: "Loại", type: "select", options: ["rung_thieng", "rung_dau_nguon", "rung_ma_lang", "rung_kieng"] },
+    { key: "loai", label: "Loại", type: "select", options: ["rung_thieng", "rung_ma", "rung_dau_nguon", "rung_trong", "rung_tu_nhien", "rung_dac_san"], optionLabels: FOREST_LABELS },
     { key: "lat", label: "Vĩ độ", type: "number" },
     { key: "lng", label: "Kinh độ", type: "number" },
     { key: "mo_ta", label: "Mô tả & luật tục", type: "textarea" },
   ],
   vac_models: [
     { key: "ten", label: "Tên mô hình", type: "text", required: true },
-    { key: "loai", label: "Loại", type: "select", options: ["VAC", "VACR", "Ruong-Ao-Vuon"] },
+    { key: "loai", label: "Loại", type: "select", options: ["VAC", "VACR", "vac", "vacr", "lua_ca_vit"], optionLabels: { vac: "VAC (viết thường)", vacr: "VACR (viết thường)", lua_ca_vit: "Lúa – Cá – Vịt" } },
     { key: "lat", label: "Vĩ độ", type: "number" },
     { key: "lng", label: "Kinh độ", type: "number" },
     { key: "thanh_phan", label: "Thành phần (cách nhau dấu phẩy)", type: "text" },
@@ -64,12 +71,12 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
     { key: "lat", label: "Vĩ độ", type: "number" },
     { key: "lng", label: "Kinh độ", type: "number" },
     { key: "cong_dung", label: "Công dụng", type: "textarea" },
-    { key: "tinh_trang", label: "Tình trạng", type: "select", options: ["pho_bien", "kha_hiem", "hiem", "rat_hiem"] },
+    { key: "tinh_trang", label: "Tình trạng", type: "select", options: ["Chưa xác minh", "Đã xác minh"], optionLabels: { "Chưa xác minh": "Chưa xác minh (chưa đối chiếu nguồn)", "Đã xác minh": "Đã xác minh" } },
     { key: "dan_toc_dung", label: "Dân tộc sử dụng (cách nhau dấu phẩy)", type: "text" },
   ],
   customary_zones: [
     { key: "ten", label: "Tên khu vực", type: "text", required: true },
-    { key: "loai", label: "Loại", type: "select", options: ["rung_cam", "khu_chan_tha", "khu_san_bat", "khu_thieng"] },
+    { key: "loai", label: "Loại", type: "select", options: ["cam_san_ban", "bao_ve_nuoc", "luat_tuc_rung", "luan_canh", "cam_rung", "bao_ve_dac_san"], optionLabels: ZONE_LABELS },
     { key: "mo_ta", label: "Mô tả", type: "textarea" },
   ],
 };
@@ -95,24 +102,27 @@ function emptyFeature(layerId: string, mapCenter: [number, number], geomType: "p
     if (f.type === "number") obj[f.key] = 0;
     else obj[f.key] = "";
   });
+  const cLat = mapCenter[0];
+  const cLng = mapCenter[1];
   if (geomType === "point") {
-    obj.lat = mapCenter[0];
-    obj.lng = mapCenter[1];
+    obj.lat = cLat;
+    obj.lng = cLng;
   } else if (geomType === "line") {
-    obj.coords = [mapCenter, [mapCenter[0] + 0.05, mapCenter[1] + 0.05]];
+    // Quy ước toàn app: coords là mảng [lng, lat]
+    obj.coords = [[cLng, cLat], [cLng + 0.05, cLat + 0.05]];
   } else if (geomType === "polygon") {
     obj.coords = [[
-      mapCenter,
-      [mapCenter[0] + 0.05, mapCenter[1]],
-      [mapCenter[0] + 0.05, mapCenter[1] + 0.05],
-      [mapCenter[0], mapCenter[1] + 0.05],
+      [cLng, cLat],
+      [cLng + 0.05, cLat],
+      [cLng + 0.05, cLat + 0.05],
+      [cLng, cLat + 0.05],
     ]];
   }
   return obj;
 }
 
 export default function LayerDataEditor(props: Props) {
-  const { layerId, layerName, layerColor, onRenameLayer, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo, onPickPoint, hidden } = props;
+  const { layerId, layerName, layerColor, onRenameLayer, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo, onPickPoint, onDrawGeom, hidden } = props;
   const fields = getFields(layerId, geomType);
   const [showAdd, setShowAdd] = useState(false);
   const [newFeat, setNewFeat] = useState<any>(() => emptyFeature(layerId, mapCenter, geomType));
@@ -133,7 +143,7 @@ export default function LayerDataEditor(props: Props) {
       return (
         <select className="lde-input" value={value || ""} onChange={e => onChange(e.target.value)}>
           <option value="">-- chọn --</option>
-          {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          {field.options?.map(opt => <option key={opt} value={opt}>{field.optionLabels?.[opt] || opt}</option>)}
         </select>
       );
     }
@@ -192,8 +202,18 @@ export default function LayerDataEditor(props: Props) {
               </button>
             )}
             {geomType !== "point" && (
+              <button
+                type="button"
+                className="lde-btn lde-btn-pick"
+                onClick={() => onDrawGeom(geomType === "line" ? "duong" : "vung", coords => setNewFeat((prev: any) => ({ ...prev, coords: geomType === "polygon" ? [coords] : coords })))}
+                title="Vẽ hình trên bản đồ: click để thêm điểm, double-click để kết thúc"
+              >
+                ✏️ Vẽ hình trên bản đồ
+              </button>
+            )}
+            {geomType !== "point" && (
               <div className="lde-hint">
-                💡 Đối tượng dạng đường/vùng được tạo với hình mặc định nhỏ tại trung tâm bản đồ. Sau khi thêm, hãy dùng công cụ vẽ tay để vẽ chính xác hơn.
+                💡 Click để thêm đỉnh, double-click để kết thúc. Nếu chưa vẽ, đối tượng sẽ được tạo với hình mặc định nhỏ tại trung tâm bản đồ.
               </div>
             )}
             <button className="lde-btn lde-btn-primary" onClick={handleAddSubmit}>Lưu đối tượng</button>
@@ -252,6 +272,14 @@ export default function LayerDataEditor(props: Props) {
                     {geomType !== "point" && feat.coords && (
                       <div className="lde-coord-info">
                         📐 {geomType === "line" ? "Đường gồm" : "Vùng gồm"} {Array.isArray(feat.coords[0][0]) ? feat.coords[0].length : feat.coords.length} điểm
+                        <button
+                          type="button"
+                          className="lde-btn lde-btn-pick lde-btn-pick-sm"
+                          onClick={() => onDrawGeom(geomType === "line" ? "duong" : "vung", coords => onUpdate(idx, { ...feat, coords: geomType === "polygon" ? [coords] : coords }))}
+                          title="Vẽ lại hình trên bản đồ"
+                        >
+                          ✏️ Vẽ lại trên bản đồ
+                        </button>
                       </div>
                     )}
                   </div>

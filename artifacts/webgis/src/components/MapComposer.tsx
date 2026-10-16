@@ -31,7 +31,7 @@ export interface MapSyncSnapshot {
   capturedAt: number;
   ethnicComposition?: { label: string; value: number; color: string }[];
   ethnicLegend?: { label: string; color: string }[];
-  densityLegend?: { label: string; color: string; fillOpacity?: number }[];
+  densityLegend?: { label: string; color: string; fillOpacity?: number; present?: boolean }[];
 }
 
 // ─────────────────────────────────────────────
@@ -198,10 +198,14 @@ const ScalebarContent: React.FC<{ el: ComposerElement; snapshot?: MapSyncSnapsho
   }
 
   if (style === "text_ratio") {
+    const zoom = snapshot ? (displayZoom ?? snapshot.mapCenter.zoom) : 7;
+    const lat = snapshot?.mapCenter.lat ?? 21.7;
+    const ratio = Math.round((156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)) * 3779.52);
+    const kmPerCm = ratio / 100000;
     return (
       <div className="el-scalebar el-scalebar-text">
-        <div className="scalebar-ratio">1 : 250.000</div>
-        <div className="scalebar-ratio-sub">1 cm ≈ 2,5 km</div>
+        <div className="scalebar-ratio">1 : {ratio.toLocaleString("vi-VN")}</div>
+        <div className="scalebar-ratio-sub">1 cm ≈ {kmPerCm.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} km</div>
       </div>
     );
   }
@@ -404,10 +408,6 @@ const ElementContent: React.FC<{
           <div className="legend-items">
             {syncSnapshot
               ? <>
-                <div className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: (el.props.textColor as string) || "#333333" }}>
-                  <svg width="24" height="12" className="legend-swatch-line"><path d="M1,9 C6,3 9,11 13,6 S19,3 23,4" fill="none" stroke="#f8fcff" strokeWidth="4.8" strokeLinecap="round"/><path d="M1,9 C6,3 9,11 13,6 S19,3 23,4" fill="none" stroke="#2589c7" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                  <span>Hệ thống sông suối</span>
-                </div>
                 {Array.from(syncSnapshot.legendLayerIds ?? syncSnapshot.activeLayers).map(id => {
                   const d = syncSnapshot.layerDisplayAll[id];
                   if (!d) return null;
@@ -420,7 +420,7 @@ const ElementContent: React.FC<{
                 })}
                 {syncSnapshot.densityLegend && syncSnapshot.densityLegend.length > 0 && <div className="legend-subtitle" style={{ color: (el.props.textColor as string) || "#333333" }}>Mật độ dân số</div>}
                 {syncSnapshot.densityLegend?.map(item => (
-                  <div key={`density-${item.label}`} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: (el.props.textColor as string) || "#333333" }}>
+                  <div key={`density-${item.label}`} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: (el.props.textColor as string) || "#333333", opacity: item.present === false ? 0.4 : 1 }} title={item.present === false ? "Chưa có xã nào ở bậc này" : undefined}>
                     <span className="legend-ethnic-color" style={{ background: item.color, opacity: item.fillOpacity ?? 1 }} />
                     <span>{item.label} người/km²</span>
                   </div>
@@ -583,6 +583,27 @@ const EthnicChart: React.FC<{ type: "pie" | "bar" | "line"; data?: { label: stri
     </div>;
   }
   const max = Math.max(...data.map(item => item.value));
+  if (type === "line") {
+    const w = Math.max(120, data.length * 28);
+    const h = 78;
+    const padL = 10, padR = 8, padT = 10, padB = 22;
+    const xs = data.map((_, i) => data.length === 1 ? w / 2 : padL + (i * (w - padL - padR)) / (data.length - 1));
+    const ys = data.map(v => h - padB - (v.value / max) * (h - padT - padB));
+    const path = xs.map((x, i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(" ");
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: "80%" }}>
+        <line x1={padL - 4} y1={h - padB} x2={w - 4} y2={h - padB} stroke="#666" strokeWidth="0.8"/>
+        <path d={path} fill="none" stroke="#2a9d8f" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>
+        {data.map((v, i) => (
+          <g key={v.label}>
+            <circle cx={xs[i]} cy={ys[i]} r="3" fill={v.color} stroke="#fff" strokeWidth="1"/>
+            <text x={xs[i]} y={Math.max(6, ys[i] - 5)} textAnchor="middle" fontSize="5" fill="#333">{v.value}%</text>
+            <text x={xs[i]} y={h - 8} textAnchor="middle" fontSize="5" fill="#333">{v.label.slice(0, 5)}</text>
+          </g>
+        ))}
+      </svg>
+    );
+  }
   return (
     <svg viewBox={`0 0 ${Math.max(120, data.length * 28)} 78`} style={{ width: "100%", height: "80%" }}>
       {data.map((v, i) => {

@@ -1,6 +1,6 @@
 # WebGIS Tây Bắc — Mã nguồn
 
-Hệ thống thông tin địa lý & tri thức bản địa vùng Tây Bắc Việt Nam (Sơn La, Điện Biên, Lai Châu).
+Hệ thống thông tin địa lý & tri thức bản địa vùng Tây Bắc Việt Nam (Sơn La, Điện Biên, Lai Châu, Lào Cai).
 
 ## Yêu cầu hệ thống
 
@@ -15,16 +15,16 @@ Sau khi giải nén, mở terminal trong thư mục `webgis/` và chạy:
 # 1) Cài đặt thư viện
 pnpm install
 
-# 2) Chạy ở chế độ phát triển (dev server)
-pnpm dev
+# 2) Chạy ở chế độ phát triển (dev server) — bắt buộc đặt PORT và BASE_PATH
+PORT=5173 BASE_PATH=/ pnpm dev
 # → mở trình duyệt tại http://localhost:5173
 
 # 3) Build bản production
-pnpm build
+PORT=5173 BASE_PATH=/ pnpm build
 # → kết quả nằm trong thư mục dist/
 
 # 4) Xem thử bản production đã build
-pnpm serve
+PORT=5173 BASE_PATH=/ pnpm serve
 ```
 
 ## Cấu trúc thư mục
@@ -37,11 +37,12 @@ webgis/
 │       ├── xa_sonla.geojson     # Ranh giới xã Sơn La
 │       ├── xa_dienbien.geojson  # Ranh giới xã Điện Biên
 │       ├── xa_laichau.geojson   # Ranh giới xã Lai Châu
+│       ├── xa_laocai.geojson    # Ranh giới xã Lào Cai (tỉnh mới, gồm Yên Bái)
 │       ├── layers.json          # Sông suối, thủy lợi, mô hình VAC, ...
 │       └── dan_toc.json         # Thông tin các dân tộc
 ├── src/
 │   ├── pages/
-│   │   └── WebGIS.tsx           # Trang chính (hiển thị bản đồ)
+│   │   └── WebGIS goc.tsx       # Trang chính (hiển thị bản đồ)
 │   ├── components/              # Các component (Modal, Editor, ...)
 │   ├── utils/
 │   │   ├── geoUtils.ts          # Xuất KML / GeoJSON, parse import

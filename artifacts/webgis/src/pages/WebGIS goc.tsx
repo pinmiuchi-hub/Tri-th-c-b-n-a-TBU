@@ -41,13 +41,23 @@ interface LayersData {
 
 /* ─── Constants ─── */
 const PROVINCE_FILES: Record<string, string> = { "Sơn La": "/data/xa_sonla.geojson", "Điện Biên": "/data/xa_dienbien.geojson", "Lai Châu": "/data/xa_laichau.geojson", "Lào Cai": "/data/xa_laocai.geojson" };
-const DEFAULT_STATS: Record<string, ProvinceStat> = { "Sơn La": { dien_tich: "14.174", dan_so: "1,25M", don_vi: 75 }, "Điện Biên": { dien_tich: "9.541", dan_so: "599K", don_vi: 45 }, "Lai Châu": { dien_tich: "9.068", dan_so: "460K", don_vi: 38 }, "Lào Cai": { dien_tich: "6.364", dan_so: "770K", don_vi: 99 } };
+// Nguồn: Tổng điều tra dân số & nhà ở 01/4/2019 (Tổng cục Thống kê) cho 3 tỉnh giữ nguyên sau sáp nhập;
+// Lào Cai theo tỉnh mới sau sáp nhập với Yên Bái (NQ 202/2025/QH15, hiệu lực 01/7/2025) — dân số 2025 (GSO).
+const DEFAULT_STATS: Record<string, ProvinceStat> = { "Sơn La": { dien_tich: "14.174", dan_so: "1,25M", don_vi: 75 }, "Điện Biên": { dien_tich: "9.541", dan_so: "599K", don_vi: 45 }, "Lai Châu": { dien_tich: "9.069", dan_so: "460K", don_vi: 38 }, "Lào Cai": { dien_tich: "13.257", dan_so: "1,78M", don_vi: 99 } };
+const STATS_SOURCE_DEFAULT_NOTE = "Nguồn: TĐTDS&NO 2019 (Tổng cục Thống kê) · Đơn vị hành chính sau sắp xếp 2025";
+const STATS_SOURCE_NOTE: Record<string, string> = {
+  "Sơn La": STATS_SOURCE_DEFAULT_NOTE,
+  "Điện Biên": STATS_SOURCE_DEFAULT_NOTE,
+  "Lai Châu": STATS_SOURCE_DEFAULT_NOTE,
+  "Lào Cai": "Nguồn: TĐTDS&NO 2019 (Tổng cục Thống kê) · Lào Cai theo tỉnh mới sau sáp nhập Yên Bái (NQ 202/2025/QH15) · Đơn vị hành chính sau sắp xếp 2025",
+};
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 const LAYER_CONFIG_STORAGE_KEY = "webgis-layer-config";
 
-// Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam — Danh mục GEE
+// Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam
 const DEFAULT_LAYER_CATEGORIES = [
   { id: "hydrology", ten: "03. Thủy văn & Tài nguyên nước", icon: "💧", layers: [
+    { id: "rivers", ten: "Hệ thống sông suối (OpenStreetMap)", mau: "#2589c7", bieu_tuong: "🌊", iconOnly: true },
     { id: "irrigation", ten: "Thủy lợi truyền thống (Mương·Phai)", mau: "#74c69d", bieu_tuong: "🚿", iconOnly: true }, 
   ]},
   { id: "landcover", ten: "04. Lớp phủ & Sử dụng đất", icon: "🌾", layers: [
@@ -72,6 +82,7 @@ const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
 };
 const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   population_density: { name: "Mật độ dân số", color: "#fe9929" },
+  rivers: { name: "Hệ thống sông suối", color: "#2589c7" },
   irrigation: { name: "Thủy lợi truyền thống", color: "#74c69d" },
   forests: { name: "Phân vùng rừng", color: "#2d6a4f" },
   vac_models: { name: "Mô hình VAC/VACR", color: "#b5e48c" },
@@ -175,6 +186,11 @@ export default function WebGIS() {
   const selectedAreaFadeRef = useRef(1);
   const provinceMaskGeomRef = useRef<GeoJSON.FeatureCollection | null>(null);
   const maskedRasterCacheRef = useRef<Map<string, string>>(new Map());
+  // Lớp ranh giới xã: tự bật khi vào xem xã (để bản đồ có ranh giới như mặc định),
+  // và tắt lại khi quay về nếu người dùng chưa tự bật/tắt lớp này.
+  const wardBoundaryAutoOnRef = useRef(false);
+  const wardBoundaryOnRef = useRef(true);
+  const syncQueuedRef = useRef(false);
 
   /* ─── Core state ─── */
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -207,28 +223,68 @@ export default function WebGIS() {
     selectedAreaFadeRef.current = selectedAreaFade;
   }, [selectedAreaOnly, selectedAreaFade]);
 
-  /* ─── Added missing states to resolve ts(2304) errors ─── */
+  /* ─── Toast & undo (thùng rác) ─── */
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [trashEntries, setTrashEntries] = useState<any[]>([]);
   const lastDeletedRef = useRef<any>(null);
-  const [customCategoryIds, setCustomCategoryIds] = useState<string[]>([]);
-  const [showSpatialAnalysis, setShowSpatialAnalysis] = useState(false);
-  const [analysisType, setAnalysisType] = useState<"buffer" | "intersect" | "ward">("buffer");
-  const [analysisLayerA, setAnalysisLayerA] = useState("");
-  const [analysisLayerB, setAnalysisLayerB] = useState("");
-  const [bufferDistance, setBufferDistance] = useState(500);
-  const [analysisSummary, setAnalysisSummary] = useState<string | null>(null);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
   const [mouseCoords, setMouseCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [showAddEthnicModal, setShowAddEthnicModal] = useState(false);
 
-  /* ─── Mock functions for missing logic referenced in UI ─── */
-  const restoreTrashEntry = useCallback((entry: any) => {}, []);
-  const deleteLayer = useCallback((id: string) => {}, []);
-  const addCategory = useCallback((name: string) => {}, []);
-  const deleteCategory = useCallback((id: string) => {}, []);
-  const clearSpatialAnalysis = useCallback(() => {}, []);
-  const runSpatialAnalysis = useCallback(() => {}, []);
+  const showToast = useCallback((message: string, trashEntry?: any) => {
+    setToastMessage(message);
+    lastDeletedRef.current = trashEntry ?? null;
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastMessage(null);
+      lastDeletedRef.current = null;
+      toastTimerRef.current = null;
+    }, 8000);
+  }, []);
+
+  const restoreTrashEntry = useCallback((entry: any) => {
+    if (!entry) return;
+    if (entry.type === "feature") {
+      setLayersData(prev => {
+        if (!prev) return prev;
+        const next = { ...prev } as any;
+        const arr = [...(next[entry.layerId] || [])];
+        arr.splice(Math.min(entry.idx, arr.length), 0, entry.feature);
+        next[entry.layerId] = arr;
+        return next;
+      });
+    } else if (entry.type === "customLayer") {
+      setCustomLayers(prev => prev.some(c => c.id === entry.layer.id) ? prev : [...prev, entry.layer]);
+      setLayersData(prev => ({ ...(prev || {} as LayersData), [entry.layer.id]: entry.features || [] } as LayersData));
+      setActiveLayers(prev => new Set([...prev, entry.layer.id]));
+    } else if (entry.type === "builtinLayer") {
+      setLayerCategories(prev => prev.map(c => c.id === entry.categoryId && !c.layers.some(l => l.id === entry.layer.id)
+        ? { ...c, layers: [...c.layers, entry.layer] } : c));
+      setHiddenLayerIds(prev => {
+        const list = prev[entry.categoryId];
+        if (!list || !list.includes(entry.layer.id)) return prev;
+        const rest = list.filter((id: string) => id !== entry.layer.id);
+        const next = { ...prev };
+        if (rest.length) next[entry.categoryId] = rest; else delete next[entry.categoryId];
+        return next;
+      });
+      setActiveLayers(prev => new Set([...prev, entry.layer.id]));
+    } else if (entry.type === "category") {
+      setLayerCategories(prev => prev.some(c => c.id === entry.category.id) ? prev : [...prev, entry.category]);
+      setDeletedCategoryIds(prev => prev.filter((id: string) => id !== entry.category.id));
+      if (Array.isArray(entry.customLayers) && entry.customLayers.length) {
+        setCustomLayers(prev => [...prev, ...entry.customLayers.filter((c: any) => !prev.some(x => x.id === c.id))]);
+      }
+      if (entry.customData) setLayersData(prev => ({ ...(prev || {} as LayersData), ...entry.customData } as LayersData));
+      setActiveLayers(prev => {
+        const next = new Set(prev);
+        entry.category.layers.forEach((l: any) => next.add(l.id));
+        (entry.customLayers || []).forEach((c: any) => next.add(c.id));
+        return next;
+      });
+    }
+    setToastMessage(null);
+    lastDeletedRef.current = null;
+    if (toastTimerRef.current) { window.clearTimeout(toastTimerRef.current); toastTimerRef.current = null; }
+  }, []);
 
   const startResizingLeft = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -284,20 +340,35 @@ export default function WebGIS() {
     const defaults: LayerCategoryState[] = DEFAULT_LAYER_CATEGORIES.map(c => ({ ...c, layers: c.layers.map(l => ({ ...l })) }));
     try {
       const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
-      return Array.isArray(saved?.layerCategories)
-        ? (saved.layerCategories as LayerCategoryState[]).map(category => ({
-            ...category,
-            layers: category.layers.filter(layer => layer.id !== "rivers"),
-          }))
-        : defaults;
+      if (!Array.isArray(saved?.layerCategories)) return defaults;
+      const savedCats = saved.layerCategories as LayerCategoryState[];
+      const deletedCategoryIds: string[] = Array.isArray(saved?.deletedCategoryIds) ? saved.deletedCategoryIds : [];
+      const hiddenLayerIds: Record<string, string[]> = saved?.hiddenLayerIds && typeof saved.hiddenLayerIds === "object" ? saved.hiddenLayerIds : {};
+      // Gộp lớp mặc định mới (vd: rivers) vào config đã lưu, tôn trọng nhóm/lớp người dùng đã ẩn
+      DEFAULT_LAYER_CATEGORIES.forEach(def => {
+        if (deletedCategoryIds.includes(def.id)) return;
+        let existing = savedCats.find(c => c.id === def.id);
+        if (!existing) { existing = { ...def, layers: [] }; savedCats.push(existing); }
+        def.layers.forEach(dl => {
+          if ((hiddenLayerIds[def.id] || []).includes(dl.id)) return;
+          if (!existing!.layers.some(l => l.id === dl.id)) existing!.layers.push({ ...dl });
+        });
+      });
+      return savedCats;
     } catch { return defaults; }
   });
-
-  useEffect(() => {
+  const [deletedCategoryIds, setDeletedCategoryIds] = useState<string[]>(() => {
     try {
-      window.localStorage.setItem(LAYER_CONFIG_STORAGE_KEY, JSON.stringify({ customLayers, layerCategories }));
-    } catch { /* Ignore storage quota or privacy errors. */ }
-  }, [customLayers, layerCategories]);
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      return Array.isArray(saved?.deletedCategoryIds) ? saved.deletedCategoryIds : [];
+    } catch { return []; }
+  });
+  const [hiddenLayerIds, setHiddenLayerIds] = useState<Record<string, string[]>>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      return saved?.hiddenLayerIds && typeof saved.hiddenLayerIds === "object" ? saved.hiddenLayerIds : {};
+    } catch { return {}; }
+  });
 
   /* ─── UI state ─── */
   const [showImport, setShowImport] = useState(false);
@@ -320,8 +391,33 @@ export default function WebGIS() {
   const [showAnnotations, setShowAnnotations] = useState(false);
   const [showPieSelector, setShowPieSelector] = useState(false);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
-  const [layerSymbologies, setLayerSymbologies] = useState<Record<string, LayerSymbologyConfig>>(DEFAULT_LAYER_SYMBOLOGY);
+  const [layerSymbologies, setLayerSymbologies] = useState<Record<string, LayerSymbologyConfig>>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      return saved?.layerSymbologies && typeof saved.layerSymbologies === "object"
+        ? { ...DEFAULT_LAYER_SYMBOLOGY, ...saved.layerSymbologies }
+        : DEFAULT_LAYER_SYMBOLOGY;
+    } catch { return DEFAULT_LAYER_SYMBOLOGY; }
+  });
   const [editingSymbologyLayer, setEditingSymbologyLayer] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const payload: Record<string, unknown> = { customLayers, layerCategories, layerSymbologies, deletedCategoryIds, hiddenLayerIds };
+      if (layersData) {
+        const { rivers: _rivers, ...rest } = layersData as Record<string, any>;
+        payload.layersData = rest;
+      } else {
+        // Chưa load xong: giữ nguyên layersData đã lưu từ phiên trước
+        try {
+          const prev = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+          if (prev?.layersData) payload.layersData = prev.layersData;
+        } catch { /* bỏ qua */ }
+      }
+      window.localStorage.setItem(LAYER_CONFIG_STORAGE_KEY, JSON.stringify(payload));
+    } catch { /* Ignore storage quota or privacy errors. */ }
+  }, [customLayers, layerCategories, layerSymbologies, layersData, deletedCategoryIds, hiddenLayerIds]);
+
   const [pdfViewer, setPdfViewer] = useState<PdfFile | null>(null);
   const [editingEthnicPct, setEditingEthnicPct] = useState<string|null>(null);
   const [editingLayer, setEditingLayer] = useState<string | null>(null); const [composerSnapshot, setComposerSnapshot] = useState<any>(null);
@@ -334,6 +430,7 @@ const [syncPending, setSyncPending] = useState(false);
 const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
   
   const pickPointCbRef = useRef<((lat: number, lng: number) => void) | null>(null);
+  const drawGeomCbRef = useRef<((coords: [number, number][]) => void) | null>(null);
   const [pickingPoint, setPickingPoint] = useState(false);
   
   const ethnicPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -355,6 +452,14 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
     setPieWardSelection(new Set(allWardIds));
   }
 }, [showPieSelector, currentProvinceGeoJson]);
+
+  const readSavedLayerData = (): Record<string, any[]> | null => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      return saved?.layersData && typeof saved.layersData === "object" ? saved.layersData : null;
+    } catch { return null; }
+  };
+
   useEffect(() => {
     const loadStandardHydrography = async (fallback: any) => {
       const query = `[out:json][timeout:60];(way["waterway"="river"](20.5,101.5,23.5,105.5);way["waterway"="stream"]["name"](20.5,101.5,23.5,105.5););out tags geom;`;
@@ -390,6 +495,15 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
         d.medicinal_plants = d.medicinal_plants.map((p: any) => {
           const { ["tình_trang"]: tt, ...rest } = p;
           return tt && !rest.tinh_trang ? { ...rest, tinh_trang: tt } : rest;
+        });
+      }
+      // Phục hồi dữ liệu lớp người dùng đã biên tập trong các phiên trước
+      const savedLayerData = readSavedLayerData();
+      if (savedLayerData) {
+        Object.keys(savedLayerData).forEach(key => {
+          if (!Array.isArray(savedLayerData[key])) return;
+          if (key === "rivers") return; // rivers tải lại từ Overpass mỗi phiên
+          if (key in d || key.startsWith("custom_")) d[key] = savedLayerData[key];
         });
       }
       setLayersData(d);
@@ -533,7 +647,8 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
   const layerStyle = getLayerSymbology("medicinal_plants");
         layersData.medicinal_plants.forEach((p, idx) => {
           const tinh_trang = p.tinh_trang || (p as any)["tình_trang"] || "";
-          const tinhTrangColor = tinh_trang.toLowerCase().includes("rất") || tinh_trang.toLowerCase().includes("nguy")?"#e63946":tinh_trang.toLowerCase().includes("hiem")||tinh_trang.toLowerCase().includes("hiếm")?"#f4a261":"#52b788";
+          const tinhTrangLower = tinh_trang.toLowerCase();
+          const tinhTrangColor = tinhTrangLower.includes("chưa xác minh")?"#e09f3e":tinhTrangLower.includes("rất")||tinhTrangLower.includes("nguy")?"#e63946":tinhTrangLower.includes("hiem")||tinhTrangLower.includes("hiếm")?"#f4a261":"#52b788";
           const popup = `<div class="map-popup"><div class="popup-title">${p.ten}</div><div class="popup-sub" style="font-style:italic">${p.ten_khoa_hoc||""}</div><p><b>Công dụng:</b> ${p.cong_dung||""}</p>${tinh_trang?`<p><b>Tình trạng:</b> <span style="color:${tinhTrangColor}">${tinh_trang}</span></p>`:""}${statusNote(p)}</div>`;
 ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿",layerStyle.color,26,true), "medicinal_plants", idx, popup));        });
       } else if (id === "customary_zones") {
@@ -574,7 +689,7 @@ ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿",layerStyle.color,26
             });
           }
         }
-      } else if (id === "ward_boundaries" && allWardsGeoJson) {
+      } else if (id === "ward_boundaries" && allWardsGeoJson && viewMode === "province") {
         const wardStyle = layerSymbologies.ward_boundaries || DEFAULT_LAYER_SYMBOLOGY.ward_boundaries;
         const layer = L.geoJSON(allWardsGeoJson as GeoJSON.FeatureCollection, {
           style: () => ({ color: wardStyle.color, weight: wardStyle.lineWeight, opacity: wardStyle.opacity, fillColor: wardStyle.fillColor, fillOpacity: wardStyle.fillOpacity }),
@@ -603,7 +718,7 @@ ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿",layerStyle.color,26
       layerInstancesRef.current.set(id, built);
       built.forEach(l => og.addLayer(l));
     });
-  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson, customLayers, layerSymbologies]);
+  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson, customLayers, layerSymbologies, viewMode]);
 
   /* ─── Population density layer ─── */
   useEffect(() => {
@@ -797,6 +912,11 @@ ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿",layerStyle.color,26
     container.style.cursor = "crosshair";
     drawingCoordsRef.current = [];
 
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") cancelDraw();
+    };
+    window.addEventListener("keydown", onKey);
+
     const onClick = (e: L.LeafletMouseEvent) => {
       const coord: [number,number] = [e.latlng.lat, e.latlng.lng];
       drawingCoordsRef.current = [...drawingCoordsRef.current, coord];
@@ -817,14 +937,22 @@ ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿",layerStyle.color,26
       const coords = [...drawingCoordsRef.current];
       if (drawingPolylineRef.current) { map.removeLayer(drawingPolylineRef.current); drawingPolylineRef.current = null; }
       if (coords.length >= 2) {
-        setPendingAnnotation({coords, loai: drawMode as "duong"|"vung"});
+        const geomCb = drawGeomCbRef.current;
+        drawGeomCbRef.current = null;
         setDrawMode(null);
+        if (geomCb) {
+          // Chuyển [lat,lng] → quy ước [lng,lat] của dữ liệu lớp
+          geomCb(coords.map(([lat, lng]) => [lng, lat] as [number, number]));
+        } else {
+          setPendingAnnotation({coords, loai: drawMode as "duong"|"vung"});
+        }
       }
     };
 
     map.on("click", onClick);
     map.on("dblclick", onDblClick);
     return () => {
+      window.removeEventListener("keydown", onKey);
       map.off("click", onClick);
       map.off("dblclick", onDblClick);
       if (drawingPolylineRef.current) { map.removeLayer(drawingPolylineRef.current); drawingPolylineRef.current = null; }
@@ -903,9 +1031,13 @@ const refreshBoundaryStyles = () => {
   }
   if (wardsLayerRef.current) {
     const wardStyle = getLayerSymbology("ward_boundaries");
+    // Dùng ref (đồng bộ theo activeLayers) thay vì state trực tiếp để các lời gọi
+    // từ hàm async (handleProvinceClick) luôn đọc được trạng thái mới nhất.
+    const wardLayerOn = wardBoundaryOnRef.current;
     wardsLayerRef.current.setStyle((feat) => {
       const ward = feat!.properties as unknown as WardProperties;
       const style = getWardMapStyle(ward, wardStyle);
+      if (!wardLayerOn) return { ...style, opacity: 0, fillOpacity: 0 };
       return selectedAreaOnly && selectedWardIds.size > 0 && !selectedWardIds.has(ward.ma_xa)
         ? { ...style, opacity: 0, fillOpacity: 0 }
         : style;
@@ -1031,7 +1163,15 @@ const resetWardStyle = (ma_xa: string) => {
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download="annotations_taybac.geojson";a.click();URL.revokeObjectURL(url);
   };
-  const cancelDraw = () => { setDrawMode(null); if(drawingPolylineRef.current&&mapRef.current){mapRef.current.removeLayer(drawingPolylineRef.current);drawingPolylineRef.current=null;} };
+  const cancelDraw = () => { setDrawMode(null); drawGeomCbRef.current = null; if(drawingPolylineRef.current&&mapRef.current){mapRef.current.removeLayer(drawingPolylineRef.current);drawingPolylineRef.current=null;} };
+  const startDrawGeom = (geom: "duong" | "vung", cb: (coords: [number, number][]) => void) => {
+    pickPointCbRef.current = null;
+    setPickingPoint(false);
+    drawGeomCbRef.current = cb;
+    if (drawingPolylineRef.current && mapRef.current) { mapRef.current.removeLayer(drawingPolylineRef.current); drawingPolylineRef.current = null; }
+    drawingCoordsRef.current = [];
+    setDrawMode(geom);
+  };
 
   /* ─── Layer data CRUD ─── */
   const addLayerFeature = (layerId: string, feature: any) => {
@@ -1041,7 +1181,9 @@ const resetWardStyle = (ma_xa: string) => {
     setLayersData(prev => { if (!prev) return prev; const next = { ...prev } as any; const arr = [...next[layerId]]; arr[idx] = feature; next[layerId] = arr; return next; });
   };
   const deleteLayerFeature = (layerId: string, idx: number) => {
+    const feature = layersData ? ((layersData as any)[layerId] || [])[idx] : null;
     setLayersData(prev => { if (!prev) return prev; const next = { ...prev } as any; next[layerId] = next[layerId].filter((_: any, i: number) => i !== idx); return next; });
+    showToast(`Đã xóa "${feature?.ten || "đối tượng"}"`, { type: "feature", layerId, idx, feature });
   };
 
   /* ─── Custom layer CRUD ─── */
@@ -1060,36 +1202,56 @@ const resetWardStyle = (ma_xa: string) => {
 const deleteLayerCategory = (categoryId: string) => {
   const cat = layerCategories.find(c => c.id === categoryId);
   if (!cat) return;
-  // tắt các lớp built-in đang bật thuộc nhóm này
+  // tắt các lớp đang bật thuộc nhóm này
   setActiveLayers(prev => {
     const next = new Set(prev);
     cat.layers.forEach(l => next.delete(l.id));
     return next;
   });
-  // xóa luôn các lớp tự tạo nằm trong nhóm này (nếu có)
-  setCustomLayers(prev => prev.filter(c => c.categoryId !== categoryId));
-  setLayersData(prev => {
-    if (!prev) return prev;
-    const next = { ...prev } as any;
-    cat.layers.forEach(layer => delete next[layer.id]);
-    customLayers.filter(layer => layer.categoryId === categoryId).forEach(layer => delete next[layer.id]);
-    return next;
-  });
+  // Chỉ xóa dữ liệu của lớp TỰ TẠO trong nhóm; dữ liệu lớp builtin được giữ nguyên (chỉ ẩn đi)
+  const customInCat = customLayers.filter(c => c.categoryId === categoryId);
+  if (customInCat.length) {
+    setCustomLayers(prev => prev.filter(c => c.categoryId !== categoryId));
+    setLayersData(prev => {
+      if (!prev) return prev;
+      const next = { ...prev } as any;
+      customInCat.forEach(layer => delete next[layer.id]);
+      return next;
+    });
+  }
+  // Nếu là nhóm mặc định: ghi nhớ để không tự động khôi phục khi tải lại
+  if (DEFAULT_LAYER_CATEGORIES.some(c => c.id === categoryId)) {
+    setDeletedCategoryIds(prev => prev.includes(categoryId) ? prev : [...prev, categoryId]);
+  }
   setLayerCategories(prev => prev.filter(c => c.id !== categoryId));
+  if (editingLayer && cat.layers.some(l => l.id === editingLayer)) setEditingLayer(null);
+  const customData: Record<string, any[]> = {};
+  customInCat.forEach(layer => { if (layersData) customData[layer.id] = (layersData as any)[layer.id] || []; });
+  showToast(`Đã xóa nhóm "${cat.ten}"`, { type: "category", category: cat, customLayers: customInCat, customData });
 };
 
 const removeBuiltinLayer = (categoryId: string, layerId: string) => {
+  const layer = layerCategories.find(c => c.id === categoryId)?.layers.find(l => l.id === layerId);
   setLayerCategories(prev => prev.map(c =>
     c.id === categoryId ? { ...c, layers: c.layers.filter(l => l.id !== layerId) } : c
   ));
+  setHiddenLayerIds(prev => {
+    const list = prev[categoryId] || [];
+    if (list.includes(layerId)) return prev;
+    return { ...prev, [categoryId]: [...list, layerId] };
+  });
   setActiveLayers(prev => { const next = new Set(prev); next.delete(layerId); return next; });
+  if (layer) showToast(`Đã ẩn lớp "${layer.ten}" khỏi bảng lớp`, { type: "builtinLayer", categoryId, layer });
 };
   const deleteCustomLayer = (id: string) => {
+    const layer = customLayers.find(c => c.id === id);
+    const features = layersData ? (layersData as any)[id] || [] : [];
     setCustomLayers(prev => prev.filter(c => c.id !== id));
     setLayersData(prev => { if (!prev) return prev; const next = { ...prev } as any; delete next[id]; return next; });
     setActiveLayers(prev => { const n = new Set(prev); n.delete(id); return n; });
     if (editingLayer === id) setEditingLayer(null);
     if (layerDragMode === id) setLayerDragMode(null);
+    if (layer) showToast(`Đã xóa lớp "${layer.ten}"`, { type: "customLayer", layer, features });
   };
   const renameCustomLayer = (id: string, name: string) => {
     setCustomLayers(prev => prev.map(layer => layer.id === id ? { ...layer, ten: name } : layer));
@@ -1196,18 +1358,15 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       mapContainerRef.current.appendChild(captureMask);
     }
     let canvas: HTMLCanvasElement;
-    const boundaryLayers = [provincesLayerRef.current, wardsLayerRef.current].filter(Boolean) as L.Layer[];
     const densityPaths: L.Path[] = [];
     const isolateSelectedDensity = selectedAreaOnly && selectedWardIds.size > 0;
     const captureDensityStyle = getLayerSymbology("population_density");
-    boundaryLayers.forEach(layer => mapRef.current?.removeLayer(layer));
     densityLayerRef.current?.eachLayer(layer => {
       if (layer instanceof L.Path) {
         densityPaths.push(layer);
         const feature = (layer as unknown as L.GeoJSON).feature as GeoJSON.Feature | undefined;
         const wardId = String(feature?.properties?.ma_xa ?? "");
         layer.setStyle({
-          color: "transparent",
           fillOpacity: isolateSelectedDensity && !selectedWardIds.has(wardId) ? 0 : captureDensityStyle.fillOpacity,
         });
       }
@@ -1216,11 +1375,23 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       canvas = await html2canvas(mapContainerRef.current, {
         useCORS: true,
         allowTaint: false,
-        ignoreElements: (el) => el.classList.contains('leaflet-control-container')
+        ignoreElements: (el) => el.classList.contains('leaflet-control-container'),
+        // html2canvas serialize SVG kèm cả CSS transform của Leaflet (zoom-animation) rồi
+        // lại vẽ theo bounds đã gồm transform → dịch vị trí kép, làm mất fill ở một số vùng.
+        // Gỡ transform + chuẩn hóa viewBox trong bản clone trước khi chụp.
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll<SVGSVGElement>('svg.leaflet-zoom-animated').forEach(svgEl => {
+            svgEl.style.transform = 'none';
+            svgEl.style.transformOrigin = '0 0';
+            const vb = (svgEl.getAttribute('viewBox') || '').trim().split(/\s+/).map(Number);
+            if (vb.length === 4 && vb.every(n => Number.isFinite(n)) && (vb[0] !== 0 || vb[1] !== 0)) {
+              svgEl.setAttribute('viewBox', `0 0 ${vb[2]} ${vb[3]}`);
+            }
+          });
+        },
       });
     } finally {
       captureMask?.remove();
-      boundaryLayers.forEach(layer => layer.addTo(mapRef.current!));
       densityPaths.forEach(layer => {
         const feature = (layer as unknown as L.GeoJSON).feature as GeoJSON.Feature | undefined;
         const density = getDensityValue(feature?.properties as WardProperties);
@@ -1325,7 +1496,7 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       },
       annotations,
       layerDisplayAll,
-      densityLegend: densityLegendEntries.map(entry => ({ label: entry.label, color: entry.color, fillOpacity: entry.fillOpacity })),
+      densityLegend: densityLegendEntries.map(entry => ({ label: entry.label, color: entry.color, fillOpacity: entry.fillOpacity, present: entry.present })),
       ethnicComposition: composerEthnicComposition,
       ethnicLegend: ethnicLegendItems,
       selectedAreaOnly,
@@ -1339,15 +1510,22 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
   }
 
   setSyncPending(false);
+  // Nếu trong lúc chụp có thay đổi khác (deps đổi) thì chụp lại để snapshot không bị cũ
+  if (syncQueuedRef.current) {
+    syncQueuedRef.current = false;
+    void syncToComposer();
+  }
 };
 
   useEffect(() => {
-    if (!showMapComposer || !composerSnapshot || syncPending) return;
+    if (!showMapComposer) { syncQueuedRef.current = false; return; }
+    if (syncPending) { syncQueuedRef.current = true; return; }
     void syncToComposer();
-  }, [showMapComposer, activeLayers, activeRaster, selectedProvince, selectedWard?.ma_xa, selectedWardIds, selectedAreaOnly, selectedAreaFade, currentProvinceGeoJson, layerSymbologies, wardOverrides]);
+  }, [showMapComposer, activeLayers, activeRaster, selectedProvince, selectedWard?.ma_xa, selectedWardIds, selectedAreaOnly, selectedAreaFade, currentProvinceGeoJson, layerSymbologies, wardOverrides, layersData, annotations]);
 
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
+    if(id==="ward_boundaries") wardBoundaryAutoOnRef.current=false;
     setActiveLayers(prev=>{
       const next=new Set(prev);
       if (next.has(id)) { next.delete(id); if (editingLayer === id) setEditingLayer(null); if (layerDragMode === id) setLayerDragMode(null); } 
@@ -1430,6 +1608,14 @@ style:()=>({
       refreshBoundaryStyles();
       setMapScale(scaleFromZoom(map.getCenter().lat, map.getZoom()));
     });
+    let lastCoordsUpdate = 0;
+    map.on("mousemove", (e: L.LeafletMouseEvent) => {
+      const now = Date.now();
+      if (now - lastCoordsUpdate < 120) return;
+      lastCoordsUpdate = now;
+      setMouseCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
+    });
+    map.on("mouseout", () => setMouseCoords(null));
     try {
       const data=await fetchGeoJson("/data/tinh.geojson");
       addProvincesLayer(map,data);
@@ -1442,6 +1628,11 @@ style:()=>({
   const handleProvinceClick = async (name:string) => {
     if(!mapRef.current)return;
     setLoading(true);setSelectedProvince(name);setSelectedWard(null);setSelectedWardIds(new Set());setSelectedDanToc(null);
+    // Vào xem xã: tự bật lớp ranh giới để bản đồ luôn có ranh giới (đồng bộ với badge/chú giải)
+    if(!activeLayers.has("ward_boundaries")){
+      setActiveLayers(prev=>prev.has("ward_boundaries")?prev:new Set([...prev,"ward_boundaries"]));
+      wardBoundaryAutoOnRef.current=true;
+    }
     try {
       const data=await fetchGeoJson(PROVINCE_FILES[name]);
       const wardStyle = getLayerSymbology("ward_boundaries");
@@ -1459,11 +1650,15 @@ onEachFeature:(feat,lyr)=>{
   const p=feat.properties as unknown as WardProperties;
   (lyr as L.Path).on({
     mouseover:e=>{
+      if(!wardBoundaryOnRef.current)return;
       const cur=getWardMapStyle(p, wardStyle);
       (e.target as L.Path).setStyle({...cur, fillOpacity:Math.min(0.6, cur.fillOpacity + 0.26), weight: cur.weight + 0.8});
       (e.target as L.Path).bringToFront();
     },
-    mouseout:e=>{(e.target as L.Path).setStyle(getWardMapStyle(p, wardStyle));},
+    mouseout:e=>{
+      if(!wardBoundaryOnRef.current)return;
+      (e.target as L.Path).setStyle(getWardMapStyle(p, wardStyle));
+    },
     click:(event: L.LeafletMouseEvent)=>{
       const additive = event.originalEvent.shiftKey || event.originalEvent.ctrlKey || event.originalEvent.metaKey;
       setSelectedWardIds(prev => {
@@ -1483,6 +1678,7 @@ onEachFeature:(feat,lyr)=>{
 },
       });
       wl.addTo(mapRef.current);wardsLayerRef.current=wl;
+      refreshBoundaryStyles();
       const b=wl.getBounds();if(b.isValid())mapRef.current.fitBounds(b,{padding:[40,40],maxZoom:11});
       setViewMode("ward");
     } catch(e){console.error(e);} finally{setLoading(false);}
@@ -1491,6 +1687,12 @@ onEachFeature:(feat,lyr)=>{
   const handleBack = async () => {
     if(!mapRef.current)return; setLoading(true);
     if(wardsLayerRef.current){mapRef.current.removeLayer(wardsLayerRef.current);wardsLayerRef.current=null;}
+    // Nếu lớp ranh giới chỉ được tự bật khi vào xem xã thì tắt lại khi quay về,
+    // giữ nguyên nếu người dùng đã tự bật/tắt lớp này.
+    if(wardBoundaryAutoOnRef.current){
+      wardBoundaryAutoOnRef.current=false;
+      setActiveLayers(prev=>{if(!prev.has("ward_boundaries"))return prev;const n=new Set(prev);n.delete("ward_boundaries");return n;});
+    }
     setSelectedProvince(null);setSelectedWard(null);setSelectedWardIds(new Set());setSelectedDanToc(null);setViewMode("province");allWardsRef.current=[];setCurrentProvinceGeoJson(null);setPieWardSelection(new Set());
     try {
       const data=await fetchGeoJson("/data/tinh.geojson");
@@ -1505,8 +1707,9 @@ onEachFeature:(feat,lyr)=>{
   useEffect(()=>{initMap();return()=>{if(mapRef.current){mapRef.current.remove();mapRef.current=null;}};},[initMap]);
 
   useEffect(() => {
+  wardBoundaryOnRef.current = activeLayers.has("ward_boundaries");
   refreshBoundaryStyles();
-  }, [layerSymbologies, wardOverrides, selectedProvince, selectedWard, selectedWardIds, selectedAreaOnly]);
+  }, [layerSymbologies, wardOverrides, selectedProvince, selectedWard, selectedWardIds, selectedAreaOnly, activeLayers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1758,7 +1961,8 @@ onEachFeature:(feat,lyr)=>{
       const index = upperBounds.findIndex(bound => value < bound);
       present.add(index < 0 ? classes.length - 1 : index);
     });
-    return classes.filter((_, index) => present.has(index)).map(entry => ({ ...entry, fillOpacity: densityStyle.fillOpacity }));
+    // Hiển thị ĐỦ các bậc; bậc chưa có xã nào rơi vào sẽ bị mờ để chú giải luôn liên tục
+    return classes.map((entry, index) => ({ ...entry, fillOpacity: densityStyle.fillOpacity, present: present.has(index) }));
   }, [activeRaster, activeLayers, selectedProvince, currentProvinceGeoJson, selectedWard, wardOverrides, layerSymbologies]);
   const wardPdfs=selectedWard?(pdfFiles.get(selectedWard.ma_xa)||[]):[];
   const wardCustom=selectedWard?wardOverrides.get(selectedWard.ma_xa):undefined;
@@ -1824,9 +2028,10 @@ onEachFeature:(feat,lyr)=>{
       return { ma_xa: props.ma_xa, ten_xa: props.ten_xa, ten_tinh: props.ten_tinh || selectedProvince || "" };
     });
   }, [currentProvinceGeoJson, selectedProvince]);
-  const totalLayerFeatures = customLayers.length + wardDanToc.length; // Placeholder calculation
+  const totalLayerFeatures = layersData ? Object.values(featureCounts).reduce((sum, n) => sum + (n || 0), 0) : 0;
 
-  const EditWard=({field,suffix="",type="text" as "text"|"number",decimals}:{field:keyof WardProperties&string;suffix?:string;type?:"text"|"number";decimals?:number})=>{
+  // Hàm render thường (không phải component) để tránh remount EditableValue mỗi lần re-render
+  const renderEditWard=({field,suffix="",type="text" as "text"|"number",decimals}:{field:keyof WardProperties&string;suffix?:string;type?:"text"|"number";decimals?:number}):React.ReactNode=>{
     if(!selectedWard)return null;
     const val=getWardValue(selectedWard,field);
     return <EditableValue value={(val??"") as string|number} suffix={suffix} type={type} decimals={decimals} placeholder="Click để nhập" onSave={v=>updateWardField(selectedWard.ma_xa,field,type==="number"?parseFloat(v):v)}/>;
@@ -1966,47 +2171,6 @@ onClick={() => setShowMapComposer(s => !s)}
           </div>
 
 
-          {showSpatialAnalysis && (
-            <div style={{ position: "absolute", top: 160, left: 16, zIndex: 700, width: 320, background: "rgba(10, 20, 16, 0.95)", border: "1px solid rgba(82, 183, 136, 0.25)", borderRadius: 12, padding: 14, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.3)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div style={{ fontWeight: 700, color: "#d8f3dc" }}>📐 Phân tích không gian</div>
-                <button className="modal-close" onClick={() => { setShowSpatialAnalysis(false); clearSpatialAnalysis(); }} title="Đóng">✕</button>
-              </div>
-              <div style={{ display: "grid", gap: 10 }}>
-                <label style={{ fontSize: 12, color: "#95d5b2" }}>Loại phân tích
-                  <select value={analysisType} onChange={e => setAnalysisType(e.target.value as any)} style={{ width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(82, 183, 136, 0.2)", background: "#13251d", color: "#d8f3dc" }}>
-                    <option value="buffer">Vùng đệm</option>
-                    <option value="intersect">Giao cắt</option>
-                    <option value="ward">Thống kê theo xã</option>
-                  </select>
-                </label>
-                <label style={{ fontSize: 12, color: "#95d5b2" }}>Lớp dữ liệu
-                  <select value={analysisLayerA} onChange={e => setAnalysisLayerA(e.target.value)} style={{ width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(82, 183, 136, 0.2)", background: "#13251d", color: "#d8f3dc" }}>
-                    {Object.entries(layerDisplayAll).filter(([id]) => id !== "ward_boundaries").map(([id, meta]) => (
-                      <option key={id} value={id}>{meta.name}</option>
-                    ))}
-                  </select>
-                </label>
-                {analysisType === "buffer" ? (
-                  <label style={{ fontSize: 12, color: "#95d5b2" }}>Bán kính (m)
-                    <input type="number" min={50} max={5000} step={50} value={bufferDistance} onChange={e => setBufferDistance(Number(e.target.value) || 0)} style={{ width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(82, 183, 136, 0.2)", background: "#13251d", color: "#d8f3dc" }} />
-                  </label>
-                ) : analysisType === "intersect" ? (
-                  <label style={{ fontSize: 12, color: "#95d5b2" }}>Lớp đối chiếu
-                    <select value={analysisLayerB} onChange={e => setAnalysisLayerB(e.target.value)} style={{ width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(82, 183, 136, 0.2)", background: "#13251d", color: "#d8f3dc" }}>
-                      {Object.entries(layerDisplayAll).filter(([id]) => id !== analysisLayerA).map(([id, meta]) => (
-                        <option key={id} value={id}>{meta.name}</option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
-                <button onClick={runSpatialAnalysis} style={{ padding: "9px 10px", borderRadius: 8, border: "none", background: "#52b788", color: "#07140d", fontWeight: 700, cursor: "pointer" }}>Chạy phân tích</button>
-                {analysisSummary && <div style={{ fontSize: 12, color: "#d8f3dc", background: "rgba(82, 183, 136, 0.14)", padding: "8px 10px", borderRadius: 8 }}>{analysisSummary}</div>}
-                {analysisError && <div style={{ fontSize: 12, color: "#fda4af", background: "rgba(220, 38, 38, 0.15)", padding: "8px 10px", borderRadius: 8 }}>{analysisError}</div>}
-              </div>
-            </div>
-          )}
-
           {showThematic && rasterMeta && (
             <div className="thematic-panel">
               <div className="thematic-header"><span className="thematic-title">Bản đồ chuyên đề</span><button className="thematic-close" onClick={()=>setShowThematic(false)} title="Đóng">×</button></div>
@@ -2063,6 +2227,7 @@ onClick={() => setShowMapComposer(s => !s)}
                     </div>
                   </div>
                 )}
+                {info.source && <div className="legend-source" title="Nguồn dữ liệu" style={{marginTop:6,fontSize:9.5,lineHeight:1.4,opacity:0.7,fontStyle:"italic"}}>Nguồn: {info.source}</div>}
               </div>
             );
           })()}
@@ -2070,8 +2235,27 @@ onClick={() => setShowMapComposer(s => !s)}
           {/* Bản đồ chính */}
           <div className="map-wrapper" style={{ width: "100%", height: "100%", flex: 1, position: "relative" }}>
             <div ref={mapContainerRef} className="map-canvas" style={{ width: "100%", height: "100%" }}/>
-            
-            {(loading||loadingWardBoundaries)&&<div className="map-overlay"><div className="loading-spinner"/><span>{loadingWardBoundaries?"Đang tải ranh giới xã của 3 tỉnh...":"Đang tải dữ liệu..."}</span></div>}
+
+            {!editingLayer && (
+            <div className="draw-toolbar">
+              <button className={`draw-btn ${drawMode==="diem"?"active":""}`} onClick={()=>setDrawMode(drawMode==="diem"?null:"diem")} title="Vẽ điểm đánh dấu">📍 Điểm</button>
+              <button className={`draw-btn ${drawMode==="duong"?"active":""}`} onClick={()=>setDrawMode(drawMode==="duong"?null:"duong")} title="Vẽ đường">〰️ Đường</button>
+              <button className={`draw-btn ${drawMode==="vung"?"active":""}`} onClick={()=>setDrawMode(drawMode==="vung"?null:"vung")} title="Vẽ vùng">⬡ Vùng</button>
+              <div className="draw-sep"/>
+              {drawMode ? (
+                <div className="draw-active-bar">
+                  <span className="draw-hint">{drawMode==="diem"?"Click vào bản đồ để đặt điểm":"Click để vẽ · Double-click để kết thúc"}</span>
+                  <button className="draw-cancel-btn" onClick={cancelDraw}>Hủy</button>
+                </div>
+              ) : (
+                <button className={`draw-btn ${showAnnotations?"active":""}`} onClick={()=>setShowAnnotations(v=>!v)} title="Danh sách đối tượng đã đánh dấu">
+                  📋 Danh sách{annotations.length>0&&<span className="ann-count">{annotations.length}</span>}
+                </button>
+              )}
+            </div>
+            )}
+
+            {(loading||loadingWardBoundaries)&&<div className="map-overlay"><div className="loading-spinner"/><span>{loadingWardBoundaries?"Đang tải ranh giới xã của 4 tỉnh...":"Đang tải dữ liệu..."}</span></div>}
             {viewMode==="ward"&&<button className="back-button" onClick={handleBack}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="back-icon"><polyline points="15 18 9 12 15 6"/></svg>Quay lại bản đồ vùng</button>}
             {viewMode==="province"&&!drawMode&&<div className="map-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Click vào tỉnh để xem ranh giới xã và dân tộc</div>}
 
@@ -2141,7 +2325,7 @@ onClick={() => setShowMapComposer(s => !s)}
                   ))}
                 </div>
               )}
-{(() => {
+{(viewMode === "province" || activeLayers.has("ward_boundaries")) && (() => {
   const boundaryStyle = getLayerSymbology(viewMode === "province" ? "province_boundaries" : "ward_boundaries");
   const boundaryDash = getZoomAwareDashArray(boundaryStyle.dashArray, mapRef.current?.getZoom() ?? 7);
   return (
@@ -2158,7 +2342,7 @@ onClick={() => setShowMapComposer(s => !s)}
       <span>{viewMode === "province" ? "Ranh giới tỉnh" : "Ranh giới xã/phường"}</span>
     </div>
   );
-})()}{activeLayers.has("ward_boundaries") && (() => {
+})()}{activeLayers.has("ward_boundaries") && viewMode === "province" && (() => {
   const wardLegendStyle = getLayerSymbology("ward_boundaries");
   const wardBoundaryDash = getZoomAwareDashArray(wardLegendStyle.dashArray, mapRef.current?.getZoom() ?? 7);
   return (
@@ -2172,17 +2356,17 @@ onClick={() => setShowMapComposer(s => !s)}
           strokeLinecap="round"
         />
       </svg>
-      <span>Ranh giới xã (3 tỉnh)</span>
+      <span>Ranh giới xã (4 tỉnh)</span>
     </div>
   );
 })()}
-<div className="legend-item">
+{activeLayers.has("rivers")&&<div className="legend-item">
   <svg width="18" height="14" viewBox="0 0 18 14" className="legend-color legend-line-swatch" style={{ width: 18, height: 14, background: "transparent" }}>
     <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#f8fcff" strokeWidth="4.8" strokeLinecap="round" opacity="0.95"/>
     <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#2589c7" strokeWidth="1.8" strokeLinecap="round"/>
   </svg>
-  <span>Hệ thống sông suối</span>
-</div>
+  <span title="Nguồn: OpenStreetMap (Overpass API)">Hệ thống sông suối <span style={{opacity:0.6,fontSize:"inherit",fontStyle:"italic"}}>(OSM)</span></span>
+</div>}
 {activeLayers.has("irrigation")&&<div className="legend-item"><span className="legend-symbol">🚿</span><span>Thủy lợi</span></div>}
               {activeLayers.has("forests")&&<div className="legend-item"><span className="legend-symbol">🌲</span><span>Rừng</span></div>}
               {activeLayers.has("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
@@ -2191,7 +2375,17 @@ onClick={() => setShowMapComposer(s => !s)}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
               {densityLegendEntries.length > 0 && viewMode === "ward" && <>
                 <div className="legend-subtitle">Mật độ dân số</div>
-                {densityLegendEntries.map((entry, index) => <div className="legend-item" key={`density-${index}`}><div className="legend-color" style={{background: entry.color, opacity: entry.fillOpacity ?? 1}}/><span>{entry.label} người/km²</span></div>)}
+                {densityLegendEntries.map((entry, index) => (
+                  <div
+                    className="legend-item"
+                    key={`density-${index}`}
+                    style={entry.present ? undefined : { opacity: 0.4 }}
+                    title={entry.present ? undefined : "Chưa có xã nào ở bậc này"}
+                  >
+                    <div className="legend-color" style={{background: entry.color, opacity: entry.fillOpacity ?? 1}}/>
+                    <span>{entry.label} người/km²</span>
+                  </div>
+                ))}
               </>}
               {annotations.length>0&&<div className="legend-item"><div className="legend-color" style={{background:"#e9c46a"}}/><span>Đối tượng của tôi</span></div>}
             </div>
@@ -2241,9 +2435,9 @@ onClick={() => setShowMapComposer(s => !s)}
                     </div>
                    <div className="info-grid">
   <div className="info-row"><div className="info-label">Mã đơn vị</div><div className="info-value">{selectedWard.ma_xa}</div></div>
-  <div className="info-row"><div className="info-label">Diện tích</div><div className="info-value"><EditWard field="dtich_km2" suffix=" km²" type="number" decimals={2}/></div></div>
-  <div className="info-row"><div className="info-label">Dân số</div><div className="info-value"><EditWard field="dan_so" suffix=" người" type="number"/></div></div>
-  <div className="info-row"><div className="info-label">Mật độ</div><div className="info-value"><EditWard field="matdo_km2" suffix=" ng/km²" type="number" decimals={1}/></div></div>
+  <div className="info-row"><div className="info-label">Diện tích</div><div className="info-value">{renderEditWard({ field: "dtich_km2", suffix: " km²", type: "number", decimals: 2 })}</div></div>
+  <div className="info-row"><div className="info-label">Dân số</div><div className="info-value">{renderEditWard({ field: "dan_so", suffix: " người", type: "number" })}</div></div>
+  <div className="info-row"><div className="info-label">Mật độ</div><div className="info-value">{renderEditWard({ field: "matdo_km2", suffix: " ng/km²", type: "number", decimals: 1 })}</div></div>
 </div>                                          {/* ✅ THÊM DÒNG NÀY */}
 <div className="custom-fields">
   {[{f:"ghi_chu",l:"Ghi chú",p:"Click để thêm"},{f:"san_pham",l:"Sản phẩm chính",p:"VD: Ngô, Sắn, Lúa"},{f:"tinh_trang",l:"Tình trạng",p:"VD: Đang phát triển"}].map(({f,l,p})=>(
@@ -2384,6 +2578,9 @@ onClick={() => setShowMapComposer(s => !s)}
                       <div className="stat-item"><div className="stat-value"><EditableValue value={stats.dan_so} onSave={v=>updateProvinceStat(selectedProvince,"dan_so",v)}/></div><div className="stat-label">Dân số</div></div>
                       <div className="stat-item"><div className="stat-value"><EditableValue value={stats.don_vi} type="number" onSave={v=>updateProvinceStat(selectedProvince,"don_vi",v)}/></div><div className="stat-label">Xã/Phường</div></div>
                     </div>
+                    {(() => { const sourceNote = STATS_SOURCE_NOTE[selectedProvince] || STATS_SOURCE_DEFAULT_NOTE; return (
+                    <div className="stats-source" title={sourceNote} style={{ marginTop: 6, fontSize: 9.5, lineHeight: 1.4, color: "rgba(149,213,177,0.65)", fontStyle: "italic" }}>{sourceNote}</div>
+                    ); })()}
                   </div>
                 )}
 
@@ -2456,7 +2653,14 @@ onClick={() => setShowMapComposer(s => !s)}
   onRequestSync={syncToComposer}
   syncPending={syncPending}
   onOpenLayerEditor={() => {
-    const preferred = editingLayer || Array.from(activeLayers)[0] || "rivers";
+    const candidates = Array.from(activeLayers);
+    const isEditable = (id: string) => allEditableLayers.has(id) && !!layerDisplayAll[id];
+    const preferred = editingLayer && isEditable(editingLayer) ? editingLayer : candidates.find(isEditable);
+    if (!preferred) {
+      alert("Hãy bật một lớp có thể biên tập trước (Thủy lợi, Rừng, Cây thuốc, Luật tục, mô hình VAC hoặc lớp tự tạo).");
+      return;
+    }
+    cancelDraw();
     setEditingLayer(preferred);
     setShowMapComposer(true);
     setShowLayers(false);
@@ -2476,18 +2680,19 @@ onClick={() => setShowMapComposer(s => !s)}
           onAdd={f => addLayerFeature(editingLayer, f)}
           onUpdate={(idx, f) => updateLayerFeature(editingLayer, idx, f)}
           onDelete={idx => deleteLayerFeature(editingLayer, idx)}
-          onClose={() => { setEditingLayer(null); setLayerDragMode(null); pickPointCbRef.current = null; setPickingPoint(false); }}
+          onClose={() => { setEditingLayer(null); setLayerDragMode(null); pickPointCbRef.current = null; setPickingPoint(false); cancelDraw(); }}
           mapCenter={mapCenter}
           onFlyTo={(lat, lng) => mapRef.current?.flyTo([lat, lng], 13, { duration: 1.2 })}
-          onPickPoint={cb => { pickPointCbRef.current = cb; setPickingPoint(true); }}
-          hidden={pickingPoint}
+          onPickPoint={cb => { cancelDraw(); pickPointCbRef.current = cb; setPickingPoint(true); }}
+          onDrawGeom={startDrawGeom}
+          hidden={pickingPoint || drawMode !== null}
         />
       )}
 
-      {pickingPoint && (
+      {(pickingPoint || (editingLayer && drawMode)) && (
         <div className="pick-point-banner">
-          <span>📍 Click vào vị trí mong muốn trên bản đồ để chọn tọa độ</span>
-          <button className="pick-point-cancel" onClick={() => { pickPointCbRef.current = null; setPickingPoint(false); }}>✕ Hủy</button>
+          <span>{pickingPoint ? "📍 Click vào vị trí mong muốn trên bản đồ để chọn tọa độ" : "✏️ Đang vẽ hình — click để thêm đỉnh, double-click để kết thúc"}</span>
+          <button className="pick-point-cancel" onClick={() => { if (pickingPoint) { pickPointCbRef.current = null; setPickingPoint(false); } else { cancelDraw(); } }}>✕ Hủy</button>
         </div>
       )}
 
@@ -2585,6 +2790,17 @@ onClick={() => setShowMapComposer(s => !s)}
           selected={pieWardSelection}
           onChange={(newSelected) => setPieWardSelection(newSelected)}
           onClose={() => setShowPieSelectorModal(false)}
+        />
+      )}
+
+      {editingSymbologyLayer && (
+        <LayerSymbologyEditorModal
+          open
+          layerId={editingSymbologyLayer}
+          layerName={layerDisplayAll[editingSymbologyLayer]?.name}
+          initialValue={getLayerSymbology(editingSymbologyLayer)}
+          onClose={() => setEditingSymbologyLayer(null)}
+          onSave={saveLayerSymbology}
         />
       )}
 

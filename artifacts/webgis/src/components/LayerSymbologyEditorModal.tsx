@@ -15,12 +15,13 @@ export interface LayerSymbologyConfig {
 interface Props {
   open: boolean;
   layerId: string;
+  layerName?: string;
   initialValue: LayerSymbologyConfig;
   onClose: () => void;
   onSave: (layerId: string, value: LayerSymbologyConfig) => void;
 }
 
-export default function LayerSymbologyEditorModal({ open, layerId, initialValue, onClose, onSave }: Props) {
+export default function LayerSymbologyEditorModal({ open, layerId, layerName, initialValue, onClose, onSave }: Props) {
   const [draft, setDraft] = useState<LayerSymbologyConfig>(initialValue);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function LayerSymbologyEditorModal({ open, layerId, initialValue,
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>Chỉnh sửa ký hiệu & chú giải</div>
-            <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{layerId === "ward_boundaries" ? "Ranh giới hành chính xã/phường" : layerId === "population_density" ? "Lớp mật độ dân số" : layerId}</div>
+            <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{layerName || (layerId === "ward_boundaries" ? "Ranh giới hành chính xã/phường" : layerId === "population_density" ? "Lớp mật độ dân số" : layerId)}</div>
           </div>
           <button type="button" onClick={onClose} style={{ border: "none", background: "#e2e8f0", borderRadius: 999, width: 36, height: 36, cursor: "pointer", fontSize: 18 }}>✕</button>
         </div>

@@ -153,7 +153,7 @@ const [newGroupIcon, setNewGroupIcon] = useState("📁");
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
                   )}
-                  {onEditSymbology && (layer.id === "ward_boundaries" || layer.id === "population_density") && (
+                  {onEditSymbology && (
  <button className="layer-edit-btn" onClick={() => onEditSymbology(layer.id)} title="Chỉnh sửa ký hiệu & chú giải">                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3h7a2 2 0 0 1 2 2v7"/><path d="M12 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><path d="M14.7 7.3l2 2"/><path d="M15.2 4.8l4 4"/><path d="M8 16l2-2 4 4-2 2z"/></svg>
                     </button>
                   )}

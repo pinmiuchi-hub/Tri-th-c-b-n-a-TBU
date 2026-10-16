@@ -128,9 +128,34 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 
 ## 5. Tài liệu chính thống nên lấy tiếp để hoàn thiện
 
-1. Tổng cục Thống kê, kết quả toàn bộ Tổng điều tra dân số và nhà ở 2019 (số dân Kinh và số liệu cấp tỉnh/huyện/xã, thay cho các số liệu tự nhập ở `DEFAULT_STATS`: diện tích, dân số, số đơn vị của 4 tỉnh trong `WebGIS.tsx`, hiện chưa đối chiếu).
+1. ~~Kết quả toàn bộ Tổng điều tra dân số và nhà ở 2019 cho `DEFAULT_STATS`~~ — **Đã đối chiếu 15/10/2026**, xem mục 6.
 2. Ủy ban Dân tộc / Viện Dân tộc học, bộ sách "Các dân tộc ở Việt Nam" (tập Nam Á, Tày–Thái, Mông–Dao) làm cơ sở cho các mục mô tả và `tri_thuc`.
 3. Bảo tàng Dân tộc học Việt Nam: hồ sơ lễ hội và tín ngưỡng của Thái, Mông, Mường (Hoa Ban, Xên bản, Gầu Tào, Nào Pê Chầu).
 4. Dữ liệu kiểm kê rừng, quy hoạch sử dụng đất của UBND tỉnh Sơn La/Điện Biên/Lai Châu/Lào Cai và Bộ Nông nghiệp và Môi trường (diện tích rừng, thảo quả, thủy lợi); Sách đỏ Việt Nam / Danh lục đỏ IUCN cho tình trạng bảo tồn cây thuốc.
 5. Lịch thời vụ chính thức của Sở Nông nghiệp và Môi trường từng tỉnh theo năm.
 6. Khảo sát thực địa có sự tham gia của già làng, trưởng bản (để có tọa độ và tên địa phương xác thực, kèm sự đồng ý của cộng đồng đối với các thông tin nhạy cảm như vị trí cây thuốc quý).
+
+## 6. Cập nhật 15/10/2026 — đối chiếu thống kê tỉnh & ghi nguồn
+
+### 6.1. `DEFAULT_STATS` đã đối chiếu nguồn chính thống
+
+| Tỉnh | Diện tích | Dân số | Đơn vị | Nguồn |
+|---|---|---|---|---|
+| Sơn La | 14.174 km² | 1.248.415 (2019) → hiển thị "1,25M" | 75 | TĐTDS&NO 01/4/2019 (Tổng cục Thống kê); đơn vị theo QĐ 19/2025/QĐ-TTg |
+| Điện Biên | 9.541 km² | 598.856 (2019) → "599K" | 45 | TĐTDS&NO 2019; đơn vị sau sắp xếp 2025 |
+| Lai Châu | 9.069 km² | 460.196 (2019) → "460K" | 38 | TĐTDS&NO 2019; đơn vị sau sắp xếp 2025 |
+| Lào Cai (mới) | 13.257 km² | 1.778.785 (2025) → "1,78M" | 99 | NQ 202/2025/QH15 (sáp nhập với Yên Bái, hiệu lực 01/7/2025); dân số theo GSO 2025 |
+
+- **Đã sửa**: dân số Lào Cai cũ ghi 770K (sai — TĐTDS&NO 2019 là 730.420). Vì dữ liệu ranh giới `xa_laocai.geojson` là **tỉnh Lào Cai mới** (gồm địa bàn Yên Bái cũ, 99 đơn vị, `ma_tinh = "15"`), thống kê đã cập nhật theo tỉnh mới thay vì gắn nhãn "cũ".
+- Giao diện hiển thị dòng nguồn ngay dưới khối thống kê tỉnh (`STATS_SOURCE_NOTE`).
+- **Lưu ý snapshot hành chính**: toàn bộ app dùng cấu trúc đơn vị hành chính **sau sắp xếp 01/7/2025** (Sơn La 75, Điện Biên 45, Lai Châu 38, Lào Cai 99). Dân số là số liệu điều tra gần nhất.
+
+### 6.2. Ghi nguồn hiển thị trong app
+
+- Chú giải raster chuyên đề: thêm dòng "Nguồn: …" lấy từ `raster/meta.json` (`source`) — elevation/aspect = NASA SRTM (Open-Meteo); nhiệt lượng, lượng mưa, đất = **mô hình ước lượng, không phải quan trắc trực tiếp**.
+- Chú giải "Hệ thống sông suối": ghi nguồn **OpenStreetMap (Overpass API)**; lớp rivers đã bật lại trong nhóm Thủy văn.
+- Panel bản đồ chuyên đề đã có dòng `Nguồn:` (có sẵn).
+
+### 6.3. Dọn dữ liệu thừa
+
+- Xóa `public/data/gee_catalog.json` (196 KB, không code nào tham chiếu; danh mục GEE không còn dùng).
