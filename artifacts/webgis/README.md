@@ -57,7 +57,7 @@ webgis/
 
 - Bản đồ tương tác với 3 lớp nền: **OpenStreetMap**, **Vệ tinh (Esri)**, **Địa hình (OpenTopoMap)**
 - Hiển thị ranh giới tỉnh/xã của Tây Bắc, có thể click để xem chi tiết
-- 7 lớp dữ liệu: Sông suối chính, Thủy lợi, **Phân vùng rừng (polygon)**, Mô hình VAC, **Khu vực cây thuốc quý (polygon)**, Vùng tập quán, Ranh giới xã
+- 8 lớp dữ liệu: Sông suối chính, Thủy lợi, **Phân vùng rừng (polygon)**, Mô hình VAC, **Khu vực cây thuốc quý (polygon)**, Vùng tập quán, **Bản làng tiêu biểu (25 điểm)**, Ranh giới xã
 - Biên tập tại chỗ: thêm/sửa/xóa đối tượng, chọn vị trí trên bản đồ (điểm) hoặc vẽ vùng/polygon
 - Tải ảnh tùy chỉnh cho biểu tượng lớp
 - Xuất từng lớp ra **KML** (Google Earth) hoặc **GeoJSON** (giữ nguyên màu sắc & biểu tượng)
@@ -75,6 +75,9 @@ Sau khi `pnpm build`, thư mục `dist/` chứa file tĩnh có thể deploy lên
 - **Phân vùng rừng** (`forests`): hình học các khu bảo tồn lấy từ **World Database on Protected Areas (WDPCA/UNEP-WCMC)** — [protectedplanet.net](https://protectedplanet.net), truy vấn 10/2026; hiển thị 11 PA thuộc 4 tỉnh.
 - **Khu vực cây thuốc quý** (`medicinal_plants`): hình học = polygon hành chính xã (sau sáp nhập 01/7/2025); nội dung & tình trạng đã đối chiếu các nguồn tin bài (Nông nghiệp & Môi trường, Nhân Dân, Lai Châu, Sơn La…) — chi tiết trong `RA_SOAT_DU_LIEU_VA_NGUON_THAM_KHAO.md`.
 - **Thủy lợi / VAC / Vùng tập quán** (`irrigation`, `vac_models`, `customary_zones`): nội dung đã đối chiếu nguồn internet (báo địa phương, Bộ Công Thương, Viện KHLN, nghiên cứu học thuật — 10/2026); 5 địa điểm mới thêm với tọa độ centroid hành chính GADM 4.1; polygon vùng tập quán = ranh giới hành chính GADM 4.1 **mang tính đại diện** — xem mục 8 trong `RA_SOAT_DU_LIEU_VA_NGUON_THAM_KHAO.md`.
+- **Bản làng** (`villages`): 25 bản làng có thật kèm nguồn riêng từng bản (10/2026), thay toàn bộ 17 điểm minh họa cũ; tọa độ ước lượng theo bản đồ — xem mục 9.1.
+- **Dân tộc từng xã** (`dan_toc` trong geojson): Sơn La có % tra cứu theo cấp huyện/xã với `dan_toc_nguon` + nhãn trạng thái (`co_nguon`/`mot_phan`/`du_doan`); 3 tỉnh còn lại gắn nhãn `du_doan` (Tổng điều tra dân tộc 2019 chỉ công bố tới cấp huyện) — xem mục 9.2.
+- **Ảnh minh họa**: 17 ảnh tải từ Wikimedia Commons (giấy phép & tác giả ghi trong `public/data/images/NGUON_ANH.md`).
 - Lớp nền vệ tinh do **Esri** cung cấp. Dữ liệu tỉnh/xã từ Bộ Tài nguyên và Môi trường Việt Nam.
 
 ## Liên hệ / Hỗ trợ

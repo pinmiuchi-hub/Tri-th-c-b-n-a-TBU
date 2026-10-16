@@ -1519,6 +1519,9 @@ html, body, #root {
 .map-popup p { font-size: 11px; color: #333; line-height: 1.5; margin-bottom: 4px; }
 .map-popup ul { padding-left: 16px; margin: 4px 0 0; }
 .map-popup li { font-size: 10px; color: #444; margin-bottom: 2px; }
+.map-popup .popup-img-wrap { margin-top: 6px; }
+.map-popup .popup-img { width: 100%; display: block; border-radius: 8px; }
+.map-popup .popup-img-credit { font-size: 9px; color: #94a3b8; margin: 3px 0 0; line-height: 1.4; }
 
 /* ─── Transect & calendar modals ─── */
 .transect-modal-overlay {
@@ -3063,6 +3066,13 @@ th.month-col { width: 36px; }
   transition: transform 0.25s ease;
 }
 .ethnic-photo:hover { transform: scale(1.02); }
+.ethnic-photo-credit {
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 4px 8px 6px;
+  background: rgba(255,255,255,0.92);
+  color: #64748b;
+}
 .ethnic-photo-actions {
   position: absolute;
   top: 8px; right: 8px;

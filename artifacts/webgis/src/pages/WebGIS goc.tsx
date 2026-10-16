@@ -22,17 +22,17 @@ interface CustomLayer { id: string; categoryId: string; ten: string; mau: string
 interface LayerCategoryState { id: string; ten: string; icon: string; layers: { id: string; ten: string; mau: string; bieu_tuong: string; iconOnly?: boolean }[]; }
 
 /* ─── Types ─── */
-interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; }
+interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; dan_toc_trang_thai?: string; dan_toc_nguon?: string[]; dan_toc_ghi_chu?: string; }
 interface GeoJsonData { type: string; features: { type: string; properties: Record<string, unknown>; geometry: unknown }[]; }
 interface BaiThuoc { ten: string; nguyen_lieu: string; cong_dung: string; }
 interface TriThuc { chu_de: string; bieu_tuong: string; noi_dung: string; bai_thuoc: BaiThuoc[]; }
-interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: number; ngon_ngu: string; mo_ta: string; tri_thuc: TriThuc[]; anh?: string; nguon?: string[]; ghi_chu_nguon?: string; }
+interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: number; ngon_ngu: string; mo_ta: string; tri_thuc: TriThuc[]; anh?: string; anh_ghichu?: string; nguon?: string[]; ghi_chu_nguon?: string; }
 interface DanTocData { dan_toc: DanTocInfo[]; }
 interface ProvinceStat { dien_tich: string; dan_so: string; don_vi: number; }
 interface LayersData {
   rivers: { id?: string; ten: string; ten_dia_phuong: string; coords: number[][]; cap_song?: number; width?: number; trang_thai?: string; nguon?: string[] }[];
   irrigation: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
-  villages?: { id?: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
+  villages?: { id?: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string; ten_xa?: string; ten_huyen?: string; ten_tinh?: string; ghi_chu?: string; anh?: string; anh_ghichu?: string; trang_thai?: string; nguon?: string[] }[];
   forests: { id?: string; ten: string; ten_dia_phuong: string; loai: string; coords: number[][] | number[][][]; dien_tich_ha?: number; iucn?: string; nam_cong_bo?: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
   vac_models: { id?: string; ten: string; loai: string; lat: number; lng: number; mo_ta: string; thanh_phan: string[] | string; trang_thai?: string; nguon?: string[] }[];
   medicinal_plants: { id?: string; ten: string; ten_dia_phuong?: string; ten_khoa_hoc: string; coords: number[][] | number[][][]; cong_dung: string; tinh_trang?: string; "tình_trang"?: string; dan_toc_dung: string[] | string; mo_ta?: string; trang_thai?: string; nguon?: string[] }[];
@@ -52,10 +52,12 @@ const STATS_SOURCE_NOTE: Record<string, string> = {
   "Lào Cai": "Nguồn: TĐTDS&NO 2019 (Tổng cục Thống kê) · Lào Cai theo tỉnh mới sau sáp nhập Yên Bái (NQ 202/2025/QH15) · Đơn vị hành chính sau sắp xếp 2025",
 };
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
+/** Chuyển đường dẫn ảnh tương đối (vd: data/images/...) sang URL có BASE_PATH; giữ nguyên http/data:/blob:. */
+const assetUrl = (p?: string): string => (!p ? "" : /^(https?:|data:|blob:)/.test(p) ? p : `${BASE_PATH}/${p.replace(/^\//, "")}`);
 const LAYER_CONFIG_STORAGE_KEY = "webgis-layer-config";
 // Bump when built-in layer content in public/data/layers.json changes (forces discard of stale saved copies)
-const LAYER_DATA_REV = 2;
-const LAYER_DATA_REV_KEYS = ["irrigation", "vac_models", "customary_zones"];
+const LAYER_DATA_REV = 3;
+const LAYER_DATA_REV_KEYS = ["irrigation", "vac_models", "customary_zones", "villages"];
 
 // Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam
 const DEFAULT_LAYER_CATEGORIES = [
@@ -76,12 +78,13 @@ const DEFAULT_LAYER_CATEGORIES = [
   ]},
   { id: "culture", ten: "Văn hóa & Tri thức bản địa", icon: "m", layers: [
     { id: "customary_zones", ten: "Ranh giới luật tục cộng đồng", mau: "#f4a261", bieu_tuong: "⚖️" },
+    { id: "villages", ten: "Bản làng tiêu biểu", mau: "#6d4c41", bieu_tuong: "🏘️", iconOnly: true },
   ]},
 ];
 const EDITABLE_LAYERS = new Set(["irrigation", "forests", "vac_models", "medicinal_plants", "customary_zones"]);
 const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
   rivers: "line", irrigation: "point", forests: "polygon", vac_models: "point",
-  medicinal_plants: "polygon", customary_zones: "polygon", population_density: "polygon",
+  medicinal_plants: "polygon", customary_zones: "polygon", population_density: "polygon", villages: "point",
 };
 const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   population_density: { name: "Mật độ dân số", color: "#fe9929" },
@@ -91,6 +94,7 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   vac_models: { name: "Mô hình VAC/VACR", color: "#b5e48c" },
   medicinal_plants: { name: "Cây thuốc quý", color: "#e63946" },
   customary_zones: { name: "Luật tục cộng đồng", color: "#f4a261" },
+  villages: { name: "Bản làng tiêu biểu", color: "#6d4c41" },
 };
 
 const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#2d6a4f", kbvcq: "#023e8a", rung_dac_dung: "#40916c" };
@@ -126,6 +130,7 @@ const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
   vac_models: { title: "Mô hình VAC/VACR", symbolType: "point", color: "#40916c", fillColor: "#40916c", lineWeight: 1.3, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
   medicinal_plants: { title: "Cây thuốc quý", symbolType: "polygon", color: "#e63946", fillColor: "#e63946", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
   customary_zones: { title: "Luật tục cộng đồng", symbolType: "polygon", color: "#f4a261", fillColor: "#f4a261", lineWeight: 1.5, opacity: 0.85, fillOpacity: 0.16, dashArray: "6,4", classes: [] },
+  villages: { title: "Bản làng tiêu biểu", symbolType: "point", color: "#6d4c41", fillColor: "#6d4c41", lineWeight: 1.4, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
 };
 const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲", canh_tac:"🌾", ban_lang:"🏘️", van_hoa:"🏺", cay_thuoc:"🌿", luat_tuc:"⚖️", vac_vacr:"♻️", khac:"📍" };
 
@@ -710,6 +715,19 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
           poly.bindPopup(`<div class="map-popup"><div class="popup-title">${z.ten}</div><div class="popup-sub">Luật tục: ${(z.loai||"").replace(/_/g," ")}</div><p>${z.mo_ta||""}</p>${statusNote(z)}</div>`);
           ls.push(poly);
         });
+      } else if (id === "villages") {
+        const layerStyle = getLayerSymbology("villages");
+        (layersData.villages || []).forEach((v, idx) => {
+          if (typeof v.lat !== "number" || typeof v.lng !== "number") return;
+          const info = getDanTocInfo(v.dan_toc);
+          const color = info?.mau || layerStyle.color || "#6d4c41";
+          const nhan = info ? info.ten.replace("Dân tộc ","").replace("Người ","") : v.dan_toc;
+          const diaPhuong = [v.ten_xa, v.ten_huyen, v.ten_tinh].filter(Boolean).join(", ");
+          const img = v.anh ? `<div class="popup-img-wrap"><img src="${assetUrl(v.anh)}" alt="" class="popup-img" loading="lazy"/>${v.anh_ghichu?`<p class="popup-img-credit">${v.anh_ghichu}</p>`:""}</div>` : "";
+          const ghichu = v.ghi_chu ? `<p style="margin:4px 0 0;font-size:10px;color:#64748b">${v.ghi_chu}</p>` : "";
+          const popup = `<div class="map-popup"><div class="popup-title">🏘️ ${v.ten}</div><div class="popup-sub" style="color:${color}">Người ${nhan}${diaPhuong?` · <i>${diaPhuong}</i>`:""}</div><p>${v.mo_ta||""}</p>${img}${ghichu}${statusNote(v)}</div>`;
+          ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("🏘️", color, 26), "villages", idx, popup));
+        });
       } else if (id.startsWith("custom_")) {
         const cl = customLayers.find(c => c.id === id);
         const arr = (layersData as any)[id] as any[] | undefined;
@@ -769,7 +787,7 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
       layerInstancesRef.current.set(id, built);
       built.forEach(l => og.addLayer(l));
     });
-  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson, customLayers, layerSymbologies, viewMode]);
+  }, [layersData, activeLayers, layerDragMode, allWardsGeoJson, customLayers, layerSymbologies, viewMode, danTocData, ethnicOverrides]);
 
   /* ─── Population density layer ─── */
   useEffect(() => {
@@ -2061,6 +2079,7 @@ onEachFeature:(feat,lyr)=>{
     vac_models: layersData.vac_models?.length || 0,
     medicinal_plants: layersData.medicinal_plants?.length || 0,
     customary_zones: layersData.customary_zones?.length || 0,
+    villages: layersData.villages?.length || 0,
     ward_boundaries: allWardsGeoJson?.features.length || 0,
     ...Object.fromEntries(customLayerIds.map(id => [id, ((layersData as any)[id] || []).length]))
   } : {};
@@ -2434,6 +2453,7 @@ onClick={() => setShowMapComposer(s => !s)}
                 <span>Cây thuốc quý</span>
               </div>}
               {activeLayers.has("customary_zones")&&<div className="legend-item"><svg width="24" height="12" viewBox="0 0 24 12" className="legend-color legend-line-swatch" style={{width:24,height:12,background:"transparent"}}><rect x="1" y="1" width="22" height="10" fill="#f4a261" fillOpacity="0.12" stroke="#f4a261" strokeWidth="1.5" strokeDasharray="4,3"/></svg><span>Luật tục</span></div>}
+              {activeLayers.has("villages")&&<div className="legend-item"><span className="legend-symbol">🏘️</span><span>Bản làng</span></div>}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
               {densityLegendEntries.length > 0 && viewMode === "ward" && <>
                 <div className="legend-subtitle">Mật độ dân số</div>
@@ -2540,6 +2560,34 @@ onClick={() => setShowMapComposer(s => !s)}
                           })}
                         </div>
                         <div className="ethnic-bar-wrap">{wardDanToc.map(({dan_toc,ty_le})=>{const info=getDanTocInfo(dan_toc);return info?<div key={dan_toc} className="ethnic-bar-seg" style={{width:`${ty_le}%`,background:info.mau}} title={`${info.ten.replace("Dân tộc ","")}: ${ty_le}%`}/>:null;})}</div>
+                        {(()=>{
+                          const tt=selectedWard.dan_toc_trang_thai;
+                          const nguon=selectedWard.dan_toc_nguon||[];
+                          const ghiChu=selectedWard.dan_toc_ghi_chu;
+                          const edited=!!wardOverrides.get(selectedWard.ma_xa)?.dan_toc;
+                          if(!tt&&!edited)return null;
+                          const meta=tt==="co_nguon"?{label:"✓ Đã có nguồn",color:"#15803d",bg:"#dcfce7",border:"#86efac"}
+                            :tt==="mot_phan"?{label:"~ Một phần có nguồn",color:"#a16207",bg:"#fef9c3",border:"#fde047"}
+                            :{label:"⚠ Ước tính — cần đối chiếu",color:"#b45309",bg:"#ffedd5",border:"#fdba74"};
+                          return(
+                            <div style={{marginTop:8,padding:"6px 8px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,fontSize:11}}>
+                              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                                <span style={{padding:"2px 8px",borderRadius:999,background:edited?"#e0e7ff":meta.bg,color:edited?"#3730a3":meta.color,border:`1px solid ${edited?"#a5b4fc":meta.border}`,fontWeight:600}}>{edited?"✎ Đã chỉnh sửa cục bộ":meta.label}</span>
+                                {nguon.length>0&&<span style={{color:"#64748b"}}>📚 {nguon.length} nguồn</span>}
+                              </div>
+                              {nguon.length>0&&(
+                                <ul style={{margin:"6px 0 0",paddingLeft:16,display:"flex",flexDirection:"column",gap:2}}>
+                                  {nguon.map((u,i)=>(
+                                    <li key={i}>{/^https?:\/\//.test(u)
+                                      ?<a href={u} target="_blank" rel="noopener noreferrer" style={{color:"#2563eb",wordBreak:"break-all"}}>{u.replace(/^https?:\/\//,"").replace(/\/$/,"")}</a>
+                                      :<span>{u}</span>}</li>
+                                  ))}
+                                </ul>
+                              )}
+                              {ghiChu&&<p style={{margin:"6px 0 0",color:"#475569",lineHeight:1.5}}>{ghiChu}</p>}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
 
@@ -2550,7 +2598,8 @@ onClick={() => setShowMapComposer(s => !s)}
                       return(<div className="knowledge-panel">
                         {info.anh ? (
                           <div className="ethnic-photo-wrap" style={{borderColor:info.mau+"55"}}>
-                            <img src={info.anh} alt={info.ten} className="ethnic-photo" onClick={()=>setEthnicPhotoLightbox(info.anh!)} loading="lazy"/>
+                            <img src={assetUrl(info.anh)} alt={info.ten} className="ethnic-photo" onClick={()=>setEthnicPhotoLightbox(assetUrl(info.anh!))} loading="lazy"/>
+                            {info.anh_ghichu&&<div className="ethnic-photo-credit" style={{color:info.mau}}>Nguồn ảnh: {info.anh_ghichu}</div>}
                             <div className="ethnic-photo-actions">
                               <button className="ethnic-photo-btn" onClick={()=>pickEthnicPhoto(info.id)} title="Đổi ảnh">🔄</button>
                               <button className="ethnic-photo-btn delete" onClick={()=>{ if (confirm("Xóa ảnh dân tộc này?")) setEthnicPhoto(info.id, undefined); }} title="Xóa ảnh">🗑️</button>

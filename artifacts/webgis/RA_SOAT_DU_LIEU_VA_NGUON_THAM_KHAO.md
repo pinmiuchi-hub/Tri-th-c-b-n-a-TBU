@@ -1,12 +1,12 @@
 # Rà soát dữ liệu WebGIS Tây Bắc và danh mục tài liệu tham khảo
 
-Ngày rà soát: 14/10/2026. Phạm vi: `dan_toc.json`, `layers.json`, lược đồ mặt cắt, nông lịch, số liệu trong giao diện.
+Ngày rà soát: 14/10/2026 · Cập nhật vòng 2: 16/10/2026. Phạm vi: `dan_toc.json`, `layers.json`, geojson 4 tỉnh, ảnh minh họa, lược đồ mặt cắt, nông lịch, số liệu trong giao diện.
 
 ## 1. Kết luận ngắn
 
 - **Đã đối chiếu được với nguồn chính thống:** số dân 12 dân tộc thiểu số (Tổng điều tra dân số 2019, bản gốc của Tổng cục Thống kê đã mở và đọc trực tiếp). Phát hiện **1 số liệu sai**: người Mảng ghi 3.700 (số liệu cũ) → đúng 2019 là **4.650**.
 - **Đã sửa theo nguồn:** thời gian Tết Mông, Gầu Tào, Xên bản, thảo quả; cách gọi vụ lúa ("vụ chiêm" → "vụ xuân" theo cách gọi của Sơn La, Lai Châu, Lào Cai); mô tả địa bàn các dân tộc; mô tả hệ thống thủy lợi người Thái (là mương – phai – lái – lìn, không phải ruộng bậc thang); nhóm ngôn ngữ người Mường (Việt–Mường, không phải Môn–Khmer); bỏ khẳng định sai "hát Then – Sli – Lượn được UNESCO công nhận" ở mô tả người Tày.
-- **Phần lớn dữ liệu điểm trong `layers.json` ban đầu KHÔNG có nguồn** (bản làng, rừng, thủy lợi, mô hình VAC, vùng luật tục, cây thuốc). Đã bỏ các con số cụ thể không có căn cứ (diện tích, tuổi, thu nhập, bán kính, số lượng) và gắn nhãn `trang_thai` hiển thị ngay trong popup. **Không nên dùng các lớp chưa được đối chiếu làm căn cứ pháp lý hoặc nghiên cứu cho đến khi xác minh thực địa.** Sau các lần cập nhật: `forests` + `medicinal_plants` (mục 7) và `irrigation` + `vac_models` + `customary_zones` (mục 8) đã đối chiếu nguồn; còn lại **`villages` (bản làng) chưa được rà soát** và phần lớn `rivers` vẫn ở mức `mot_phan`.
+- **Phần lớn dữ liệu điểm trong `layers.json` ban đầu KHÔNG có nguồn** (bản làng, rừng, thủy lợi, mô hình VAC, vùng luật tục, cây thuốc). Đã bỏ các con số cụ thể không có căn cứ (diện tích, tuổi, thu nhập, bán kính, số lượng) và gắn nhãn `trang_thai` hiển thị ngay trong popup. **Không nên dùng các lớp chưa được đối chiếu làm căn cứ pháp lý hoặc nghiên cứu cho đến khi xác minh thực địa.** Sau các lần cập nhật: `forests` + `medicinal_plants` (mục 7), `irrigation` + `vac_models` + `customary_zones` (mục 8) và `villages` (mục 9 — thay bằng 25 bản làng thật) đã đối chiếu nguồn; phần lớn `rivers` vẫn ở mức `mot_phan`.
 - **Mô tả "tri thức" của từng dân tộc** (mục `tri_thuc`, tri thức bản địa mặc định) chưa có tài liệu đính kèm trừ những mục ghi cụ thể bên dưới. Đã gắn nhãn `chua_xac_minh`.
 
 ## 2. Giới hạn của lần rà soát này (cần đọc)
@@ -233,5 +233,54 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 | irrigation | 14 | 3 | 1 | 10 | 0 |
 | vac_models | 9 | 2 | 1 | 6 | 0 |
 | customary_zones | 7 | 2 | 1 | 4 | 0 |
+
+## 9. Cập nhật vòng 2 (16/10/2026)
+
+### 9.1. `villages` — thay 17 điểm minh họa bằng 25 bản làng thật
+
+- **Toàn bộ 17 điểm cũ bị xóa** (10 `minh_hoa` gồm v1–v14 đặt tên không rõ địa chỉ + 7 điểm `chua_xac_minh`). Thay bằng **25 bản làng có thật, 25/25 `co_nguon`** với ít nhất 1 URL nguồn riêng cho từng bản (ubnd xã, cổng TTĐT tỉnh, Sở VHTTDL, VietnamPlus, vietnamtourism, báo địa phương…).
+- Phân bố: **Lào Cai 8** (Y Tý, Dền Sáng, Bản Liền, Bản Phố, Lao Chải, Tả Van, Tả Phìn, Séo Mý Tỷ) · **Lai Châu 5** (Mường So, Bum Nưa, Bản Bo, Sin Suối Hồ, Sì Thâu Chải) · **Sơn La 6** (Chiềng Khoong, Nong Lạnh, Phiêng Ban, Bản Bon, Mường Và, Bản Áng) · **Điện Biên 6** (Mường Phăng, Che Căn, Bản Mển, Bản Ten, Na Nát, Sín Thầu) = 25.
+- Trường mới: `ten_xa`, `ten_huyen`, `ten_tinh`, `ghi_chu` (ghi rõ sắp xếp hành chính 7/2025: NQ 1673 Lào Cai, NQ 1670 Lai Châu, NQ 1681 Sơn La, NQ 1661 Điện Biên — Lai Châu & Điện Biên bỏ cấp huyện), `anh`, `anh_ghichu`, `trang_thai`, `nguon`.
+- **Sửa lỗi mã dân tộc**: `lao` → `ethnic_lao` ở `ban-phieng-ban`, `ban-muong-va` (khớp `slugEthnicName`); sửa gõ nhầm "được ~~选~~ làm" → "được lựa chọn làm".
+- **Tọa độ**: ước lượng theo bản đồ OSM/Google — ghi rõ trong `ghi_chu`, KHÔNG phải tọa độ kiểm kê. Nội dung `mo_ta` chỉ dùng chi tiết có nguồn.
+- 5 bản gắn ảnh popup (5 trong số 17 ảnh Commons): Y Tý → `yty.jpg`, Lao Chải → `sapa.jpg`, Séo Mý Tỷ → `mucangchai.jpg`, Bản Bo → `con_nuoc.jpg`, Mường So → `thai_stilt_house.jpg`; các ảnh không chụp đúng bản đó được ghi rõ "ảnh đại diện" trong `anh_ghichu`.
+
+### 9.2. Dân tộc từng xã — tra cứu cho Sơn La (3 tỉnh còn lại gắn nhãn trung thực)
+
+- **Sơn La (75 xã)** — thêm trường `dan_toc_trang_thai` (`co_nguon` | `mot_phan` | `du_doan`), `dan_toc_nguon` (URL[]), `dan_toc_ghi_chu`; % tính theo **mẫu cấp huyện** khi chưa có số liệu cấp xã, gắn nhãn huyện trong ghi chú:
+  - `co_nguon` 5 xã (nguồn cấp xã/địa phương): Sốp Cộp (UBND xã 63,57/22,35/7,85/3,92%), Tà Xùa (Mông 99,57%), Ngọc Chiến (Thái 65% – Mông 33% – Kinh 0,25%), Mường Khiêng (Thái 98%), Mường Chiên (Thái 72%).
+  - `mot_phan` 22 xã = 11 xã có số liệu riêng trong `COMMUNE_OVERRIDE` (Chiềng Cơi, Chiềng Sinh, Chiềng Sơn, Yên Châu, Hat Lot, Chiềng Khương, Phiêng Cằm, Long Hẹ, Gia Phù, Mường Lèo, Vân Hồ) + 11 xã còn lại của TP Sơn La (Tô Hiệu, Chiềng An, Thảo Nguyên), Mộc Châu và Yên Châu dùng mẫu huyện. Nguồn cấp xã tiêu biểu: Long Hẹ (bản Nong Lạnh – cọn nước Nậm É), Phiêng Cằm (Thái 75% – Mông 25%), Chiềng Khương (Thái 50% – Kinh 30% – Khơ Mú 15%), Mường Lèo (5 dân tộc), Gia Phù (5 dân tộc, bản Lá 100% Mường).
+  - `du_doan` 48 xã còn lại — mẫu cấp huyện, có `dan_toc_nguon` cấp huyện: TP Sơn La (Thái ~50% — trangtraiviet), Quỳnh Nhai, Thuận Châu, Mường La, Bắc Yên (Cổng dữ liệu tỉnh), Phù Yên, Mộc Châu, Vân Hồ (Mông+Thái >90%), Yên Châu, Mai Sơn (TT2019), Sông Mã, Sốp Cộp.
+  - **Lưu ý ghi rõ trong `dan_toc_ghi_chu`**: nhóm ngoài 14 dân tộc hiển thị (Kháng, Xinh Mun, La Chí, Hoa, Lào ở một số nơi) không hiển thị trong thanh % → tổng hiển thị có thể < 100% (thanh bar không bao giờ bị bóp về 100% giả tạo); nguồn/thời điểm số liệu ghi ngay trong ghi chú.
+- **Lai Châu (38), Điện Biên (45), Lào Cai (99)**: KHÔNG tra cứu từng xã (ngoài phạm vi được chọn) → gắn `dan_toc_trang_thai: "du_doan"` + `dan_toc_ghi_chu` mẫu nêu rõ "% mang tính tham khảo theo mẫu cấp tỉnh/huyện, Tổng điều tra dân tộc 2019 chỉ công bố tới cấp huyện". Số liệu % cũ giữ nguyên.
+- ID dân tộc额外 dùng `ethnic_lao`, `ethnic_la_ha`, `ethnic_xinh_mun`, `ethnic_khang`(không dùng) — khớp `EXTRA_ETHNIC_OPTIONS` nên hiển thị đúng màu/tên trong `getDanTocInfo`.
+
+### 9.3. Ảnh Wikimedia Commons — tải về dự án, có ghi công
+
+- **17/17 ảnh JPEG** tải từ Commons về `public/data/images/` (12 `dan_toc/` + 5 `dia_diem/`) — xem bảng đầy đủ tác giả/giấy phí/trang nguồn: **`public/data/images/NGUON_ANH.md`**.
+- `dan_toc.json`: thêm `anh` + `anh_ghichu` cho **12/14 nhóm**. **Không có ảnh** cho Khơ Mú và La Hủ (Commons chưa có ảnh đúng — không gán ảnh nhầm).
+- Ghi công hiển thị: banner ảnh dân tộc trong knowledge panel có dòng "Nguồn ảnh: …"; popup bản làng có dòng credit dưới ảnh.
+
+### 9.4. Thay đổi code liên quan (vòng 2)
+
+- `WebGIS goc.tsx`:
+  - `LAYER_DATA_REV` 2 → **3**, `LAYER_DATA_REV_KEYS` thêm `"villages"` (ép trình duyệt bỏ bản villages đã lưu trong localStorage).
+  - Thêm `villages` vào: `DEFAULT_LAYER_CATEGORIES` (nhóm "Văn hóa & Tri thức bản địa", iconOnly), `LAYER_GEOM_TYPE` ("point"), `LAYER_DISPLAY`, `DEFAULT_LAYER_SYMBOLOGY`, `featureCounts`; nhánh render `buildLayer` (circleMarker divIcon 🏘️ màu theo dân tộc, popup có ảnh + credit + `statusNote`); deps effect thêm `danTocData`, `ethnicOverrides`.
+  - Helper `assetUrl()` (ghép `BASE_PATH` cho ảnh `data/images/…`, giữ nguyên http/data/blob).
+  - Panel "Các dân tộc sinh sống": thêm khối trạng thái nguồn — chip `✓ Đã có nguồn` / `~ Một phần có nguồn` / `⚠ Ước tính — cần đối chiếu` / `✎ Đã chỉnh sửa cục bộ` + danh sách link `dan_toc_nguon` + `dan_toc_ghi_chu`.
+  - Types: `WardProperties` + `dan_toc_trang_thai/nguon/ghi_chu`; `DanTocInfo.anh_ghichu`; `villages[]` + trường địa bàn/ảnh.
+- `index.css`: style `.popup-img*`, `.ethnic-photo-credit`.
+
+### 9.5. Số liệu sau cập nhật (vòng 2)
+
+| Nhóm | Số đối tượng | `co_nguon` | `mot_phan` | `du_doan` | Ghi chú |
+|---|---|---|---|---|---|
+| villages | 25 | 25 | 0 | 0 | thay toàn bộ 17 điểm cũ |
+| xa_sonla (dân tộc) | 75 xã | 5 | 22 | 48 | % theo mẫu huyện khi chưa có số liệu xã |
+| xa_laichau (dân tộc) | 38 xã | 0 | 0 | 38 | % cũ giữ nguyên, gắn nhãn ước tính |
+| xa_dienbien (dân tộc) | 45 xã | 0 | 0 | 45 | như trên |
+| xa_laocai (dân tộc) | 99 xã | 0 | 0 | 99 | như trên |
+| dan_toc (ảnh) | 14 nhóm | 12 có ảnh | — | — | Khơ Mú, La Hủ: chưa có ảnh phù hợp |
+
 
 
