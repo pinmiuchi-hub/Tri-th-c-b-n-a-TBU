@@ -74,6 +74,7 @@ Sau khi `pnpm build`, thư mục `dist/` chứa file tĩnh có thể deploy lên
 - Sông suối: tọa độ lấy từ **OpenStreetMap** (© OpenStreetMap contributors, ODbL license).
 - **Phân vùng rừng** (`forests`): hình học các khu bảo tồn lấy từ **World Database on Protected Areas (WDPCA/UNEP-WCMC)** — [protectedplanet.net](https://protectedplanet.net), truy vấn 10/2026; hiển thị 11 PA thuộc 4 tỉnh.
 - **Khu vực cây thuốc quý** (`medicinal_plants`): hình học = polygon hành chính xã (sau sáp nhập 01/7/2025); nội dung & tình trạng đã đối chiếu các nguồn tin bài (Nông nghiệp & Môi trường, Nhân Dân, Lai Châu, Sơn La…) — chi tiết trong `RA_SOAT_DU_LIEU_VA_NGUON_THAM_KHAO.md`.
+- **Thủy lợi / VAC / Vùng tập quán** (`irrigation`, `vac_models`, `customary_zones`): nội dung đã đối chiếu nguồn internet (báo địa phương, Bộ Công Thương, Viện KHLN, nghiên cứu học thuật — 10/2026); 5 địa điểm mới thêm với tọa độ centroid hành chính GADM 4.1; polygon vùng tập quán = ranh giới hành chính GADM 4.1 **mang tính đại diện** — xem mục 8 trong `RA_SOAT_DU_LIEU_VA_NGUON_THAM_KHAO.md`.
 - Lớp nền vệ tinh do **Esri** cung cấp. Dữ liệu tỉnh/xã từ Bộ Tài nguyên và Môi trường Việt Nam.
 
 ## Liên hệ / Hỗ trợ

@@ -33,7 +33,7 @@ interface Props {
 }
 
 const FOREST_LABELS: Record<string, string> = { vqg: "Vườn quốc gia", kbttn: "Khu bảo tồn thiên nhiên", kbvcq: "Khu bảo vệ cảnh quan", rung_dac_dung: "Rừng đặc dụng khác" };
-const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
+const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (phân phối nước vào ruộng)", lai: "Lái (máng dẫn)", con: "Cọn (guồng nước)" };
 const ZONE_LABELS: Record<string, string> = { cam_san_ban: "Cấm săn bắt", bao_ve_nuoc: "Bảo vệ nguồn nước", luat_tuc_rung: "Luật tục rừng", luan_canh: "Luân canh", cam_rung: "Cấm chặt phá rừng", bao_ve_dac_san: "Bảo vệ sản vật đặc sản" };
 
 const FIELD_CONFIG: Record<string, FieldDef[]> = {
@@ -44,7 +44,7 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
   irrigation: [
     { key: "ten", label: "Tên công trình", type: "text", required: true },
     { key: "ten_dia_phuong", label: "Tên địa phương", type: "text" },
-    { key: "loai", label: "Loại", type: "select", options: ["phai", "muong", "lin", "lai"], optionLabels: IRRIGATION_LABELS },
+    { key: "loai", label: "Loại", type: "select", options: ["phai", "muong", "lin", "lai", "con"], optionLabels: IRRIGATION_LABELS },
     { key: "lat", label: "Vĩ độ", type: "number" },
     { key: "lng", label: "Kinh độ", type: "number" },
     { key: "mo_ta", label: "Mô tả", type: "textarea" },

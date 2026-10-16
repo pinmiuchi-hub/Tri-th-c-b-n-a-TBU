@@ -53,6 +53,9 @@ const STATS_SOURCE_NOTE: Record<string, string> = {
 };
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 const LAYER_CONFIG_STORAGE_KEY = "webgis-layer-config";
+// Bump when built-in layer content in public/data/layers.json changes (forces discard of stale saved copies)
+const LAYER_DATA_REV = 2;
+const LAYER_DATA_REV_KEYS = ["irrigation", "vac_models", "customary_zones"];
 
 // Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam
 const DEFAULT_LAYER_CATEGORIES = [
@@ -92,7 +95,7 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
 
 const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#2d6a4f", kbvcq: "#023e8a", rung_dac_dung: "#40916c" };
 const FOREST_LABELS: Record<string, string> = { vqg: "Vườn quốc gia", kbttn: "Khu bảo tồn thiên nhiên", kbvcq: "Khu bảo vệ cảnh quan", rung_dac_dung: "Rừng đặc dụng khác" };
-const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
+const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (phân phối nước vào ruộng)", lai: "Lái (máng dẫn)", con: "Cọn (guồng nước)" };
 const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946", tay: "#1d3557", giay: "#06a77d", ha_nhi: "#a4243b", nung: "#5a189a", phu_la: "#ff8c42", la_chi: "#ffc857" };
 const VIETNAMESE_ETHNIC_NAMES = [
   "Ba Na", "Bố Y", "Brâu", "Bru-Vân Kiều", "Chăm", "Chơ Ro", "Chu Ru", "Chứt", "Co", "Cống", "Cơ Ho", "Cơ Lao", "Cơ Tu", "Dao", "Ê Đê", "Gia Rai", "Giáy", "Giẻ-Triêng", "Hà Nhì", "Hrê", "Kháng", "Khmer", "Khơ Mú", "Kinh", "La Chí", "La Ha", "La Hủ", "Lào", "Lự", "Lô Lô", "Mạ", "Mảng", "M'Nông", "Mông", "Mường", "Ngái", "Nùng", "Ơ Đu", "Pà Thẻn", "Phù Lá", "Pu Péo", "Ra Glai", "Rơ Măm", "Sán Chay", "Sán Dìu", "Si La", "Tà Ôi", "Tày", "Thái", "Thổ", "Xinh Mun", "Xơ Đăng", "Xtiêng", "Cao Lan (nhánh Sán Chay)"
@@ -172,11 +175,12 @@ const savedEthnicData = loadEthnicData();
 const statusNote = (x: { trang_thai?: string; nguon?: string[] } | null | undefined): string => {
   if (!x?.trang_thai) return "";
   const msg = x.trang_thai === "minh_hoa" ? "⚠ Dữ liệu minh họa — chưa có nguồn xác minh, không dùng làm căn cứ"
-    : x.trang_thai === "chua_xac_minh" ? "ⓘ Chưa có nguồn đính kèm — cần xác minh thực địa"
+    : x.trang_thai === "chua_xac_minh" ? "ⓘ Chưa xác minh trực tiếp — cần đối chiếu thêm ở hiện trường"
     : x.trang_thai === "co_nguon" ? "✓ Đã đối chiếu nguồn — danh sách nguồn bên dưới"
     : "ⓘ Một phần có nguồn — xem ghi chú nguồn";
   const color = x.trang_thai === "minh_hoa" ? "#b45309" : x.trang_thai === "co_nguon" ? "#15803d" : "#64748b";
-  const src = x.nguon && x.nguon.length ? `<p style="margin:4px 0 0;font-size:10px;color:#64748b">Nguồn: ${x.nguon.join("; ")}</p>` : "";
+  const links = (x.nguon || []).map(u => /^https?:\/\//.test(u) ? `<a href="${u}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:underline">${u}</a>` : u);
+  const src = links.length ? `<p style="margin:4px 0 0;font-size:10px;color:#64748b">Nguồn: ${links.join("; ")}</p>` : "";
   return `<p style="margin:6px 0 0;font-size:11px;color:${color}">${msg}</p>${src}`;
 };
 
@@ -426,11 +430,12 @@ export default function WebGIS() {
       if (layersData) {
         const { rivers: _rivers, ...rest } = layersData as Record<string, any>;
         payload.layersData = rest;
+        payload.layersDataRev = LAYER_DATA_REV;
       } else {
         // Chưa load xong: giữ nguyên layersData đã lưu từ phiên trước
         try {
           const prev = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
-          if (prev?.layersData) payload.layersData = prev.layersData;
+          if (prev?.layersData) { payload.layersData = prev.layersData; payload.layersDataRev = prev.layersDataRev; }
         } catch { /* bỏ qua */ }
       }
       window.localStorage.setItem(LAYER_CONFIG_STORAGE_KEY, JSON.stringify(payload));
@@ -472,10 +477,10 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
   }
 }, [showPieSelector, currentProvinceGeoJson]);
 
-  const readSavedLayerData = (): Record<string, any[]> | null => {
+  const readSavedLayerConfig = (): { layersData?: Record<string, any[]>; layersDataRev?: number } | null => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
-      return saved?.layersData && typeof saved.layersData === "object" ? saved.layersData : null;
+      return saved?.layersData && typeof saved.layersData === "object" ? saved : null;
     } catch { return null; }
   };
 
@@ -517,11 +522,15 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
         });
       }
       // Phục hồi dữ liệu lớp người dùng đã biên tập trong các phiên trước
-      const savedLayerData = readSavedLayerData();
+      const savedConfig = readSavedLayerConfig();
+      const savedLayerData = savedConfig?.layersData;
       if (savedLayerData) {
+        const savedRev = (savedConfig as any)?.layersDataRev;
         Object.keys(savedLayerData).forEach(key => {
           if (!Array.isArray(savedLayerData[key])) return;
           if (key === "rivers") return; // rivers tải lại từ Overpass mỗi phiên
+          // Bản lưu cũ (trước khi layers.json được đối chiếu nguồn) không dùng nữa — lấy bản mới nhất
+          if (LAYER_DATA_REV_KEYS.includes(key) && savedRev !== LAYER_DATA_REV) return;
           if (key === "forests" || key === "medicinal_plants") {
             // Phiên trước lưu dạng điểm (lat/lng) — không dùng nữa; chỉ nhận bản đã biên tập dạng polygon
             const polygonItems = savedLayerData[key].filter((x: any) => Array.isArray(x?.coords));
@@ -653,7 +662,7 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
       } else if (id === "irrigation") {
         const layerStyle = getLayerSymbology("irrigation");
         layersData.irrigation.forEach((ir, idx) => {
-          const emoji = ir.loai==="phai"?"💧":ir.loai==="lin"?"〰️":"🚿";
+          const emoji = ir.loai==="phai"?"💧":ir.loai==="lin"?"〰️":ir.loai==="con"?"🌀":"🚿";
           const popup = `<div class="map-popup"><div class="popup-title">${ir.ten}</div><div class="popup-sub">${IRRIGATION_LABELS[ir.loai]||ir.loai} · <i>${ir.ten_dia_phuong||""}</i></div><p>${ir.mo_ta||""}</p>${statusNote(ir)}</div>`;
 ls.push(makeDraggableMarker(ir.lat, ir.lng, makeDivIcon(emoji,layerStyle.color, 24, true), "irrigation", idx, popup));        });
       } else if (id === "forests") {

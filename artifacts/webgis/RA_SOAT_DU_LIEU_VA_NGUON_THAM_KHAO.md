@@ -6,7 +6,7 @@ Ngày rà soát: 14/10/2026. Phạm vi: `dan_toc.json`, `layers.json`, lược �
 
 - **Đã đối chiếu được với nguồn chính thống:** số dân 12 dân tộc thiểu số (Tổng điều tra dân số 2019, bản gốc của Tổng cục Thống kê đã mở và đọc trực tiếp). Phát hiện **1 số liệu sai**: người Mảng ghi 3.700 (số liệu cũ) → đúng 2019 là **4.650**.
 - **Đã sửa theo nguồn:** thời gian Tết Mông, Gầu Tào, Xên bản, thảo quả; cách gọi vụ lúa ("vụ chiêm" → "vụ xuân" theo cách gọi của Sơn La, Lai Châu, Lào Cai); mô tả địa bàn các dân tộc; mô tả hệ thống thủy lợi người Thái (là mương – phai – lái – lìn, không phải ruộng bậc thang); nhóm ngôn ngữ người Mường (Việt–Mường, không phải Môn–Khmer); bỏ khẳng định sai "hát Then – Sli – Lượn được UNESCO công nhận" ở mô tả người Tày.
-- **Phần lớn dữ liệu điểm trong `layers.json` KHÔNG có nguồn** (bản làng, rừng, thủy lợi, mô hình VAC, vùng luật tục, cây thuốc). Đã bỏ các con số cụ thể không có căn cứ (diện tích, tuổi, thu nhập, bán kính, số lượng) và gắn nhãn `trang_thai` hiển thị ngay trong popup. **Không nên dùng các lớp này làm căn cứ pháp lý hoặc nghiên cứu cho đến khi xác minh thực địa.**
+- **Phần lớn dữ liệu điểm trong `layers.json` ban đầu KHÔNG có nguồn** (bản làng, rừng, thủy lợi, mô hình VAC, vùng luật tục, cây thuốc). Đã bỏ các con số cụ thể không có căn cứ (diện tích, tuổi, thu nhập, bán kính, số lượng) và gắn nhãn `trang_thai` hiển thị ngay trong popup. **Không nên dùng các lớp chưa được đối chiếu làm căn cứ pháp lý hoặc nghiên cứu cho đến khi xác minh thực địa.** Sau các lần cập nhật: `forests` + `medicinal_plants` (mục 7) và `irrigation` + `vac_models` + `customary_zones` (mục 8) đã đối chiếu nguồn; còn lại **`villages` (bản làng) chưa được rà soát** và phần lớn `rivers` vẫn ở mức `mot_phan`.
 - **Mô tả "tri thức" của từng dân tộc** (mục `tri_thuc`, tri thức bản địa mặc định) chưa có tài liệu đính kèm trừ những mục ghi cụ thể bên dưới. Đã gắn nhãn `chua_xac_minh`.
 
 ## 2. Giới hạn của lần rà soát này (cần đọc)
@@ -44,7 +44,7 @@ Tất cả bản ghi đã thêm: `nam_dan_so`, `nguon`, `ghi_chu_nguon`, `trang_
 
 ### 3.2. `layers.json`
 
-Quy ước `trang_thai`: `minh_hoa` = dữ liệu minh họa không có nguồn; `chua_xac_minh` = chưa có nguồn đính kèm (có thể có thật nhưng chưa kiểm chứng); `mot_phan` = một phần có nguồn.
+Quy ước `trang_thai`: `minh_hoa` = dữ liệu minh họa không có nguồn; `chua_xac_minh` = chưa có nguồn xác minh trực tiếp địa điểm/nội dung (URL đính kèm, nếu có, chỉ là tham khảo tổng quát); `mot_phan` = một phần có nguồn; `co_nguon` = đã đối chiếu nguồn (danh sách URL hiển thị trong popup).
 
 | Lớp | Mã | Nội dung cũ | Nội dung mới |
 |---|---|---|---|
@@ -186,4 +186,52 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 - `geoUtils.ts`: export GeoJSON hỗ trợ MultiPolygon (Tà Xùa), KML xuất `<MultiGeometry>`.
 - `LayerDataEditor.tsx`: bỏ trường lat/lng của 2 lớp, enum loai mới, thêm `dien_tich_ha`/`mo_ta`/`ten_dia_phuong`.
 - Hành vi tự đúng: đếm feature, xuất KML/GeoJSON, modal symbology, legend composer.
+
+## 8. Cập nhật 16/10/2026 — đối chiếu 3 lớp `irrigation`, `vac_models`, `customary_zones` (nguồn internet thật)
+
+### 8.1. Nguyên tắc
+
+- `co_nguon` = nội dung và địa điểm có nguồn tin cậy đính kèm (`nguon` là URL, bấm được ngay trong popup); `mot_phan` = một phần có nguồn (ví dụ công trình lớn có nguồn nhưng tọa độ cột mốc chỉ mang tính đại diện); `chua_xac_minh` = chưa có nguồn xác minh trực tiếp — popup ghi rõ "cần đối chiếu thêm ở hiện trường".
+- Địa điểm mới lấy tọa độ = **centroid polygon hành chính GADM 4.1** (gadm.org, tải 16/10/2026 — OSM/Overpass không có boundary commune ở vùng này), đã đối chiếu bbox với địa bàn nêu trong bài nguồn.
+
+### 8.2. `irrigation` — 11 → 14 điểm
+
+- **3 điểm mới, `co_nguon`**:
+  - `con_nam_e_long_he` — cọn nước (guồng) bản Nong Lạnh, dòng Nặm É, xã Long Hẹ, Thuận Châu: tre/nứa, quay bằng sức nước tự nhiên; kèm câu "Mương, phai, lái, lín, lốc, cọn" của người Thái — [baosonla.vn 02/6/2026](https://baosonla.vn/du-lich/giu-nhip-quay-con-nuoc-ben-dong-nam-e-kVg31Vxvg.html), [vov4.vov.vn](https://vov4.vov.vn/tim-hieu-dan-toc-viet-nam/kinh-nghiem-lam-lua-nuoc-cua-nguoi-thai-o-dien-bien-366939.vov4).
+  - `muong_chieng_khoong` — xã Chiềng Khoong, Sông Mã: 25 công trình thủy lợi (18 kiên cố, 7 gỗ–đá), gần 20 km mương, 21 tổ thủy nông, tưới 245 ha lúa xuân 2022 — [songma.sonla.gov.vn 15/3/2022](https://songma.sonla.gov.vn/1298/31420/60148/632775/van-hoa-xa-hoi/chieng-khoong-dam-bao-nguon-nuoc-cho-lua-xuan).
+  - `muang_fai_yen_chau` — muang-fai Chiềng Khôi, Yên Châu (~5 km từ trung tâm huyện), quản lý theo luật tục — Neef và cộng sự, 2006 ([hdl.handle.net/10535/560](http://hdl.handle.net/10535/560)).
+- `ir1` Phai Nậm Rốm → `mot_phan`: Đại thủy nông Nậm Rốm (khởi công cuối 1963, hoàn thành 1969; đập tràn 127 m, hơn 34 km kênh ôm cánh đồng Mường Thanh, 100 km mương, 476 cống; Di tích lịch sử – văn hóa cấp tỉnh QĐ 372/QĐ-UBND 23/5/2014) — [Ban Quản lý di tích tỉnh Điện Biên](http://bqldt.svhttdl.dienbien.gov.vn/portal/pages/2020-6-30/Cong-trinh-Dai-thuy-nong-Nam-Rom9vcbupk907im.aspx); phần "phai" cụ thể tại tọa độ chưa có nguồn.
+- `ir2`–`ir7` và 4 điểm cũ (`phai_ban_ho`, `muong_muong_khuong`, `lin_y_ty`, `phai_bac_ha`) → `chua_xac_minh`, đính nguồn tham khảo tổng quát (bài cọn Nặm É định nghĩa mương–phai–lái–lín–lốc–cọn; [Bảo tàng VHDTVN – dẫn thủy nhập điền](http://mcve.org.vn/2023/03/10/tim-hieu-he-thong-dan-thuy-nhap-dien-cua-nhom-cu-dan-tay-thai-qua-he-thong-trung-bay-tai-bao-tang-van-hoa-cac-dan-toc-viet-nam/); Neef 2006).
+- Code: thêm loại `con` (cọn/guồng nước) vào `IRRIGATION_LABELS` + options `loai` của LayerDataEditor, emoji 🌀; sửa nghĩa theo nguồn: **lái = máng dẫn, lín = phân phối nước vào ruộng** (bản cũ ghi "Lịn (máng), Lái (kênh phụ)").
+
+### 8.3. `vac_models` — 7 → 9 mô hình
+
+- **2 mô hình mới, `co_nguon`** (tọa độ = centroid GADM):
+  - `vac_ta_lai` — VAC gia đình anh Đinh Văn Màu, bản Tà Lọt, xã Tà Lại, Mộc Châu: ~4 ha cây ăn quả (nhãn, xoài, mít, bưởi da xanh) từ 2015, nuôi vịt cổ xanh – thỏ – dúi (~200 con) + ao cá, chăn nuôi trên 100 triệu đồng/năm — [baosonla.org.vn 08/7/2020](https://baosonla.org.vn/guong-sang-ban-lang/lam-giau-tu-mo-hinh-vac-32416.html).
+  - `vac_kun_ha` — anh Hàng A Cơ, bản Nậm Pha, xã Khun Há, Tam Đường, Lai Châu: 5 ha thảo quả dưới tán rừng (6.000 gốc, 200–300 triệu đồng/năm) + vườn–ao–chuồng 3 ao cá gần 3.000 m², vịt/gà/trâu, tổng thu trên 500 triệu đồng/năm (2018) — [baotintuc.vn 13/10/2018](https://baotintuc.vn/mo-hinh-phat-trien-kinh-te-hieu-qua-cua-nguoi-mong-huyen-tam-duong-lai-chau-post539261.html).
+- `vac_atiso_sa_pa` → `mot_phan`: phần atisô được nguồn xác nhận (trồng tập trung xã Tả Phìn, phường Hàm Rồng và phường Sa Pả, ~60 ha, ~160 hộ, Traphaco Sapa bao tiêu hơn 2.500 tấn lá/năm — [baolaocai.vn 11/12/2023](https://baolaocai.vn/nong-dan-sa-pa-phan-khoi-thu-hoach-cay-atiso-post376999.html), [nongnghiepmoitruong.vn](https://nongnghiepmoitruong.vn/loai-cay-sieu-thuc-pham-o-vung-dat-sa-pa-d408160.html)); mô hình cá hồi – cá tầm tại điểm này chưa có nguồn chỉ định.
+- 6 mô hình còn lại → `chua_xac_minh` (bỏ `minh_hoa`: các tên được đặt như địa danh cụ thể nhưng chưa có nguồn xác minh).
+
+### 8.4. `customary_zones` — 7 polygon hành chính thật (thay hình chữ nhật minh họa)
+
+- **Hình học**: ranh giới GADM 4.1 — Mường Tè (huyện), Chiềng Yên (xã), Điện Biên Đông (huyện), Chiềng Sơ (xã), Y Tý (xã), Bản Liền (xã), Mường Khương (huyện). Mọi `mo_ta` đều ghi "ranh giới vẽ theo hành chính cấp địa phương của GADM 4.1, mang tính đại diện".
+- `luat_tuc_y_ty` → **`co_nguon`**, đổi tên thành "Rừng thiêng & luật tục rừng Hà Nhì Y Tý": cúng rừng ngày Thìn tháng Giêng; mỗi tuần mở cửa rừng 1 ngày chỉ lấy củi khô; phạt người thấy cháy không dập – không báo; chỉ đến dịp mở hội mới được chặt cây dựng đu. **Sửa lỗi cũ**: "Khô Già Già" là tên *lễ hội cầu mùa* của người Hà Nhì đen (cả 9 thôn ở Y Tý đều tổ chức), được công nhận Di sản văn hóa phi vật thể cấp quốc gia — không phải tên khu rừng thiêng — [baolaocai.vn 17/7/2020](https://baolaocai.vn/le-hoi-cau-mua-cua-nguoi-ha-nhi-post289399.html), [baolaocai.vn 9/5/2016](https://baolaocai.vn/bao-ve-rung-gan-voi-bao-ton-van-hoa-post257142.html).
+- `luat_tuc_ban_lien` → **`co_nguon`**: quy ước "Nhà nào phun thuốc là bị phạt một bữa ăn cho cả bản và 5 triệu đồng, đồng thời bị loại khỏi nhóm sản xuất"; hữu cơ từ 2005, chứng nhận EU/USDA 9/2007; HTX Chè Bản Liền 310 thành viên, OCOP 5 sao — [sanphamvungmien.vn (Bộ Công Thương) 23/9/2025](https://sanphamvungmien.vn/san-pham-vung-mien/2025/9/che-shan-tuyet-ban-lien-tu-goc-co-thu-den-thuong-hieu-huu-co-quoc-te).
+- `luat_tuc_muong_khuong` → `mot_phan`: luật tục rừng Nùng Dín ở Mường Khương (cúng rừng tháng Bảy âm lịch, 3 ngày cấm chặt cây – bổ củi, vi phạm phải mua gà/vịt/lợn làm lễ tạ lỗi) và người Mông Nậm Chảy giữ rừng gỗ nghiến — [baolaocai.vn 9/5/2016](https://baolaocai.vn/bao-ve-rung-gan-voi-bao-ton-van-hoa-post257142.html); dùng ranh giới **huyện** vì GADM không có polygon xã Mường Khương phù hợp.
+- `cz1`–`cz4` → `chua_xac_minh` (nội dung giữ nguyên + ranh giới GADM; `cz4` đính [nguồn tổng quát về quyền sử dụng đất nương luân canh – Viện KHLN](https://vafs.gov.vn/vn/ve-quyen-su-dung-dat-lam-nuong-ray-cua-dong-bao-dan-toc-thieu-so-o-mien-nui/)).
+
+### 8.5. Thay đổi code liên quan
+
+- `WebGIS goc.tsx`: `IRRIGATION_LABELS` thêm `con`, sửa nghĩa lái/lín theo nguồn; emoji cọn 🌀; `statusNote` — thông điệp `chua_xac_minh` đổi thành "Chưa xác minh trực tiếp — cần đối chiếu thêm ở hiện trường", danh sách `nguon` hiển thị thành liên kết bấm được (`target="_blank"`).
+- `LayerDataEditor.tsx`: options `loai` của irrigation thêm `con`.
+- `customary_zones` giữ nguyên nhánh render (hỗ trợ ring phẳng/nested) — dữ liệu GADM ghi ring phẳng `[lng, lat]`.
+
+### 8.6. Số liệu sau cập nhật
+
+| Lớp | Số đối tượng | `co_nguon` | `mot_phan` | `chua_xac_minh` | `minh_hoa` |
+|---|---|---|---|---|---|
+| irrigation | 14 | 3 | 1 | 10 | 0 |
+| vac_models | 9 | 2 | 1 | 6 | 0 |
+| customary_zones | 7 | 2 | 1 | 4 | 0 |
+
 
