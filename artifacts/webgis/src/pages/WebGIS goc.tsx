@@ -2462,7 +2462,26 @@ onClick={() => setShowMapComposer(s => !s)}
   </svg>
   <span title="Nguồn: OpenStreetMap (Overpass API)">Hệ thống sông suối <span style={{opacity:0.6,fontSize:"inherit",fontStyle:"italic"}}>(OSM)</span></span>
 </div>}
-{activeLayers.has("irrigation")&&<div className="legend-item"><span className="legend-symbol">🚿</span><span>Thủy lợi</span></div>}
+{activeLayers.has("irrigation") && (() => {
+  const present = new Set((layersData?.irrigation || []).map(ir => ir.loai));
+  const groups: Array<{ emoji: string; label: string; ok: boolean }> = [
+    { emoji: "💧", label: "Phai (đập)", ok: present.has("phai") },
+    { emoji: "🚿", label: "Mương · Lái (kênh, máng dẫn)", ok: present.has("muong") || present.has("lai") },
+    { emoji: "〰️", label: "Lịn (phân phối nước vào ruộng)", ok: present.has("lin") },
+    { emoji: "🌀", label: "Cọn (guồng nước)", ok: present.has("con") },
+  ];
+  const shown = groups.filter(g => g.ok);
+  if (!shown.length) return <div className="legend-item"><span className="legend-symbol">🚿</span><span>Thủy lợi</span></div>;
+  return (<>
+    <div className="legend-subtitle">Thủy lợi truyền thống</div>
+    {shown.map(g => (
+      <div className="legend-item" key={`legend-irr-${g.label}`}>
+        <span className="legend-symbol">{g.emoji}</span>
+        <span>{g.label}</span>
+      </div>
+    ))}
+  </>);
+})()}
               {activeLayers.has("forests")&&<>
                 <div className="legend-subtitle">Phân vùng rừng</div>
                 {(["vqg","kbttn","kbvcq","rung_dac_dung"] as const).filter(k => !layersData || (layersData.forests||[]).some(f => f.loai === k)).map(k => (
