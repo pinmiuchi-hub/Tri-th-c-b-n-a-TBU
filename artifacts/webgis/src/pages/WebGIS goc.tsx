@@ -2486,14 +2486,14 @@ onClick={() => setShowMapComposer(s => !s)}
                 <div className="legend-subtitle">Phân vùng rừng</div>
                 {(["vqg","kbttn","kbvcq","rung_dac_dung"] as const).filter(k => !layersData || (layersData.forests||[]).some(f => f.loai === k)).map(k => (
                   <div className="legend-item" key={`legend-forest-${k}`}>
-                    <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" fill={FOREST_COLORS[k]} fillOpacity="0.3" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
+                    <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill={FOREST_COLORS[k]} fillOpacity="0.5" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
                     <span>{FOREST_LABELS[k]}</span>
                   </div>
                 ))}
               </>}
               {activeLayers.has("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
               {activeLayers.has("medicinal_plants")&&<div className="legend-item">
-                <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" fill="#e63946" fillOpacity="0.3" stroke="#e63946" strokeWidth="1.5"/></svg>
+                <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill="#e63946" fillOpacity="0.5" stroke="#e63946" strokeWidth="1.5"/></svg>
                 <span>Cây thuốc quý</span>
               </div>}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
