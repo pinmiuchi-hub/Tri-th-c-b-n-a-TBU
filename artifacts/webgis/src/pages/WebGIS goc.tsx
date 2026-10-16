@@ -1848,10 +1848,10 @@ onEachFeature:(feat,lyr)=>{
     });
     if (rings.length === 0) return;
 
-    const maskHost = map.getContainer().parentElement || map.getContainer();
+    const mapPane = map.getPane("mapPane") || map.getContainer().parentElement || map.getContainer();
     const mask = document.createElement("div");
     mask.className = "selected-area-mask";
-    mask.style.cssText = "position:absolute;inset:0;z-index:650;pointer-events:none;overflow:hidden";
+    mask.style.cssText = "position:absolute;left:0;top:0;z-index:660;pointer-events:none;overflow:hidden";
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", "100%");
     svg.setAttribute("height", "100%");
@@ -1890,23 +1890,25 @@ onEachFeature:(feat,lyr)=>{
     whiteOverlay.setAttribute("mask", `url(#${maskId})`);
     svg.appendChild(whiteOverlay);
     mask.appendChild(svg);
-    maskHost.appendChild(mask);
+    mapPane.appendChild(mask);
     selectedAreaMaskRef.current = mask;
 
     const updateMask = () => {
-      const mapRect = map.getContainer().getBoundingClientRect();
-      const hostRect = maskHost.getBoundingClientRect();
-      const width = Math.max(1, Math.round(hostRect.width));
-      const height = Math.max(1, Math.round(hostRect.height));
-      const offsetX = mapRect.left - hostRect.left;
-      const offsetY = mapRect.top - hostRect.top;
+      const contRect = map.getContainer().getBoundingClientRect();
+      const paneRect = mapPane.getBoundingClientRect();
+      const width = Math.max(1, Math.round(contRect.width));
+      const height = Math.max(1, Math.round(contRect.height));
+      mask.style.left = `${Math.round(contRect.left - paneRect.left)}px`;
+      mask.style.top = `${Math.round(contRect.top - paneRect.top)}px`;
+      mask.style.width = `${width}px`;
+      mask.style.height = `${height}px`;
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
       svgMask.setAttribute("width", String(width));
       svgMask.setAttribute("height", String(height));
       selectedPath.setAttribute("d", rings.map(ring => {
         const points = ring.map(([lng, lat]) => {
           const point = map.latLngToContainerPoint([lat, lng]);
-          return `${point.x + offsetX} ${point.y + offsetY}`;
+          return `${point.x} ${point.y}`;
         });
         return `M ${points.join(" L ")} Z`;
       }).join(" "));
