@@ -431,7 +431,7 @@ export default function WebGIS() {
   const [showThematic, setShowThematic] = useState(false);
   const [activeRaster, setActiveRaster] = useState<string | null>(null);
   const [earth3d, setEarth3d] = useState<{ open: boolean; center?: [number, number]; zoom?: number; overlay?: unknown }>({ open: false });
-  const [rasterOpacity, setRasterOpacity] = useState(0.65);
+  const [rasterOpacity, setRasterOpacity] = useState(0.8);
   const [rasterMeta, setRasterMeta] = useState<{ bounds: [[number,number],[number,number]]; layers: Record<string, { file: string; unit: string; label: string; source: string; stops: any }> } | null>(null);
   const [transectFor, setTransectFor] = useState<EthnicKey | null>(null);
   const [calendarFor, setCalendarFor] = useState<EthnicKey | null>(null);

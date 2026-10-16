@@ -9,10 +9,10 @@ const OUT_DIR = path.resolve(__dirname, '../../artifacts/webgis/public/data/rast
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const BBOX = { lngMin: 101.5, lngMax: 105.5, latMin: 20.5, latMax: 23.5 };
-const GRID_W = 80;
-const GRID_H = 64;
-const PNG_W = 600;
-const PNG_H = 500;
+const GRID_W = 240;
+const GRID_H = 192;
+const PNG_W = 1200;
+const PNG_H = 1000;
 
 type Grid = Float32Array;
 const idx = (x: number, y: number) => y * GRID_W + x;
@@ -168,6 +168,28 @@ function bilinear(grid: Grid, fx: number, fy: number): number {
   const v01 = grid[idx(x0, y1)], v11 = grid[idx(x1, y1)];
   return v00 * (1 - tx) * (1 - ty) + v10 * tx * (1 - ty)
        + v01 * (1 - tx) * ty + v11 * tx * ty;
+}
+
+function smooth3(g: Grid, passes = 2): Grid {
+  let src = g;
+  for (let p = 0; p < passes; p++) {
+    const out = new Float32Array(GRID_W * GRID_H);
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        let sum = 0, n = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const xx = x + dx, yy = y + dy;
+            if (xx < 0 || yy < 0 || xx >= GRID_W || yy >= GRID_H) continue;
+            sum += src[idx(xx, yy)]; n++;
+          }
+        }
+        out[idx(x, y)] = sum / n;
+      }
+    }
+    src = out;
+  }
+  return src;
 }
 
 function renderPng(grid: Grid, stops: ColorStop[], outPath: string, alpha = 200) {
@@ -348,15 +370,16 @@ const PH_STOPS: ColorStop[] = [
   const aspect = computeAspect(elev);
   const temp = computeTemperature(elev);
   const precip = computePrecipitation(elev);
-  const { grid: soilType, legend: soilLegend } = generateSoilType(elev);
-  const soilPh = computeSoilPh(elev, soilType);
+  const soilElev = smooth3(elev, 2);
+  const { grid: soilType, legend: soilLegend } = generateSoilType(soilElev);
+  const soilPh = computeSoilPh(soilElev, soilType);
 
   console.log('\nRendering PNGs...');
   renderPng(elev, ELEV_STOPS, path.join(OUT_DIR, 'elevation.png'));
   renderAspectPng(aspect, elev, path.join(OUT_DIR, 'aspect.png'));
   renderPng(temp, TEMP_STOPS, path.join(OUT_DIR, 'temperature.png'));
   renderPng(precip, PRECIP_STOPS, path.join(OUT_DIR, 'precipitation.png'));
-  renderSoilTypePng(elev, soilLegend, path.join(OUT_DIR, 'soil_type.png'));
+  renderSoilTypePng(soilElev, soilLegend, path.join(OUT_DIR, 'soil_type.png'), 255);
   renderPng(soilPh, PH_STOPS, path.join(OUT_DIR, 'soil_ph.png'));
 
   const meta = {
