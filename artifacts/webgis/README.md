@@ -65,6 +65,7 @@ webgis/
 - Nhập dữ liệu CSV cho xã & dân tộc
 - Mặt cắt sinh thái (transect), Lịch nông vụ, Thư viện tri thức bản địa
 - Hồ sơ ảnh & tài liệu PDF cho từng dân tộc và xã
+- **Chế độ 3D kiểu Google Earth** (MapLibre GL): địa hình thật từ DEM (AWS Terrain Tiles · SRTM/ETOPO), xoay/nghiêng/bay quanh, làm nổi địa hình chỉnh sửa được, nền vệ tinh/đường phố và ranh giới tỉnh/xã phủ lên địa hình — mở từ nhóm "Địa hình" trong panel "Bản đồ chuyên đề"
 
 ## Triển khai (Deploy)
 

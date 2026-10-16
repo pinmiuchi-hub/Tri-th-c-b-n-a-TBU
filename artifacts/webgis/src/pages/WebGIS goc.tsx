@@ -13,7 +13,7 @@ import LayerDataEditor from "../components/LayerDataEditor";
 import LayerSymbologyEditorModal, { type LayerSymbologyConfig } from "../components/LayerSymbologyEditorModal"; import WardStyleEditorModal, { type WardStyleValue } from "../components/WardStyleEditorModal";
 import WardPieSelector from "../components/WardPieSelector";
 import WardEthnicEditorModal from "../components/WardEthnicEditorModal";
-import Terrain3DModal from "../components/Terrain3DModal";
+import Earth3DModal from "../components/Earth3DModal";
 import MapComposer from '@/components/MapComposer';
 import html2canvas from "html2canvas";
 import { Printer } from 'lucide-react';
@@ -430,7 +430,7 @@ export default function WebGIS() {
   const [showLayers, setShowLayers] = useState(false);
   const [showThematic, setShowThematic] = useState(false);
   const [activeRaster, setActiveRaster] = useState<string | null>(null);
-  const [showTerrain3D, setShowTerrain3D] = useState(false);
+  const [earth3d, setEarth3d] = useState<{ open: boolean; center?: [number, number]; zoom?: number; overlay?: unknown }>({ open: false });
   const [rasterOpacity, setRasterOpacity] = useState(0.65);
   const [rasterMeta, setRasterMeta] = useState<{ bounds: [[number,number],[number,number]]; layers: Record<string, { file: string; unit: string; label: string; source: string; stops: any }> } | null>(null);
   const [transectFor, setTransectFor] = useState<EthnicKey | null>(null);
@@ -2289,7 +2289,20 @@ onClick={() => setShowMapComposer(s => !s)}
                   })}
                 </div>
                 <button className="thematic-clear" disabled={!activeRaster} onClick={()=>setActiveRaster(null)}>Tắt lớp chuyên đề</button>
-                {activeRaster === "elevation" && <button className="thematic-3d-btn" onClick={() => setShowTerrain3D(true)}>🌐 Mở địa hình 3D</button>}
+                <button className="thematic-3d-btn" onClick={() => {
+                  const m = mapRef.current;
+                  const center: [number, number] = m ? [m.getCenter().lng, m.getCenter().lat] : [103.6, 21.7];
+                  const zoom = m ? Math.min(Math.max(m.getZoom(), 7), 11) : 9;
+                  let overlay: unknown = null;
+                  if (selectedWard && currentProvinceGeoJson) {
+                    overlay = { type: "FeatureCollection", features: currentProvinceGeoJson.features.filter(f => (f.properties as Record<string, unknown>)?.ma_xa === selectedWard.ma_xa) };
+                  } else if (currentProvinceGeoJson) {
+                    overlay = currentProvinceGeoJson;
+                  } else if (provinceMaskGeomRef.current) {
+                    overlay = provinceMaskGeomRef.current;
+                  }
+                  setEarth3d({ open: true, center, zoom, overlay });
+                }}>🌍 Chế độ 3D (xoay · nghiêng góc nhìn)</button>
                 {activeRaster && (<div className="thematic-opacity"><label>Độ trong suốt: {Math.round(rasterOpacity*100)}%</label><input type="range" min={0.2} max={1} step={0.05} value={rasterOpacity} onChange={e=>setRasterOpacity(parseFloat(e.target.value))} /></div>)}
                 {activeRaster && rasterMeta.layers[activeRaster] && (<div className="thematic-source">Nguồn: <em>{rasterMeta.layers[activeRaster].source}</em></div>)}
               </div>
@@ -2850,7 +2863,7 @@ onClick={() => setShowMapComposer(s => !s)}
       {showKnowledge && <IndigenousKnowledge onClose={()=>setShowKnowledge(false)} data={knowledgeData} onChange={setKnowledgeData}/>}
       
       {pendingAnnotation && <AnnotationModal coords={pendingAnnotation.coords} loai={pendingAnnotation.loai} onSave={saveAnnotation} onCancel={()=>setPendingAnnotation(null)}/>}
-      <Terrain3DModal open={showTerrain3D} onClose={() => setShowTerrain3D(false)} basePath={BASE_PATH} />
+      <Earth3DModal open={earth3d.open} onClose={() => setEarth3d(s => ({ ...s, open: false }))} center={earth3d.center} zoom={earth3d.zoom} overlay={earth3d.overlay} />
       <MapComposer
   hidden={!showMapComposer || !!editingLayer}
   onClose={() => setShowMapComposer(false)}

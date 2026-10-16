@@ -1,0 +1,116 @@
+.earth3d-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 8, 5, 0.8);
+}
+
+.earth3d-panel {
+  width: min(1200px, 100%);
+  height: min(800px, 93vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(82, 183, 136, 0.4);
+  border-radius: 12px;
+  background: #0d1512;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+}
+
+.earth3d-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #101f18;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.25);
+  color: #d8f3dc;
+}
+
+.earth3d-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.earth3d-title b { font-size: 14px; }
+.earth3d-title span { font-size: 11px; color: rgba(184, 231, 205, 0.75); }
+
+.earth3d-tools { display: flex; align-items: center; gap: 8px; }
+
+.earth3d-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px;
+  border-radius: 7px;
+  border: 1px solid rgba(82, 183, 136, 0.3);
+}
+
+.earth3d-toggle button {
+  border: none;
+  background: transparent;
+  color: #b7e4c7;
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.earth3d-toggle button.active { background: rgba(82, 183, 136, 0.35); color: #eafff5; font-weight: 700; }
+
+.earth3d-close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  border-radius: 6px;
+  background: transparent;
+  color: #d8f3dc;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.earth3d-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #0e1a13;
+}
+
+.earth3d-body .maplibregl-map { position: absolute; inset: 0; }
+
+.earth3d-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 14px;
+  background: #101f18;
+  border-top: 1px solid rgba(82, 183, 136, 0.25);
+  font-size: 11px;
+  color: #b7e4c7;
+  flex-wrap: wrap;
+}
+
+.earth3d-exag { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.earth3d-exag input { width: 130px; accent-color: #52b788; }
+
+.earth3d-body .maplibregl-ctrl-group {
+  background: rgba(10, 20, 15, 0.92);
+  border: 1px solid rgba(82, 183, 136, 0.35);
+}
+.earth3d-body .maplibregl-ctrl-group button { background: transparent; }
+.earth3d-body .maplibregl-ctrl-group button + button { border-top: 1px solid rgba(82, 183, 136, 0.25); }
+.earth3d-body .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(0.86) sepia(0.3) saturate(0.5) hue-rotate(90deg); }
+
+@media (max-width: 768px) {
+  .earth3d-overlay { padding: 8px; }
+  .earth3d-panel { height: 96vh; }
+  .earth3d-hint { display: none; }
+}
