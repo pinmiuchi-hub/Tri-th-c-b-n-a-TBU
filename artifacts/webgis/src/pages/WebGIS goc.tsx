@@ -467,6 +467,9 @@ export default function WebGIS() {
       const payload: Record<string, unknown> = { customLayers, layerCategories, layerSymbologies, deletedCategoryIds, hiddenLayerIds };
       if (layersData) {
         const { rivers: _rivers, ...rest } = layersData as Record<string, any>;
+        // Không lưu lại mảng built-in còn nhãn minh họa/chưa xác minh (dữ liệu cũ từ phiên trước) — lần nạp sau lấy bản mới từ layers.json
+        const hasStaleLabel = (arr: unknown) => Array.isArray(arr) && arr.some((x: any) => x?.trang_thai === "minh_hoa" || x?.trang_thai === "chua_xac_minh");
+        Object.keys(rest).forEach(k => { if (!k.startsWith("custom_") && hasStaleLabel(rest[k])) delete rest[k]; });
         payload.layersData = rest;
         payload.layersDataRev = LAYER_DATA_REV;
       } else {
@@ -543,7 +546,14 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
         }];
       });
       if (rivers.length === 0) throw new Error("No standard hydrography features returned");
-      setLayersData(prev => ({ ...(prev || fallback), rivers } as LayersData));
+      // Giữ metadata đã đối chiếu nguồn (mo_ta/nguon/trang_thai) từ layers.json cho các sông khớp tên
+      const localByName = new Map<string, any>();
+      ((fallback as any)?.rivers || []).forEach((r: any) => { if (r?.ten) localByName.set(String(r.ten).toLowerCase(), r); });
+      const enriched = rivers.map(r => {
+        const local = localByName.get(String(r.ten).toLowerCase());
+        return local ? { ...r, mo_ta: local.mo_ta, nguon: local.nguon, trang_thai: local.trang_thai, ghi_chu: local.ghi_chu } : r;
+      });
+      setLayersData(prev => ({ ...(prev || fallback), rivers: enriched } as LayersData));
     };
 
     fetch(BASE_PATH+"/data/dan_toc.json").then(r=>r.json()).then(setDanTocData).catch(console.error);
@@ -564,11 +574,14 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
       const savedLayerData = savedConfig?.layersData;
       if (savedLayerData) {
         const savedRev = (savedConfig as any)?.layersDataRev;
+        const hasStaleLabel = (arr: unknown) => Array.isArray(arr) && arr.some((x: any) => x?.trang_thai === "minh_hoa" || x?.trang_thai === "chua_xac_minh");
         Object.keys(savedLayerData).forEach(key => {
           if (!Array.isArray(savedLayerData[key])) return;
           if (key === "rivers") return; // rivers tải lại từ Overpass mỗi phiên
           // Bản lưu cũ (trước khi layers.json được đối chiếu nguồn) không dùng nữa — lấy bản mới nhất
           if (LAYER_DATA_REV_KEYS.includes(key) && savedRev !== LAYER_DATA_REV) return;
+          // Bản lưu còn nhãn minh họa/chưa xác minh = dữ liệu trước khi đối chiếu nguồn (kể cả khi rev trùng) — bỏ
+          if (!key.startsWith("custom_") && hasStaleLabel(savedLayerData[key])) return;
           if (key === "forests" || key === "medicinal_plants") {
             // Phiên trước lưu dạng điểm (lat/lng) — không dùng nữa; chỉ nhận bản đã biên tập dạng polygon
             const polygonItems = savedLayerData[key].filter((x: any) => Array.isArray(x?.coords));
@@ -2576,6 +2589,8 @@ onClick={() => setShowMapComposer(s => !s)}
                           const ghiChu=selectedWard.dan_toc_ghi_chu;
                           const edited=!!wardOverrides.get(selectedWard.ma_xa)?.dan_toc;
                           if(!tt&&!edited)return null;
+                          // Panel "Thông tin địa bàn": bỏ khối "Ước tính — cần đối chiếu" (dữ liệu ước tính theo mẫu), chỉ giữ nguồn đã đối chiếu
+                          if(!edited&&tt!=="co_nguon"&&tt!=="mot_phan")return null;
                           const meta=tt==="co_nguon"?{label:"✓ Đã có nguồn",color:"#15803d",bg:"#dcfce7",border:"#86efac"}
                             :tt==="mot_phan"?{label:"~ Một phần có nguồn",color:"#a16207",bg:"#fef9c3",border:"#fde047"}
                             :{label:"⚠ Ước tính — cần đối chiếu",color:"#b45309",bg:"#ffedd5",border:"#fdba74"};

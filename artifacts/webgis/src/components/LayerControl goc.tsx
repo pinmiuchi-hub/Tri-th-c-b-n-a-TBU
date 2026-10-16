@@ -83,13 +83,11 @@ export default function LayerControl({
   };
   const clearSymbolImage = () => setDraft(d => ({ ...d, bieu_tuong: "📌" }));
 
+  const firstCatId = categories[0]?.id;
   const startAdd = (catId: string) => {
     setAddingFor(catId);
     setDraft({ ten: "", mau: PALETTE[Math.floor(Math.random() * PALETTE.length)], bieu_tuong: "📌", geomType: "point" });
   };
-  const [addingGroup, setAddingGroup] = useState(false);
-const [newGroupName, setNewGroupName] = useState("");
-const [newGroupIcon, setNewGroupIcon] = useState("📁");
   const submitAdd = (catId: string) => {
     if (!draft.ten.trim()) { alert("Nhập tên lớp"); return; }
     onAddCustomLayer(catId, { ...draft, ten: draft.ten.trim() });
@@ -120,19 +118,8 @@ const [newGroupIcon, setNewGroupIcon] = useState("📁");
       </div>
 
       <div className="layer-panel-body">
-        {categories.map(cat => (
-          <div key={cat.id} className="layer-category">
-<div className="layer-cat-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-  <span>{cat.icon} {cat.ten}</span>
-    <button className="layer-edit-btn" onClick={() => { const name = prompt("Tên nhóm lớp mới", cat.ten); if (name?.trim()) onRenameCategory(cat.id, name.trim()); }} title="Đổi tên nhóm lớp">✎</button>
-  <button
-    className="layer-delete-btn"
-    onClick={() => { if (confirm(`Xóa nhóm "${cat.ten}"? Các lớp bên trong sẽ bị ẩn khỏi bảng điều khiển.`)) onDeleteCategory(cat.id); }}
-    title="Xóa nhóm lớp bản đồ"
-  >
-    🗑️
-  </button>
-</div>            {cat.layers.map(layer => (
+        <div className="layer-category">
+        {categories.flatMap(cat => cat.layers.map(layer => (
               <div key={layer.id} className={`layer-item ${layer.active ? "active" : ""}`}>
                 <div className="layer-item-left">
                   <div className="layer-dot" style={{ background: layer.mau }}/>
@@ -188,9 +175,10 @@ const [newGroupIcon, setNewGroupIcon] = useState("📁");
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
 
-            {addingFor === cat.id ? (
+            {firstCatId ? (
+              addingFor === firstCatId ? (
               <div className="layer-add-form">
                 <div className="laf-row">
                   <div className="laf-symbol-cell" title="Biểu tượng (emoji hoặc ảnh)">
@@ -214,22 +202,21 @@ const [newGroupIcon, setNewGroupIcon] = useState("📁");
                     <option value="polygon">⬡ Vùng</option>
                   </select>
                   <button className="laf-cancel" onClick={() => setAddingFor(null)}>Hủy</button>
-                  <button className="laf-save" onClick={() => submitAdd(cat.id)}>Tạo lớp</button>
+                  <button className="laf-save" onClick={() => submitAdd(firstCatId)}>Tạo lớp</button>
                 </div>
               </div>
             ) : (
               <div className="layer-add-row">
-                <button className="layer-add-btn" onClick={() => startAdd(cat.id)}>+ Thêm lớp trống</button>
-                <button className="layer-import-btn" onClick={() => startImport(cat.id)} title="Nhập lớp từ file GeoJSON hoặc KML">📁 Nhập GeoJSON / KML</button>
+                <button className="layer-add-btn" onClick={() => startAdd(firstCatId)}>+ Thêm lớp trống</button>
+                <button className="layer-import-btn" onClick={() => startImport(firstCatId)} title="Nhập lớp từ file GeoJSON hoặc KML">📁 Nhập GeoJSON / KML</button>
               </div>
-            )}
+            )
+            ) : null}
           </div>
-        ))}
         <input ref={fileInputRef} type="file" accept=".geojson,.json,.kml,application/geo+json,application/vnd.google-earth.kml+xml" style={{ display: "none" }} onChange={handleFileChosen}/>
         <input ref={symbolInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style={{ display: "none" }} onChange={handleSymbolFileChosen}/>
 
         <div className="layer-category">
-          <div className="layer-cat-title">📊 Biểu đồ · Lịch · Tri thức</div>
           <div className={`layer-item ${showEthnicPie ? "active" : ""}`}>
   <div className="layer-item-left">
     <div className="layer-dot" style={{ background: "#f4a261" }}/>
@@ -274,45 +261,11 @@ const [newGroupIcon, setNewGroupIcon] = useState("📁");
             </div>
           </div>
           )}
-          <div className={`layer-item ${showKnowledge ? "active" : ""}`}>
-            <div className="layer-item-left">
-              <div className="layer-dot" style={{ background: "#9b5de5" }}/>
-              <span className="layer-symbol">📖</span>
-              <span className="layer-name">Tri thức & văn hóa bản địa</span>
-            </div>
-            <div className="layer-item-actions">
-              <div className={`layer-toggle ${showKnowledge ? "on" : ""}`} onClick={onToggleKnowledge}>
-                <div className="layer-toggle-thumb"/>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="layer-legend-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Click ✏️ bên cạnh lớp để thêm/sửa/xóa dữ liệu · Dùng "+ Thêm lớp" để tạo lớp tùy chỉnh
-        </div>
-
-        {/* ← CHÈN KHỐI "+ Thêm nhóm lớp mới" TẠI ĐÂY */}
-        <div className="layer-category">
-          {addingGroup ? (
-            <div className="layer-add-form">
-              <div className="laf-row">
-                <input className="laf-input laf-symbol" maxLength={2} value={newGroupIcon} onChange={e => setNewGroupIcon(e.target.value)} placeholder="📁"/>
-                <input className="laf-input laf-name" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} placeholder="Tên nhóm lớp mới..."/>
-              </div>
-              <div className="laf-row">
-                <button className="laf-cancel" onClick={() => setAddingGroup(false)}>Hủy</button>
-                <button className="laf-save" onClick={() => {
-                  if (!newGroupName.trim()) { alert("Nhập tên nhóm"); return; }
-                  onAddCategory(newGroupName.trim(), newGroupIcon || "📁");
-                  setNewGroupName(""); setNewGroupIcon("📁"); setAddingGroup(false);
-                }}>Tạo nhóm</button>
-              </div>
-            </div>
-          ) : (
-            <button className="layer-add-btn" onClick={() => setAddingGroup(true)}>+ Thêm nhóm lớp mới</button>
-          )}
         </div>
 
       </div>

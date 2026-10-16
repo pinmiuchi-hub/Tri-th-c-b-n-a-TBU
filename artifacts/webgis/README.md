@@ -58,6 +58,7 @@ webgis/
 - Bản đồ tương tác với 3 lớp nền: **OpenStreetMap**, **Vệ tinh (Esri)**, **Địa hình (OpenTopoMap)**
 - Hiển thị ranh giới tỉnh/xã của Tây Bắc, có thể click để xem chi tiết
 - 7 lớp dữ liệu: Sông suối chính, Thủy lợi, **Phân vùng rừng (polygon)**, Mô hình VAC, **Khu vực cây thuốc quý (polygon)**, Mật độ dân số, Ranh giới xã — riêng **Bản làng tiêu biểu (25)** và **Luật tục cộng đồng (5)** hiển thị văn bản theo từng xã trong panel "Thông tin địa bàn" (vòng 3, tất cả đã có nguồn)
+- Vòng 4: panel "Lớp bản đồ" hiển thị **dạng phẳng, không phân nhóm** (bỏ tiêu đề nhóm + nút quản lý nhóm + dòng "Tri thức & văn hóa bản địa"); dữ liệu minh họa cũ còn sót trong localStorage bị tự động bỏ khi nạp; panel "Thông tin địa bàn" không còn khối "Ước tính — cần đối chiếu"
 - Biên tập tại chỗ: thêm/sửa/xóa đối tượng, chọn vị trí trên bản đồ (điểm) hoặc vẽ vùng/polygon
 - Tải ảnh tùy chỉnh cho biểu tượng lớp
 - Xuất từng lớp ra **KML** (Google Earth) hoặc **GeoJSON** (giữ nguyên màu sắc & biểu tượng)

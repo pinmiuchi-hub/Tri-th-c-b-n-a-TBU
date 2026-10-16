@@ -318,5 +318,15 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 | forests | 11 | 11 | 0 |
 | medicinal_plants | 11 | 11 | 0 |
 
+## 11. Vòng 4 (16/10/2026): guard dữ liệu minh họa cũ + giao diện panel
+
+**Chẩn đoán ảnh người dùng (popup còn "minh họa", badge 11 thủy lợi / 7 VAC, tên nhóm cũ):** dữ liệu trên máy dev đã sạch từ vòng 3 (verify vòng 3 đối chiếu `localhost:5173` = 6/8/5/25 `co_nguon`) — hiện tượng do **localStorage/bundle CŨ trong tab trình duyệt** và tên nhóm cũ do config người dùng lưu giữ `ten` nhóm cũ. Vòng 4 xử lý cả hai:
+
+- **Guard nạp dữ liệu** (`WebGIS goc.tsx`): bản lưu localStorage của lớp built-in (không `custom_*`) mà còn phần tử `trang_thai: minh_hoa|chua_xac_minh` → bỏ toàn bộ mảng, lấy bản mới từ `layers.json` (kể cả khi `layersDataRev` đã trùng `LAYER_DATA_REV` — trường hợp người dùng gặp). Rivers vẫn tải Overpass mỗi phiên và nay được **làm giàu metadata** (`mo_ta`/`nguon`/`trang_thai`/`ghi_chu`) từ `layers.json` theo tên khớp.
+- **Guard lưu dữ liệu**: khi ghi config, mảng built-in còn nhãn minh họa/chưa xác minh bị loại khỏi payload → storage tự sạch sau lần tải.
+- **Panel "Thông tin địa bàn"**: ẩn khối trạng thái dân tộc khi `dan_toc_trang_thai` không phải `co_nguon`/`mot_phan` (tức xóa hẳn chip **"⚠ Ước tính — cần đối chiếu"** + ghi chú ước tính theo mẫu cấp huyện); vẫn giữ khối khi đã có nguồn hoặc người dùng sửa cục bộ.
+- **Panel "Lớp bản đồ" phẳng** (`LayerControl goc.tsx`): bỏ tiêu đề nhóm (`.layer-cat-title`), nút ✎/🗑 từng nhóm, khối "+ Thêm nhóm lớp mới" và **dòng "Tri thức & văn hóa bản địa"**; danh sách = `categories.flatMap(...)` trong một wrapper, chỉ còn **một** hàng "+ Thêm lớp trống / Nhập GeoJSON-KML" dùng `firstCatId`. (`IndigenousKnowledge` + dữ liệu tri thức vẫn còn trong mã nguồn, chỉ không mở từ panel lớp.)
+- **Verify `verify_round4.js` → 15/15 PASS**: seed localStorage `rev=4` nhưng chứa dữ liệu STALE `minh_hoa` → badge vẫn 7 sông/6 thủy lợi/8 VAC; panel 0 tiêu đề nhóm, không tên nhóm cũ, 1 hàng thêm lớp; xã **Mường Tè** (du_doan) hết khối ước tính, tag dân tộc còn; regression Y Tý 2 section / Tà Xùa 0 section / popup sông có nguồn.
+
 
 
