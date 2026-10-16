@@ -57,8 +57,8 @@ webgis/
 
 - Bản đồ tương tác với 3 lớp nền: **OpenStreetMap**, **Vệ tinh (Esri)**, **Địa hình (OpenTopoMap)**
 - Hiển thị ranh giới tỉnh/xã của Tây Bắc, có thể click để xem chi tiết
-- 7 lớp dữ liệu: Sông suối chính, Thủy lợi, Rừng, Mô hình VAC, Cây thuốc, Vùng tập quán, Ranh giới xã
-- Biên tập tại chỗ: thêm/sửa/xóa điểm, chọn vị trí trực tiếp trên bản đồ
+- 7 lớp dữ liệu: Sông suối chính, Thủy lợi, **Phân vùng rừng (polygon)**, Mô hình VAC, **Khu vực cây thuốc quý (polygon)**, Vùng tập quán, Ranh giới xã
+- Biên tập tại chỗ: thêm/sửa/xóa đối tượng, chọn vị trí trên bản đồ (điểm) hoặc vẽ vùng/polygon
 - Tải ảnh tùy chỉnh cho biểu tượng lớp
 - Xuất từng lớp ra **KML** (Google Earth) hoặc **GeoJSON** (giữ nguyên màu sắc & biểu tượng)
 - Nhập dữ liệu CSV cho xã & dân tộc
@@ -69,9 +69,12 @@ webgis/
 
 Sau khi `pnpm build`, thư mục `dist/` chứa file tĩnh có thể deploy lên bất kỳ web host nào (Netlify, Vercel, Nginx, Apache, GitHub Pages, ...).
 
-## Lưu ý về dữ liệu sông suối
+## Lưu ý về dữ liệu
 
-Tọa độ sông suối lấy từ **OpenStreetMap** (© OpenStreetMap contributors, ODbL license). Lớp nền vệ tinh do **Esri** cung cấp. Dữ liệu tỉnh/xã từ Bộ Tài nguyên và Môi trường Việt Nam.
+- Sông suối: tọa độ lấy từ **OpenStreetMap** (© OpenStreetMap contributors, ODbL license).
+- **Phân vùng rừng** (`forests`): hình học các khu bảo tồn lấy từ **World Database on Protected Areas (WDPCA/UNEP-WCMC)** — [protectedplanet.net](https://protectedplanet.net), truy vấn 10/2026; hiển thị 11 PA thuộc 4 tỉnh.
+- **Khu vực cây thuốc quý** (`medicinal_plants`): hình học = polygon hành chính xã (sau sáp nhập 01/7/2025); nội dung & tình trạng đã đối chiếu các nguồn tin bài (Nông nghiệp & Môi trường, Nhân Dân, Lai Châu, Sơn La…) — chi tiết trong `RA_SOAT_DU_LIEU_VA_NGUON_THAM_KHAO.md`.
+- Lớp nền vệ tinh do **Esri** cung cấp. Dữ liệu tỉnh/xã từ Bộ Tài nguyên và Môi trường Việt Nam.
 
 ## Liên hệ / Hỗ trợ
 

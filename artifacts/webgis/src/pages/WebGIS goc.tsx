@@ -33,9 +33,9 @@ interface LayersData {
   rivers: { id?: string; ten: string; ten_dia_phuong: string; coords: number[][]; cap_song?: number; width?: number; trang_thai?: string; nguon?: string[] }[];
   irrigation: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
   villages?: { id?: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
-  forests: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
+  forests: { id?: string; ten: string; ten_dia_phuong: string; loai: string; coords: number[][] | number[][][]; dien_tich_ha?: number; iucn?: string; nam_cong_bo?: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
   vac_models: { id?: string; ten: string; loai: string; lat: number; lng: number; mo_ta: string; thanh_phan: string[] | string; trang_thai?: string; nguon?: string[] }[];
-  medicinal_plants: { id?: string; ten: string; ten_khoa_hoc: string; lat: number; lng: number; cong_dung: string; tinh_trang?: string; "tình_trang"?: string; dan_toc_dung: string[] | string; trang_thai?: string; nguon?: string[] }[];
+  medicinal_plants: { id?: string; ten: string; ten_dia_phuong?: string; ten_khoa_hoc: string; coords: number[][] | number[][][]; cong_dung: string; tinh_trang?: string; "tình_trang"?: string; dan_toc_dung: string[] | string; mo_ta?: string; trang_thai?: string; nguon?: string[] }[];
   customary_zones: { id?: string; ten: string; loai: string; mo_ta: string; coords: number[][]; trang_thai?: string; nguon?: string[] }[];
 }
 
@@ -77,8 +77,8 @@ const DEFAULT_LAYER_CATEGORIES = [
 ];
 const EDITABLE_LAYERS = new Set(["irrigation", "forests", "vac_models", "medicinal_plants", "customary_zones"]);
 const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
-  rivers: "line", irrigation: "point", forests: "point", vac_models: "point",
-  medicinal_plants: "point", customary_zones: "polygon", population_density: "polygon",
+  rivers: "line", irrigation: "point", forests: "polygon", vac_models: "point",
+  medicinal_plants: "polygon", customary_zones: "polygon", population_density: "polygon",
 };
 const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   population_density: { name: "Mật độ dân số", color: "#fe9929" },
@@ -90,8 +90,8 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   customary_zones: { name: "Luật tục cộng đồng", color: "#f4a261" },
 };
 
-const FOREST_COLORS: Record<string, string> = { rung_thieng: "#1b4332", rung_ma: "#7209b7", rung_dau_nguon: "#023e8a", rung_trong: "#52b788", rung_tu_nhien: "#2d6a4f", rung_dac_san: "#b7791f", rung_ma_lang: "#7209b7", rung_kieng: "#9d0208" };
-const FOREST_LABELS: Record<string, string> = { rung_thieng: "Rừng thiêng", rung_ma: "Rừng ma", rung_dau_nguon: "Rừng đầu nguồn", rung_trong: "Rừng trồng", rung_tu_nhien: "Rừng tự nhiên", rung_dac_san: "Rừng đặc sản", rung_ma_lang: "Rừng ma làng", rung_kieng: "Rừng kiêng" };
+const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#2d6a4f", kbvcq: "#023e8a", rung_dac_dung: "#40916c" };
+const FOREST_LABELS: Record<string, string> = { vqg: "Vườn quốc gia", kbttn: "Khu bảo tồn thiên nhiên", kbvcq: "Khu bảo vệ cảnh quan", rung_dac_dung: "Rừng đặc dụng khác" };
 const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
 const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946", tay: "#1d3557", giay: "#06a77d", ha_nhi: "#a4243b", nung: "#5a189a", phu_la: "#ff8c42", la_chi: "#ffc857" };
 const VIETNAMESE_ETHNIC_NAMES = [
@@ -119,9 +119,9 @@ const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
   ] },
   rivers: { title: "Sông suối chính", symbolType: "line", color: "#4b9ad6", fillColor: "#4b9ad6", lineWeight: 1.8, opacity: 0.85, fillOpacity: 0.7, dashArray: "", classes: [] },
   irrigation: { title: "Thủy lợi truyền thống", symbolType: "point", color: "#74c69d", fillColor: "#74c69d", lineWeight: 1.4, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
-  forests: { title: "Phân vùng rừng", symbolType: "point", color: "#2d6a4f", fillColor: "#2d6a4f", lineWeight: 1.3, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
+  forests: { title: "Phân vùng rừng", symbolType: "polygon", color: "#2d6a4f", fillColor: "#2d6a4f", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
   vac_models: { title: "Mô hình VAC/VACR", symbolType: "point", color: "#40916c", fillColor: "#40916c", lineWeight: 1.3, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
-  medicinal_plants: { title: "Cây thuốc quý", symbolType: "point", color: "#e63946", fillColor: "#e63946", lineWeight: 1.3, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
+  medicinal_plants: { title: "Cây thuốc quý", symbolType: "polygon", color: "#e63946", fillColor: "#e63946", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
   customary_zones: { title: "Luật tục cộng đồng", symbolType: "polygon", color: "#f4a261", fillColor: "#f4a261", lineWeight: 1.5, opacity: 0.85, fillOpacity: 0.16, dashArray: "6,4", classes: [] },
 };
 const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲", canh_tac:"🌾", ban_lang:"🏘️", van_hoa:"🏺", cay_thuoc:"🌿", luat_tuc:"⚖️", vac_vacr:"♻️", khac:"📍" };
@@ -151,6 +151,18 @@ function makeDivIcon(symbol: string, color: string, size = 28, iconOnly = false)
 
 const toArr = (v: string[] | string | undefined): string[] => Array.isArray(v) ? v : (typeof v === "string" && v.trim() ? v.split(",").map(s => s.trim()) : []);
 
+/** Chuẩn hóa coords polygon về danh sách ring: hỗ trợ ring phẳng [[lng,lat]..], [ring], hoặc [ring1, ring2] (đa phần). */
+const polygonRings = (coords: any): number[][][] => {
+  if (!Array.isArray(coords) || coords.length === 0) return [];
+  const nested = Array.isArray(coords[0]) && Array.isArray(coords[0][0]);
+  if (!nested) return coords.length >= 3 ? [coords as number[][]] : [];
+  const rings: number[][][] = [];
+  for (const r of coords) {
+    if (Array.isArray(r) && r.length >= 3 && Array.isArray(r[0]) && typeof r[0][0] === "number") rings.push(r);
+  }
+  return rings;
+};
+
 const ETHNIC_DATA_LS_KEY = "webgis-ethnic-data-v1";
 type SavedEthnicData = { calendar?: Partial<Record<EthnicKey, CalendarGroup[]>>; transect?: Partial<Record<EthnicKey, TransectZone[]>>; ethnicZones?: EthnicZone[] };
 const loadEthnicData = (): SavedEthnicData | null => {
@@ -161,8 +173,9 @@ const statusNote = (x: { trang_thai?: string; nguon?: string[] } | null | undefi
   if (!x?.trang_thai) return "";
   const msg = x.trang_thai === "minh_hoa" ? "⚠ Dữ liệu minh họa — chưa có nguồn xác minh, không dùng làm căn cứ"
     : x.trang_thai === "chua_xac_minh" ? "ⓘ Chưa có nguồn đính kèm — cần xác minh thực địa"
+    : x.trang_thai === "co_nguon" ? "✓ Đã đối chiếu nguồn — danh sách nguồn bên dưới"
     : "ⓘ Một phần có nguồn — xem ghi chú nguồn";
-  const color = x.trang_thai === "minh_hoa" ? "#b45309" : "#64748b";
+  const color = x.trang_thai === "minh_hoa" ? "#b45309" : x.trang_thai === "co_nguon" ? "#15803d" : "#64748b";
   const src = x.nguon && x.nguon.length ? `<p style="margin:4px 0 0;font-size:10px;color:#64748b">Nguồn: ${x.nguon.join("; ")}</p>` : "";
   return `<p style="margin:6px 0 0;font-size:11px;color:${color}">${msg}</p>${src}`;
 };
@@ -394,10 +407,16 @@ export default function WebGIS() {
   const [layerSymbologies, setLayerSymbologies] = useState<Record<string, LayerSymbologyConfig>>(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
-      return saved?.layerSymbologies && typeof saved.layerSymbologies === "object"
+      const merged: Record<string, LayerSymbologyConfig> = saved?.layerSymbologies && typeof saved.layerSymbologies === "object"
         ? { ...DEFAULT_LAYER_SYMBOLOGY, ...saved.layerSymbologies }
-        : DEFAULT_LAYER_SYMBOLOGY;
-    } catch { return DEFAULT_LAYER_SYMBOLOGY; }
+        : { ...DEFAULT_LAYER_SYMBOLOGY };
+      // Đồng bộ cấu hình cũ (point) của 2 lớp đã chuyển sang polygon
+      (["forests", "medicinal_plants"] as const).forEach(k => {
+        const s = merged[k];
+        if (s && s.symbolType !== "polygon") merged[k] = { ...s, symbolType: "polygon", fillOpacity: s.fillOpacity > 0.5 ? 0.3 : s.fillOpacity };
+      });
+      return merged;
+    } catch { return { ...DEFAULT_LAYER_SYMBOLOGY }; }
   });
   const [editingSymbologyLayer, setEditingSymbologyLayer] = useState<string | null>(null);
 
@@ -503,6 +522,12 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
         Object.keys(savedLayerData).forEach(key => {
           if (!Array.isArray(savedLayerData[key])) return;
           if (key === "rivers") return; // rivers tải lại từ Overpass mỗi phiên
+          if (key === "forests" || key === "medicinal_plants") {
+            // Phiên trước lưu dạng điểm (lat/lng) — không dùng nữa; chỉ nhận bản đã biên tập dạng polygon
+            const polygonItems = savedLayerData[key].filter((x: any) => Array.isArray(x?.coords));
+            if (polygonItems.length) d[key] = polygonItems;
+            return;
+          }
           if (key in d || key.startsWith("custom_")) d[key] = savedLayerData[key];
         });
       }
@@ -633,10 +658,19 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
 ls.push(makeDraggableMarker(ir.lat, ir.lng, makeDivIcon(emoji,layerStyle.color, 24, true), "irrigation", idx, popup));        });
       } else if (id === "forests") {
   const layerStyle = getLayerSymbology("forests");
-        layersData.forests.forEach((f, idx) => {
-          const color = FOREST_COLORS[f.loai]||"#2d6a4f";
-          const popup = `<div class="map-popup"><div class="popup-title">${f.ten}</div><div class="popup-sub" style="color:${color}">${FOREST_LABELS[f.loai]||f.loai} · <i>${f.ten_dia_phuong||""}</i></div><p>${f.mo_ta||""}</p>${statusNote(f)}</div>`;
-ls.push(makeDraggableMarker(f.lat, f.lng, makeDivIcon("🌲",layerStyle.color,26,true), "forests", idx, popup));        });
+        layersData.forests.forEach((f) => {
+          const color = FOREST_COLORS[f.loai]||layerStyle.color;
+          const sizeLine = f.dien_tich_ha ? `<p style="margin:2px 0 0;font-size:11px;color:#475569">📏 ${f.dien_tich_ha.toLocaleString("vi-VN")} ha${f.iucn?` · IUCN ${f.iucn}`:""}${f.nam_cong_bo?` · công bố ${f.nam_cong_bo}`:""}</p>` : "";
+          const popup = `<div class="map-popup"><div class="popup-title">${f.ten}</div><div class="popup-sub" style="color:${color}">${FOREST_LABELS[f.loai]||f.loai} · <i>${f.ten_dia_phuong||""}</i></div>${sizeLine}<p>${f.mo_ta||""}</p>${statusNote(f)}</div>`;
+          polygonRings(f.coords).forEach(ring => {
+            const poly = L.polygon(ring.map(([lng,lat])=>[lat,lng] as L.LatLngExpression), {
+              color, weight: Math.max(1, layerStyle.lineWeight), opacity: layerStyle.opacity,
+              fillColor: color, fillOpacity: layerStyle.fillOpacity, dashArray: layerStyle.dashArray || undefined,
+            });
+            poly.bindPopup(popup);
+            ls.push(poly);
+          });
+        });
       } else if (id === "vac_models") {
   const layerStyle = getLayerSymbology("vac_models");
         layersData.vac_models.forEach((v, idx) => {
@@ -645,12 +679,20 @@ ls.push(makeDraggableMarker(f.lat, f.lng, makeDivIcon("🌲",layerStyle.color,26
 ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,26,true), "vac_models", idx, popup));        });
       } else if (id === "medicinal_plants") {
   const layerStyle = getLayerSymbology("medicinal_plants");
-        layersData.medicinal_plants.forEach((p, idx) => {
+        layersData.medicinal_plants.forEach((p) => {
           const tinh_trang = p.tinh_trang || (p as any)["tình_trang"] || "";
           const tinhTrangLower = tinh_trang.toLowerCase();
           const tinhTrangColor = tinhTrangLower.includes("chưa xác minh")?"#e09f3e":tinhTrangLower.includes("rất")||tinhTrangLower.includes("nguy")?"#e63946":tinhTrangLower.includes("hiem")||tinhTrangLower.includes("hiếm")?"#f4a261":"#52b788";
-          const popup = `<div class="map-popup"><div class="popup-title">${p.ten}</div><div class="popup-sub" style="font-style:italic">${p.ten_khoa_hoc||""}</div><p><b>Công dụng:</b> ${p.cong_dung||""}</p>${tinh_trang?`<p><b>Tình trạng:</b> <span style="color:${tinhTrangColor}">${tinh_trang}</span></p>`:""}${statusNote(p)}</div>`;
-ls.push(makeDraggableMarker(p.lat, p.lng, makeDivIcon("🌿",layerStyle.color,26,true), "medicinal_plants", idx, popup));        });
+          const popup = `<div class="map-popup"><div class="popup-title">${p.ten}</div><div class="popup-sub" style="font-style:italic">${p.ten_khoa_hoc||""}${p.ten_dia_phuong?` · <i>${p.ten_dia_phuong}</i>`:""}</div><p><b>Công dụng:</b> ${p.cong_dung||""}</p>${tinh_trang?`<p><b>Tình trạng:</b> <span style="color:${tinhTrangColor}">${tinh_trang}</span></p>`:""}${p.mo_ta?`<p>${p.mo_ta}</p>`:""}${statusNote(p)}</div>`;
+          polygonRings(p.coords).forEach(ring => {
+            const poly = L.polygon(ring.map(([lng,lat])=>[lat,lng] as L.LatLngExpression), {
+              color: layerStyle.color, weight: Math.max(1, layerStyle.lineWeight), opacity: layerStyle.opacity,
+              fillColor: layerStyle.fillColor || layerStyle.color, fillOpacity: layerStyle.fillOpacity, dashArray: layerStyle.dashArray || undefined,
+            });
+            poly.bindPopup(popup);
+            ls.push(poly);
+          });
+        });
       } else if (id === "customary_zones") {
         layersData.customary_zones.forEach(z => {
           const coords = (z.coords && Array.isArray(z.coords[0]) && Array.isArray((z.coords[0] as any)[0])) ? (z.coords as any)[0] : z.coords;
@@ -2368,9 +2410,20 @@ onClick={() => setShowMapComposer(s => !s)}
   <span title="Nguồn: OpenStreetMap (Overpass API)">Hệ thống sông suối <span style={{opacity:0.6,fontSize:"inherit",fontStyle:"italic"}}>(OSM)</span></span>
 </div>}
 {activeLayers.has("irrigation")&&<div className="legend-item"><span className="legend-symbol">🚿</span><span>Thủy lợi</span></div>}
-              {activeLayers.has("forests")&&<div className="legend-item"><span className="legend-symbol">🌲</span><span>Rừng</span></div>}
+              {activeLayers.has("forests")&&<>
+                <div className="legend-subtitle">Phân vùng rừng</div>
+                {(["vqg","kbttn","kbvcq","rung_dac_dung"] as const).filter(k => !layersData || (layersData.forests||[]).some(f => f.loai === k)).map(k => (
+                  <div className="legend-item" key={`legend-forest-${k}`}>
+                    <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" fill={FOREST_COLORS[k]} fillOpacity="0.3" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
+                    <span>{FOREST_LABELS[k]}</span>
+                  </div>
+                ))}
+              </>}
               {activeLayers.has("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
-              {activeLayers.has("medicinal_plants")&&<div className="legend-item"><span className="legend-symbol">🌿</span><span>Cây thuốc</span></div>}
+              {activeLayers.has("medicinal_plants")&&<div className="legend-item">
+                <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" fill="#e63946" fillOpacity="0.3" stroke="#e63946" strokeWidth="1.5"/></svg>
+                <span>Cây thuốc quý</span>
+              </div>}
               {activeLayers.has("customary_zones")&&<div className="legend-item"><svg width="24" height="12" viewBox="0 0 24 12" className="legend-color legend-line-swatch" style={{width:24,height:12,background:"transparent"}}><rect x="1" y="1" width="22" height="10" fill="#f4a261" fillOpacity="0.12" stroke="#f4a261" strokeWidth="1.5" strokeDasharray="4,3"/></svg><span>Luật tục</span></div>}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
               {densityLegendEntries.length > 0 && viewMode === "ward" && <>

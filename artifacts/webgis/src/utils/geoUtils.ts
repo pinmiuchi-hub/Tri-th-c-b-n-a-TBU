@@ -190,10 +190,18 @@ function featureGeometry(f: InternalFeature, geomType: GeomType): any | null {
     return { type: "LineString", coordinates: coords };
   }
   if (geomType === "polygon") {
-    const ring = (Array.isArray(raw[0]) && Array.isArray(raw[0][0])) ? raw[0] : raw;
+    const nested = Array.isArray(raw[0]) && Array.isArray(raw[0][0]);
+    const closeRing = (ring: number[][]) => ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? ring : [...ring, ring[0]];
+    if (nested) {
+      // [ring] hoặc [ring1, ring2, ...] (đa phần) → MultiPolygon khi có >1 ring hợp lệ
+      const valid = (raw as number[][][]).filter(r => Array.isArray(r) && r.length >= 3 && Array.isArray(r[0]) && typeof r[0][0] === "number");
+      if (!valid.length) return null;
+      if (valid.length > 1) return { type: "MultiPolygon", coordinates: valid.map(r => [closeRing(r)]) };
+      return { type: "Polygon", coordinates: [closeRing(valid[0])] };
+    }
+    const ring = raw as number[][];
     if (!ring || ring.length < 3) return null;
-    const closed = ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? ring : [...ring, ring[0]];
-    return { type: "Polygon", coordinates: [closed] };
+    return { type: "Polygon", coordinates: [closeRing(ring)] };
   }
   return null;
 }
@@ -248,11 +256,17 @@ function geometryKML(f: InternalFeature, geomType: GeomType): string {
     return `<LineString><coordinates>${cs}</coordinates></LineString>`;
   }
   if (geomType === "polygon") {
-    const ring = (Array.isArray(raw[0]) && Array.isArray(raw[0][0])) ? raw[0] : raw;
-    if (!ring || ring.length < 3) return "";
-    const closed = ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? ring : [...ring, ring[0]];
-    const cs = closed.map(([lng, lat]: number[]) => `${lng},${lat},0`).join(" ");
-    return `<Polygon><outerBoundaryIs><LinearRing><coordinates>${cs}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
+    const nested = Array.isArray(raw[0]) && Array.isArray(raw[0][0]);
+    const rings: number[][][] = nested
+      ? (raw as number[][][]).filter(r => Array.isArray(r) && r.length >= 3 && Array.isArray(r[0]) && typeof r[0][0] === "number")
+      : [raw as number[][]];
+    if (!rings.length) return "";
+    const toRing = (ring: number[][]) => {
+      const closed = ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? ring : [...ring, ring[0]];
+      return `<Polygon><outerBoundaryIs><LinearRing><coordinates>${closed.map(([lng, lat]: number[]) => `${lng},${lat},0`).join(" ")}</coordinates></LinearRing></outerBoundaryIs></Polygon>`;
+    };
+    if (rings.length === 1) return rings[0].length >= 3 ? toRing(rings[0]) : "";
+    return `<MultiGeometry>${rings.map(toRing).join("")}</MultiGeometry>`;
   }
   return "";
 }

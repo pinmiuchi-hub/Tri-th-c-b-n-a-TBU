@@ -159,3 +159,31 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 ### 6.3. Dọn dữ liệu thừa
 
 - Xóa `public/data/gee_catalog.json` (196 KB, không code nào tham chiếu; danh mục GEE không còn dùng).
+
+## 7. Cập nhật 16/10/2026 — lớp `forests` & `medicinal_plants` chuyển từ point sang polygon (shape thật)
+
+### 7.1. `forests` — 11 khu bảo tồn, hình học từ WDPCA
+
+- **Nguồn shape**: UNEP-WCMC / IUCN *World Database on Protected Areas* (WDPCA), truy vấn dịch vụ map service `data-gis.unep-wcmc.org`, bản ghi ISO3 = VNM, lọc theo bbox 4 tỉnh; hiển thị tại [protectedplanet.net](https://protectedplanet.net). Trường `gis_area` (km²) × 100 = `dien_tich_ha`.
+- **11 đối tượng**: Hoàng Liên (VQG), Hoàng Liên–Văn Bàn, Hoàng Liên Sơn – Lai Châu, Mường Nhé, Mường Phăng (KBCQ), Sốp Cộp, Copia, Tà Xùa (2 phần → export MultiPolygon), Xuân Nha, Mù Cang Chải, Nà Hẩu.
+- **Enum `loai` mới**: `vqg` | `kbttn` | `kbvcq` | `rung_dac_dung` (đã thay enum minh họa cũ `rung_thieng`/`rung_ma`/… trong `FOREST_LABELS`, `FOREST_COLORS` và `FIELD_CONFIG` của LayerDataEditor).
+- **Loại bỏ khỏi WDPA (lọc 4 tỉnh)**: `Hang Kia - Pà Cò` (Hòa Bình/Phú Thọ), `Xuân Sơn` (VQG Phú Thọ), `Nam Don` (bản ghi không tra được nguồn tiếng Việt tương ứng).
+- **Đổi tên theo tên chính thức**: WDPA `Chế Tạo` → **Mù Cang Chải** (Khu bảo tồn loài – sinh cảnh Mù Cang Chải, 20.293,3 ha, 5 xã Mù Cang Chải — nbca.gov.vn, baolaocai.vn); `Hoang Lien Son - Lai Chau` → `Hoàng Liên Sơn – Lai Châu`.
+- **Tỉnh (`ten_dia_phuong`)**: chấm điểm theo đa số đỉnh polygon trong `tinh.geojson` (trừ Mù Cang Chải gán Lào Cai — Yên Bái cũ). Lưu ý: WDPA gộp một số PA xuyên tỉnh trong một MultiPolygon → diện tích theo geometry WDPCA có thể nhỏ hơn số quyết định công bố (ví dụ Copia: 10.317 ha theo WDPCA vs 19.745 ha theo QĐ thành lập — ghi trong `mo_ta`).
+- `trang_thai = "co_nguon"` (trạng thái mới: đã đối chiếu nguồn), `nguon` = WDPCA/protectedplanet.net.
+
+### 7.2. `medicinal_plants` — 11 vùng, hình học = polygon hành chính thật
+
+- **Nguồn shape**: polygon từ `public/data/xa_*.geojson` (đơn vị hành chính **sau sáp nhập 01/7/2025**), chọn ring lớn nhất, Douglas–Peucker tol 0.0005°.
+- **Đối chiếu sáp nhập (NQ 1681 & NQ 1661/NQ-UBTVQH15)**: Chiềng Chung → **Mường Chanh**; Tênh Phông → **Quài Tở**; Trung Thu → **Sính Phình**; Mồ Sì San gộp vào **Sì Lở Lầu** (một polygon).
+- **Nội dung**: sâm Lai Châu (Mồ Sì San–Sì Lở Lầu), sâm Ngọc Linh bản Sam Ta (Mường Chanh), dược liệu cao Quài Tở, sa nhân tím Sốp Cộp, dược liệu Trung Thu/Sính Phình, Mường Phăng–Pá Khoang, 8 loài dưới tán KBTTN Mường La, thảo quả Thuận Châu/Quỳnh Nhai/Bắc Yên, dược liệu Vân Hồ.
+- **Nguồn tin bài**: nhandan.vn 5/2022 (dược liệu đặc hữu Tây Bắc); baolaichau.vn 1/2025; thongtindoingoai.sonla.gov.vn 10/2026 (KBTTN Mường La >48 ha chu kỳ 1); nc23.cnnd.vn 11/2025 (Sơn La 16.145 ha dược liệu 2025); văn bản sáp nhập ĐVHC 2025.
+- `tinh_trang = "Đã xác minh"` (FIELD_CONFIG), `trang_thai = "co_nguon"`.
+
+### 7.3. Thay đổi code liên quan
+
+- `WebGIS goc.tsx`: type `LayersData`; `LAYER_GEOM_TYPE` → polygon; `DEFAULT_LAYER_SYMBOLOGY` (symbolType polygon, fillOpacity 0.3); render `L.polygon` nhiều ring (`polygonRings`); legend 4 loài rừng + ô màu cây thuốc; `statusNote` thêm nhánh `co_nguon` (xanh lá); migrate localStorage: bỏ dữ liệu point cũ của 2 lớp (chỉ nhận bản polygon), migrate cấu hình symbology point → polygon.
+- `geoUtils.ts`: export GeoJSON hỗ trợ MultiPolygon (Tà Xùa), KML xuất `<MultiGeometry>`.
+- `LayerDataEditor.tsx`: bỏ trường lat/lng của 2 lớp, enum loai mới, thêm `dien_tich_ha`/`mo_ta`/`ten_dia_phuong`.
+- Hành vi tự đúng: đếm feature, xuất KML/GeoJSON, modal symbology, legend composer.
+

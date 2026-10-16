@@ -32,7 +32,7 @@ interface Props {
   hidden?: boolean;
 }
 
-const FOREST_LABELS: Record<string, string> = { rung_thieng: "Rừng thiêng", rung_ma: "Rừng ma", rung_dau_nguon: "Rừng đầu nguồn", rung_trong: "Rừng trồng", rung_tu_nhien: "Rừng tự nhiên", rung_dac_san: "Rừng đặc sản" };
+const FOREST_LABELS: Record<string, string> = { vqg: "Vườn quốc gia", kbttn: "Khu bảo tồn thiên nhiên", kbvcq: "Khu bảo vệ cảnh quan", rung_dac_dung: "Rừng đặc dụng khác" };
 const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (máng)", lai: "Lái (kênh phụ)" };
 const ZONE_LABELS: Record<string, string> = { cam_san_ban: "Cấm săn bắt", bao_ve_nuoc: "Bảo vệ nguồn nước", luat_tuc_rung: "Luật tục rừng", luan_canh: "Luân canh", cam_rung: "Cấm chặt phá rừng", bao_ve_dac_san: "Bảo vệ sản vật đặc sản" };
 
@@ -52,10 +52,9 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
   forests: [
     { key: "ten", label: "Tên khu rừng", type: "text", required: true },
     { key: "ten_dia_phuong", label: "Tên địa phương", type: "text" },
-    { key: "loai", label: "Loại", type: "select", options: ["rung_thieng", "rung_ma", "rung_dau_nguon", "rung_trong", "rung_tu_nhien", "rung_dac_san"], optionLabels: FOREST_LABELS },
-    { key: "lat", label: "Vĩ độ", type: "number" },
-    { key: "lng", label: "Kinh độ", type: "number" },
-    { key: "mo_ta", label: "Mô tả & luật tục", type: "textarea" },
+    { key: "loai", label: "Loại", type: "select", options: ["vqg", "kbttn", "kbvcq", "rung_dac_dung"], optionLabels: FOREST_LABELS },
+    { key: "dien_tich_ha", label: "Diện tích (ha)", type: "number" },
+    { key: "mo_ta", label: "Mô tả & nguồn", type: "textarea" },
   ],
   vac_models: [
     { key: "ten", label: "Tên mô hình", type: "text", required: true },
@@ -66,13 +65,13 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
     { key: "mo_ta", label: "Mô tả", type: "textarea" },
   ],
   medicinal_plants: [
-    { key: "ten", label: "Tên cây thuốc", type: "text", required: true },
+    { key: "ten", label: "Tên khu vực / cây thuốc", type: "text", required: true },
+    { key: "ten_dia_phuong", label: "Tên địa phương", type: "text" },
     { key: "ten_khoa_hoc", label: "Tên khoa học", type: "text" },
-    { key: "lat", label: "Vĩ độ", type: "number" },
-    { key: "lng", label: "Kinh độ", type: "number" },
     { key: "cong_dung", label: "Công dụng", type: "textarea" },
     { key: "tinh_trang", label: "Tình trạng", type: "select", options: ["Chưa xác minh", "Đã xác minh"], optionLabels: { "Chưa xác minh": "Chưa xác minh (chưa đối chiếu nguồn)", "Đã xác minh": "Đã xác minh" } },
     { key: "dan_toc_dung", label: "Dân tộc sử dụng (cách nhau dấu phẩy)", type: "text" },
+    { key: "mo_ta", label: "Mô tả", type: "textarea" },
   ],
   customary_zones: [
     { key: "ten", label: "Tên khu vực", type: "text", required: true },
