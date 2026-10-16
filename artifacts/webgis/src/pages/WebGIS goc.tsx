@@ -30,13 +30,13 @@ interface DanTocInfo { id: string; ten: string; mau: string; dan_so_ca_nuoc: num
 interface DanTocData { dan_toc: DanTocInfo[]; }
 interface ProvinceStat { dien_tich: string; dan_so: string; don_vi: number; }
 interface LayersData {
-  rivers: { id?: string; ten: string; ten_dia_phuong: string; coords: number[][]; cap_song?: number; width?: number; trang_thai?: string; nguon?: string[] }[];
-  irrigation: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
-  villages?: { id?: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string; ten_xa?: string; ten_huyen?: string; ten_tinh?: string; ghi_chu?: string; anh?: string; anh_ghichu?: string; trang_thai?: string; nguon?: string[] }[];
+  rivers: { id?: string; ten: string; ten_dia_phuong: string; coords: number[][]; cap_song?: number; width?: number; mo_ta?: string; trang_thai?: string; nguon?: string[]; ghi_chu?: string }[];
+  irrigation: { id?: string; ten: string; ten_dia_phuong: string; loai: string; lat: number; lng: number; mo_ta: string; trang_thai?: string; nguon?: string[]; ghi_chu?: string }[];
+  villages?: { id?: string; ten: string; dan_toc: string; lat: number; lng: number; mo_ta: string; ten_xa?: string; ten_huyen?: string; ten_tinh?: string; ma_xa?: string; ghi_chu?: string; anh?: string; anh_ghichu?: string; trang_thai?: string; nguon?: string[] }[];
   forests: { id?: string; ten: string; ten_dia_phuong: string; loai: string; coords: number[][] | number[][][]; dien_tich_ha?: number; iucn?: string; nam_cong_bo?: number; mo_ta: string; trang_thai?: string; nguon?: string[] }[];
-  vac_models: { id?: string; ten: string; loai: string; lat: number; lng: number; mo_ta: string; thanh_phan: string[] | string; trang_thai?: string; nguon?: string[] }[];
+  vac_models: { id?: string; ten: string; loai: string; lat: number; lng: number; mo_ta: string; thanh_phan: string[] | string; trang_thai?: string; nguon?: string[]; ghi_chu?: string }[];
   medicinal_plants: { id?: string; ten: string; ten_dia_phuong?: string; ten_khoa_hoc: string; coords: number[][] | number[][][]; cong_dung: string; tinh_trang?: string; "tình_trang"?: string; dan_toc_dung: string[] | string; mo_ta?: string; trang_thai?: string; nguon?: string[] }[];
-  customary_zones: { id?: string; ten: string; loai: string; mo_ta: string; coords: number[][]; trang_thai?: string; nguon?: string[] }[];
+  customary_zones: { id?: string; ten: string; loai: string; mo_ta: string; coords: number[][]; ma_xa?: string; dia_ban_hien_tai?: string; trang_thai?: string; nguon?: string[]; ghi_chu?: string }[];
 }
 
 /* ─── Constants ─── */
@@ -56,8 +56,10 @@ const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 const assetUrl = (p?: string): string => (!p ? "" : /^(https?:|data:|blob:)/.test(p) ? p : `${BASE_PATH}/${p.replace(/^\//, "")}`);
 const LAYER_CONFIG_STORAGE_KEY = "webgis-layer-config";
 // Bump when built-in layer content in public/data/layers.json changes (forces discard of stale saved copies)
-const LAYER_DATA_REV = 3;
+const LAYER_DATA_REV = 4;
 const LAYER_DATA_REV_KEYS = ["irrigation", "vac_models", "customary_zones", "villages"];
+// Lớp đã gỡ khỏi giao diện bản đồ (round 3): hiển thị văn bản theo xã trong panel "Thông tin địa bàn"
+const REMOVED_LAYER_IDS = new Set(["villages", "customary_zones"]);
 
 // Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam
 const DEFAULT_LAYER_CATEGORIES = [
@@ -76,15 +78,11 @@ const DEFAULT_LAYER_CATEGORIES = [
     { id: "ward_boundaries", ten: "Ranh giới xã/phường", mau: "#6b4226", bieu_tuong: "🗺️" },
     { id: "population_density", ten: "Mật độ dân số", mau: "#2a9d8f", bieu_tuong: "📊" }
   ]},
-  { id: "culture", ten: "Văn hóa & Tri thức bản địa", icon: "m", layers: [
-    { id: "customary_zones", ten: "Ranh giới luật tục cộng đồng", mau: "#f4a261", bieu_tuong: "⚖️" },
-    { id: "villages", ten: "Bản làng tiêu biểu", mau: "#6d4c41", bieu_tuong: "🏘️", iconOnly: true },
-  ]},
 ];
-const EDITABLE_LAYERS = new Set(["irrigation", "forests", "vac_models", "medicinal_plants", "customary_zones"]);
+const EDITABLE_LAYERS = new Set(["irrigation", "forests", "vac_models", "medicinal_plants"]);
 const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
   rivers: "line", irrigation: "point", forests: "polygon", vac_models: "point",
-  medicinal_plants: "polygon", customary_zones: "polygon", population_density: "polygon", villages: "point",
+  medicinal_plants: "polygon", population_density: "polygon",
 };
 const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   population_density: { name: "Mật độ dân số", color: "#fe9929" },
@@ -93,8 +91,6 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   forests: { name: "Phân vùng rừng", color: "#2d6a4f" },
   vac_models: { name: "Mô hình VAC/VACR", color: "#b5e48c" },
   medicinal_plants: { name: "Cây thuốc quý", color: "#e63946" },
-  customary_zones: { name: "Luật tục cộng đồng", color: "#f4a261" },
-  villages: { name: "Bản làng tiêu biểu", color: "#6d4c41" },
 };
 
 const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#2d6a4f", kbvcq: "#023e8a", rung_dac_dung: "#40916c" };
@@ -129,8 +125,6 @@ const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
   forests: { title: "Phân vùng rừng", symbolType: "polygon", color: "#2d6a4f", fillColor: "#2d6a4f", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
   vac_models: { title: "Mô hình VAC/VACR", symbolType: "point", color: "#40916c", fillColor: "#40916c", lineWeight: 1.3, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
   medicinal_plants: { title: "Cây thuốc quý", symbolType: "polygon", color: "#e63946", fillColor: "#e63946", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
-  customary_zones: { title: "Luật tục cộng đồng", symbolType: "polygon", color: "#f4a261", fillColor: "#f4a261", lineWeight: 1.5, opacity: 0.85, fillOpacity: 0.16, dashArray: "6,4", classes: [] },
-  villages: { title: "Bản làng tiêu biểu", symbolType: "point", color: "#6d4c41", fillColor: "#6d4c41", lineWeight: 1.4, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
 };
 const NHOM_LABELS: Record<string, string> = { tai_nguyen_nuoc:"💧", rung:"🌲", canh_tac:"🌾", ban_lang:"🏘️", van_hoa:"🏺", cay_thuoc:"🌿", luat_tuc:"⚖️", vac_vacr:"♻️", khac:"📍" };
 
@@ -187,6 +181,42 @@ const statusNote = (x: { trang_thai?: string; nguon?: string[] } | null | undefi
   const links = (x.nguon || []).map(u => /^https?:\/\//.test(u) ? `<a href="${u}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:underline">${u}</a>` : u);
   const src = links.length ? `<p style="margin:4px 0 0;font-size:10px;color:#64748b">Nguồn: ${links.join("; ")}</p>` : "";
   return `<p style="margin:6px 0 0;font-size:11px;color:${color}">${msg}</p>${src}`;
+};
+
+const TRANG_THAI_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  co_nguon: { label: "✓ Đã có nguồn", color: "#15803d", bg: "#dcfce7", border: "#86efac" },
+  mot_phan: { label: "~ Một phần có nguồn", color: "#a16207", bg: "#fef9c3", border: "#fde047" },
+  chua_xac_minh: { label: "ⓘ Chưa xác minh", color: "#475569", bg: "#f1f5f9", border: "#cbd5e1" },
+  minh_hoa: { label: "⚠ Dữ liệu minh họa", color: "#b45309", bg: "#ffedd5", border: "#fdba74" },
+};
+/** Chip trạng thái nguồn + danh sách link + ghi chú (JSX, dùng trong panel "Thông tin địa bàn"). */
+const SourceStatus = ({ item }: { item: { trang_thai?: string; nguon?: string[]; ghi_chu?: string } | null | undefined }) => {
+  const nguon = item?.nguon || [];
+  if (!item?.trang_thai && !nguon.length && !item?.ghi_chu) return null;
+  const meta = TRANG_THAI_META[item?.trang_thai || ""] || TRANG_THAI_META.mot_phan;
+  return (
+    <div className="src-status">
+      <div className="src-status-head">
+        {item?.trang_thai && <span className="src-chip" style={{ color: meta.color, background: meta.bg, borderColor: meta.border }}>{meta.label}</span>}
+        {nguon.length > 0 && <span className="src-count">📚 {nguon.length} nguồn</span>}
+      </div>
+      {nguon.length > 0 && (
+        <ul className="src-list">
+          {nguon.map((u, i) => (
+            <li key={i}>{/^https?:\/\//.test(u)
+              ? <a href={u} target="_blank" rel="noopener noreferrer">{u.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>
+              : <span>{u}</span>}</li>
+          ))}
+        </ul>
+      )}
+      {item?.ghi_chu && (
+        <details className="src-note-details">
+          <summary>📝 Ghi chú nguồn</summary>
+          <p className="src-note">{item.ghi_chu}</p>
+        </details>
+      )}
+    </div>
+  );
 };
 
 export default function WebGIS() {
@@ -376,7 +406,10 @@ export default function WebGIS() {
           if (!existing!.layers.some(l => l.id === dl.id)) existing!.layers.push({ ...dl });
         });
       });
-      return savedCats;
+      // Round 3: gỡ 2 lớp (villages, customary_zones) khỏi config đã lưu của người dùng cũ
+      return savedCats
+        .filter(c => c.id !== "culture")
+        .map(c => ({ ...c, layers: c.layers.filter(l => !REMOVED_LAYER_IDS.has(l.id)) }));
     } catch { return defaults; }
   });
   const [deletedCategoryIds, setDeletedCategoryIds] = useState<string[]>(() => {
@@ -662,6 +695,8 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
           const casing = L.polyline(latlngs, { color: "#f8fcff", weight: innerWeight + 3.2, opacity: 0.95, lineCap: "round", lineJoin: "round", interactive: false });
           const line = L.polyline(latlngs, { color: riverStyle.color || "#2589c7", weight: innerWeight, opacity: Math.max(0.85, riverStyle.opacity), dashArray: riverStyle.dashArray || undefined, lineCap: "round", lineJoin: "round" });
           line.bindTooltip(`<b>${r.ten}</b><br><i>${r.ten_dia_phuong || ""}</i>`,{sticky:true,className:"custom-tooltip"});
+          const riverPopup = `<div class="map-popup"><div class="popup-title">${r.ten}</div>${r.ten_dia_phuong ? `<div class="popup-sub"><i>${r.ten_dia_phuong}</i></div>` : ""}${r.mo_ta ? `<p>${r.mo_ta}</p>` : ""}${statusNote(r)}</div>`;
+          line.bindPopup(riverPopup);
           ls.push(casing, line);
         });
       } else if (id === "irrigation") {
@@ -706,27 +741,6 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
             poly.bindPopup(popup);
             ls.push(poly);
           });
-        });
-      } else if (id === "customary_zones") {
-        layersData.customary_zones.forEach(z => {
-          const coords = (z.coords && Array.isArray(z.coords[0]) && Array.isArray((z.coords[0] as any)[0])) ? (z.coords as any)[0] : z.coords;
-          if (!coords || coords.length < 3) return;
-          const poly = L.polygon(coords.map(([lng,lat]: [number,number])=>[lat,lng] as L.LatLngExpression), {color:"#f4a261",weight:2,opacity:0.8,fillColor:"#f4a261",fillOpacity:0.12,dashArray:"6,4"});
-          poly.bindPopup(`<div class="map-popup"><div class="popup-title">${z.ten}</div><div class="popup-sub">Luật tục: ${(z.loai||"").replace(/_/g," ")}</div><p>${z.mo_ta||""}</p>${statusNote(z)}</div>`);
-          ls.push(poly);
-        });
-      } else if (id === "villages") {
-        const layerStyle = getLayerSymbology("villages");
-        (layersData.villages || []).forEach((v, idx) => {
-          if (typeof v.lat !== "number" || typeof v.lng !== "number") return;
-          const info = getDanTocInfo(v.dan_toc);
-          const color = info?.mau || layerStyle.color || "#6d4c41";
-          const nhan = info ? info.ten.replace("Dân tộc ","").replace("Người ","") : v.dan_toc;
-          const diaPhuong = [v.ten_xa, v.ten_huyen, v.ten_tinh].filter(Boolean).join(", ");
-          const img = v.anh ? `<div class="popup-img-wrap"><img src="${assetUrl(v.anh)}" alt="" class="popup-img" loading="lazy"/>${v.anh_ghichu?`<p class="popup-img-credit">${v.anh_ghichu}</p>`:""}</div>` : "";
-          const ghichu = v.ghi_chu ? `<p style="margin:4px 0 0;font-size:10px;color:#64748b">${v.ghi_chu}</p>` : "";
-          const popup = `<div class="map-popup"><div class="popup-title">🏘️ ${v.ten}</div><div class="popup-sub" style="color:${color}">Người ${nhan}${diaPhuong?` · <i>${diaPhuong}</i>`:""}</div><p>${v.mo_ta||""}</p>${img}${ghichu}${statusNote(v)}</div>`;
-          ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("🏘️", color, 26), "villages", idx, popup));
         });
       } else if (id.startsWith("custom_")) {
         const cl = customLayers.find(c => c.id === id);
@@ -2048,7 +2062,7 @@ onEachFeature:(feat,lyr)=>{
   const customLayerIds = customLayers.map(c => c.id);
   const allEditableLayers = new Set<string>([...EDITABLE_LAYERS, ...customLayerIds]);
   const allExportableLayers = new Set<string>([
-    "irrigation", "forests", "vac_models", "medicinal_plants", "customary_zones", "ward_boundaries",
+    "irrigation", "forests", "vac_models", "medicinal_plants", "ward_boundaries",
     ...customLayerIds,
   ]);
   const customDisplay: Record<string, { name: string; color: string }> = {};
@@ -2078,8 +2092,6 @@ onEachFeature:(feat,lyr)=>{
     forests: layersData.forests?.length || 0,
     vac_models: layersData.vac_models?.length || 0,
     medicinal_plants: layersData.medicinal_plants?.length || 0,
-    customary_zones: layersData.customary_zones?.length || 0,
-    villages: layersData.villages?.length || 0,
     ward_boundaries: allWardsGeoJson?.features.length || 0,
     ...Object.fromEntries(customLayerIds.map(id => [id, ((layersData as any)[id] || []).length]))
   } : {};
@@ -2452,8 +2464,6 @@ onClick={() => setShowMapComposer(s => !s)}
                 <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" fill="#e63946" fillOpacity="0.3" stroke="#e63946" strokeWidth="1.5"/></svg>
                 <span>Cây thuốc quý</span>
               </div>}
-              {activeLayers.has("customary_zones")&&<div className="legend-item"><svg width="24" height="12" viewBox="0 0 24 12" className="legend-color legend-line-swatch" style={{width:24,height:12,background:"transparent"}}><rect x="1" y="1" width="22" height="10" fill="#f4a261" fillOpacity="0.12" stroke="#f4a261" strokeWidth="1.5" strokeDasharray="4,3"/></svg><span>Luật tục</span></div>}
-              {activeLayers.has("villages")&&<div className="legend-item"><span className="legend-symbol">🏘️</span><span>Bản làng</span></div>}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
               {densityLegendEntries.length > 0 && viewMode === "ward" && <>
                 <div className="legend-subtitle">Mật độ dân số</div>
@@ -2590,6 +2600,57 @@ onClick={() => setShowMapComposer(s => !s)}
                         })()}
                       </div>
                     )}
+
+                    {(() => {
+                      const wardVillages = (layersData?.villages || []).filter(v => v.ma_xa === selectedWard.ma_xa);
+                      if (!wardVillages.length) return null;
+                      return (
+                        <div className="ward-place-section">
+                          <div className="ward-place-title">🏘️ Bản làng tiêu biểu ({wardVillages.length})</div>
+                          {wardVillages.map((v, i) => {
+                            const info = getDanTocInfo(v.dan_toc);
+                            return (
+                              <div className="ward-place-card" key={v.id || `vil-${i}`}>
+                                <div className="ward-place-head">
+                                  <span className="ward-place-dot" style={{ background: info?.mau || "#6d4c41" }} />
+                                  <span className="ward-place-name">{v.ten}</span>
+                                  {info && <span className="ward-place-ethnic">{info.ten.replace("Dân tộc ", "").replace("Người ", "")}</span>}
+                                </div>
+                                {v.mo_ta && <p className="ward-place-desc">{v.mo_ta}</p>}
+                                {v.anh && (
+                                  <div className="ward-place-photo">
+                                    <img src={assetUrl(v.anh)} alt={v.ten} loading="lazy" onClick={() => setEthnicPhotoLightbox(assetUrl(v.anh))} />
+                                    {v.anh_ghichu && <div className="ward-place-credit">Nguồn ảnh: {v.anh_ghichu}</div>}
+                                  </div>
+                                )}
+                                <SourceStatus item={v} />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                    {(() => {
+                      const wardLaw = (layersData?.customary_zones || []).filter(z => z.ma_xa === selectedWard.ma_xa);
+                      if (!wardLaw.length) return null;
+                      return (
+                        <div className="ward-place-section">
+                          <div className="ward-place-title">⚖️ Luật tục cộng đồng ({wardLaw.length})</div>
+                          {wardLaw.map((z, i) => (
+                            <div className="ward-place-card" key={z.id || `law-${i}`}>
+                              <div className="ward-place-head">
+                                <span className="ward-place-dot law" />
+                                <span className="ward-place-name">{z.ten}</span>
+                                <span className="ward-place-ethnic">{(z.loai || "").replace(/_/g, " ")}</span>
+                              </div>
+                              {z.dia_ban_hien_tai && <div className="ward-place-dia-ban">📍 {z.dia_ban_hien_tai}</div>}
+                              {z.mo_ta && <p className="ward-place-desc">{z.mo_ta}</p>}
+                              <SourceStatus item={z} />
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {selectedDanToc&&(()=>{
                       const info=getDanTocInfo(selectedDanToc.id)!;

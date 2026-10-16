@@ -671,6 +671,157 @@ html, body, #root {
   transition: flex 0.3s;
 }
 
+/* ---- Ward place sections: bản làng / luật tục (văn bản theo xã, round 3) ---- */
+.ward-place-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(82, 183, 136, 0.15);
+}
+
+.ward-place-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #74c69d;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 8px;
+}
+
+.ward-place-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(82, 183, 136, 0.18);
+  border-radius: 10px;
+  padding: 9px 10px;
+  margin-bottom: 8px;
+}
+
+.ward-place-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ward-place-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ward-place-dot.law {
+  background: #f4a261;
+}
+
+.ward-place-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #d8f3dc;
+}
+
+.ward-place-ethnic {
+  font-size: 10px;
+  color: rgba(149, 213, 178, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.ward-place-dia-ban {
+  font-size: 10.5px;
+  color: rgba(149, 213, 178, 0.65);
+  margin-top: 5px;
+}
+
+.ward-place-desc {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #b7dcc6;
+  margin: 6px 0 0;
+}
+
+.ward-place-photo {
+  margin-top: 7px;
+}
+
+.ward-place-photo img {
+  display: block;
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(82, 183, 136, 0.25);
+  cursor: zoom-in;
+}
+
+.ward-place-credit {
+  font-size: 9px;
+  color: #94a3b8;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* ---- Source status (chips nguồn trong panel xã) ---- */
+.src-status {
+  margin-top: 7px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.src-status-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.src-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.src-count {
+  font-size: 10px;
+  color: rgba(149, 213, 178, 0.7);
+}
+
+.src-list {
+  margin: 5px 0 0;
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.src-list a {
+  color: #7cc4ff;
+  word-break: break-all;
+}
+
+.src-note-details summary {
+  font-size: 10px;
+  color: rgba(149, 213, 178, 0.65);
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.src-note {
+  font-size: 10.5px;
+  color: #9dc4ae;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
 /* ---- Knowledge panel ---- */
 .knowledge-panel {
   margin-top: 14px;

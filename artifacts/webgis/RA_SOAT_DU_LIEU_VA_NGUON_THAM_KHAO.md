@@ -1,12 +1,12 @@
 # Rà soát dữ liệu WebGIS Tây Bắc và danh mục tài liệu tham khảo
 
-Ngày rà soát: 14/10/2026 · Cập nhật vòng 2: 16/10/2026. Phạm vi: `dan_toc.json`, `layers.json`, geojson 4 tỉnh, ảnh minh họa, lược đồ mặt cắt, nông lịch, số liệu trong giao diện.
+Ngày rà soát: 14/10/2026 · Cập nhật vòng 2: 16/10/2026 · Cập nhật vòng 3: 16/10/2026. Phạm vi: `dan_toc.json`, `layers.json`, geojson 4 tỉnh, ảnh minh họa, lược đồ mặt cắt, nông lịch, số liệu trong giao diện.
 
 ## 1. Kết luận ngắn
 
 - **Đã đối chiếu được với nguồn chính thống:** số dân 12 dân tộc thiểu số (Tổng điều tra dân số 2019, bản gốc của Tổng cục Thống kê đã mở và đọc trực tiếp). Phát hiện **1 số liệu sai**: người Mảng ghi 3.700 (số liệu cũ) → đúng 2019 là **4.650**.
 - **Đã sửa theo nguồn:** thời gian Tết Mông, Gầu Tào, Xên bản, thảo quả; cách gọi vụ lúa ("vụ chiêm" → "vụ xuân" theo cách gọi của Sơn La, Lai Châu, Lào Cai); mô tả địa bàn các dân tộc; mô tả hệ thống thủy lợi người Thái (là mương – phai – lái – lìn, không phải ruộng bậc thang); nhóm ngôn ngữ người Mường (Việt–Mường, không phải Môn–Khmer); bỏ khẳng định sai "hát Then – Sli – Lượn được UNESCO công nhận" ở mô tả người Tày.
-- **Phần lớn dữ liệu điểm trong `layers.json` ban đầu KHÔNG có nguồn** (bản làng, rừng, thủy lợi, mô hình VAC, vùng luật tục, cây thuốc). Đã bỏ các con số cụ thể không có căn cứ (diện tích, tuổi, thu nhập, bán kính, số lượng) và gắn nhãn `trang_thai` hiển thị ngay trong popup. **Không nên dùng các lớp chưa được đối chiếu làm căn cứ pháp lý hoặc nghiên cứu cho đến khi xác minh thực địa.** Sau các lần cập nhật: `forests` + `medicinal_plants` (mục 7), `irrigation` + `vac_models` + `customary_zones` (mục 8) và `villages` (mục 9 — thay bằng 25 bản làng thật) đã đối chiếu nguồn; phần lớn `rivers` vẫn ở mức `mot_phan`.
+- **Phần lớn dữ liệu điểm trong `layers.json` ban đầu KHÔNG có nguồn** (bản làng, rừng, thủy lợi, mô hình VAC, vùng luật tục, cây thuốc). Đã bỏ các con số cụ thể không có căn cứ (diện tích, tuổi, thu nhập, bán kính, số lượng) và gắn nhãn `trang_thai` hiển thị ngay trong popup. **Không nên dùng các lớp chưa được đối chiếu làm căn cứ pháp lý hoặc nghiên cứu cho đến khi xác minh thực địa.** Sau các lần cập nhật: `forests` + `medicinal_plants` (mục 7), `irrigation` + `vac_models` + `customary_zones` (mục 8) và `villages` (mục 9 — thay bằng 25 bản làng thật) đã đối chiếu nguồn; **vòng 3 (mục 10)**: `rivers` 7/7 `co_nguon` (hình học OSM + tài liệu bổ sung từng sông), `irrigation` 6/6, `vac_models` 8/8, `customary_zones` 5/5 — **11 mục không tra được tài liệu đã XÓA**; `villages` + `customary_zones` gỡ khỏi lớp bản đồ, chuyển thành văn bản theo xã trong panel "Thông tin địa bàn".
 - **Mô tả "tri thức" của từng dân tộc** (mục `tri_thuc`, tri thức bản địa mặc định) chưa có tài liệu đính kèm trừ những mục ghi cụ thể bên dưới. Đã gắn nhãn `chua_xac_minh`.
 
 ## 2. Giới hạn của lần rà soát này (cần đọc)
@@ -281,6 +281,42 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 | xa_dienbien (dân tộc) | 45 xã | 0 | 0 | 45 | như trên |
 | xa_laocai (dân tộc) | 99 xã | 0 | 0 | 99 | như trên |
 | dan_toc (ảnh) | 14 nhóm | 12 có ảnh | — | — | Khơ Mú, La Hủ: chưa có ảnh phù hợp |
+
+## 10. Vòng 3 (16/10/2026): tra lại nguồn — XÓA mục không xác minh, rivers bổ sung tài liệu, gỡ 2 lớp khỏi bản đồ
+
+**Chính sách người dùng xác nhận:** (1) mục tra không ra tài liệu uy tín → **xóa khỏi dữ liệu**; (2) sông suối giữ hình học OSM + bổ sung tài liệu → `co_nguon`; (3) `villages` + `customary_zones` **bỏ hẳn khỏi lớp bản đồ/legend**, chuyển thành văn bản theo từng xã (ghép `ma_xa`) trong panel "Thông tin địa bàn".
+
+### 10.1. Kết quả tra cứu 30 mục (4 nhóm song song, URL đã webfetch xác nhận còn sống)
+
+| Lớp | Trước vòng 3 | Sau vòng 3 | Xóa |
+|---|---|---|---|
+| rivers | 7 `mot_phan` | 7 `co_nguon` (OSM + 2–3 tài liệu/sông) | 0 |
+| irrigation | 14 = 3 co + 1 mot + 10 chưa | 6 (3 giữ + ir1, ir6, lin_y_ty) | 8 |
+| vac_models | 9 = 2 co + 1 mot + 6 chưa | 8 (2 giữ + 6 mới) | 1 |
+| customary_zones | 7 = 2 co + 1 mot + 4 chưa | 5 (2 giữ + cz1, cz4, luat_tuc_muong_khuong) | 2 |
+
+- **Xóa 11 mục không tìm được tài liệu xác minh**: `ir2` Mương Tân Châu, `ir3` Phai Bản Pha, `ir4` Lịn Nậm Giải, `ir5` Mương Chiềng Bằng, `ir7` Lái Chiềng Khương, `phai_ban_ho`, `muong_muong_khuong`, `phai_bac_ha`, `vac3` lúa-cá-vịt Chiềng Hắc, `cz2` Chiềng Yên, `cz3` Điện Biên Đông (nhiều lượt tìm kiếm; các tên riêng có vẻ là tự đặt, không khớp báo/ubnd/nghiên cứu nào).
+- **19 mục giữ lại**: `mo_ta` viết lại chỉ theo chi tiết được nguồn hỗ trợ (bỏ chi tiết thiếu căn cứ), `nguon` = URL đã webfetch, `ghi_chu` ghi rõ số liệu/năm/cấp xác minh. 6 mục `vac_models` viết lại bị bỏ `thanh_phan` (danh sách thành phần gốc không có nguồn). Nâng cấp đáng chú ý: `ir1` Đại thủy nông Nậm Rốm (BQL di tích tỉnh Điện Biên, QĐ 372/QĐ-UBND 23/5/2014), `vac_atiso_sa_pa` (thêm nguồn cá hồi–cá tầm: Dân Việt 03/2025).
+- **7 sông bổ sung `mo_ta`**: độ dài/lưu vực/tỉnh chảy qua/thủy điện từ VietNamNet, baochinhphu.vn (QĐ 20/QĐ-TTg 2024), ISPONRE, Sở VH-TT&DL Điện Biên, Báo Lai Châu theo Địa chí Lai Châu 2020...; giữ ghi công hình học OpenStreetMap (ODbL). **Popup sông mới**: click dòng sông → mô tả + chip nguồn.
+- Sau vòng 3: 5 lớp `rivers, irrigation, vac_models, customary_zones, villages` **không còn `chua_xac_minh`/`minh_hoa`** — 100% `co_nguon`.
+
+### 10.2. Thay đổi cấu trúc: 2 lớp bản đồ → văn bản theo xã
+
+- `WebGIS goc.tsx`: `LAYER_DATA_REV` 3 → **4** (bắt buộc discard bản saa localStorage); gỡ `villages` + `customary_zones` khỏi `DEFAULT_LAYER_CATEGORIES` (xóa nhóm "Văn hóa & Tri thức bản địa"), `LAYER_GEOM_TYPE`, `LAYER_DISPLAY`, `DEFAULT_LAYER_SYMBOLOGY`, `featureCounts`, legend, nhánh `buildLayer`, `EDITABLE_LAYERS`, `allExportableLayers`; config localStorage người dùng cũ được lọc bỏ 2 lớp (`REMOVED_LAYER_IDS`).
+- 2 mảng dữ liệu **giữ trong `layers.json`** làm nguồn cho panel: thêm `ma_xa` cho 25/25 villages (khớp tên xã hiện có, 0 miss) + 5/5 customary (`03445` Mường Tè, `04195` Chiềng Sơ, `02701` Y Tý, `02869` Bản Liền, `02761` Mường Khương). Gỡ câu "(Ranh giới vẽ theo hành chính ... GADM 4.1 ...)" khỏi `mo_ta` các luật tục còn giữ (không còn polygon).
+- Panel "Thông tin địa bàn" thêm 2 section (chỉ hiện khi xã có dữ liệu): **🏘️ Bản làng tiêu biểu** (tên + chấm màu dân tộc + mô tả + ảnh/credit + chip trạng thái + link nguồn + ghi chú) và **⚖️ Luật tục cộng đồng** (tên + loại + địa bàn hiện tại + mô tả + chip nguồn). Helper JSX mới: `SourceStatus` + `TRANG_THAI_META`.
+
+### 10.3. Số liệu sau vòng 3
+
+| Nhóm | Số đối tượng | `co_nguon` | Xóa ở vòng 3 |
+|---|---|---|---|
+| rivers | 7 | 7 | 0 |
+| irrigation | 6 | 6 | 8 |
+| vac_models | 8 | 8 | 1 |
+| customary_zones | 5 | 5 | 2 |
+| villages | 25 | 25 | 0 |
+| forests | 11 | 11 | 0 |
+| medicinal_plants | 11 | 11 | 0 |
 
 
 
