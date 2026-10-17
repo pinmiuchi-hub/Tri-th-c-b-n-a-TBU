@@ -32,7 +32,26 @@ export interface MapSyncSnapshot {
   ethnicComposition?: { label: string; value: number; color: string }[];
   ethnicLegend?: { label: string; color: string }[];
   densityLegend?: { label: string; color: string; fillOpacity?: number; present?: boolean }[];
+  legendSections?: ComposerLegendSection[];
 }
+
+// ─────────────────────────────────────────────
+// CHÚ GIẢI THEO NHÓM (dựng từ giao diện chính — cùng thứ tự & ký hiệu)
+// ─────────────────────────────────────────────
+export interface ComposerLegendRow {
+  type: "line" | "swatch" | "emoji" | "forest" | "river" | "custom";
+  label: string;
+  color?: string;
+  lineWeight?: number;
+  lineDash?: string;
+  fillOpacity?: number;
+  emoji?: string;
+  bieu_tuong?: string;
+  osm?: boolean;
+  dimmed?: boolean;
+  dimTitle?: string;
+}
+export interface ComposerLegendSection { title?: string; rows: ComposerLegendRow[] }
 
 // ─────────────────────────────────────────────
 // SCALE UTILITY
@@ -441,12 +460,54 @@ const ElementContent: React.FC<{
           </div>
         );
       };
+      // Ký hiệu theo đúng mẫu chú giải giao diện chính
+      const renderRichRow = (row: ComposerLegendRow, key: React.Key) => {
+        const baseStyle: React.CSSProperties = { fontSize: (el.props.fontSize as number) || 10, color: legendText, opacity: row.dimmed ? 0.4 : 1 };
+        return (
+          <div key={key} className="legend-item" style={baseStyle} title={row.dimTitle}>
+            {row.type === "line" && (
+              <svg width="18" height="14" viewBox="0 0 18 14" className="legend-swatch-line" style={{ width: 18, height: 14 }}>
+                <line x1="1" y1="7" x2="17" y2="7" stroke={row.color || "#333333"} strokeWidth={Math.max(1.5, row.lineWeight ?? 1.5)} strokeDasharray={row.lineDash || undefined} strokeLinecap="round"/>
+              </svg>
+            )}
+            {row.type === "swatch" && <span className="legend-ethnic-color" style={{ background: row.color, opacity: row.fillOpacity ?? 1 }}/>}
+            {row.type === "emoji" && <span className="legend-symbol">{row.emoji || "●"}</span>}
+            {row.type === "forest" && (
+              <svg width="18" height="14" viewBox="0 0 18 14" className="legend-swatch-line" style={{ width: 18, height: 14 }}>
+                <rect x="1" y="1" width="16" height="12" rx="2" fill="#ffffff" fillOpacity="0.88"/>
+                <rect x="1" y="1" width="16" height="12" rx="2" fill={row.color} fillOpacity="0.5" stroke={row.color} strokeWidth="1.5"/>
+              </svg>
+            )}
+            {row.type === "river" && (
+              <svg width="18" height="14" viewBox="0 0 18 14" className="legend-swatch-line" style={{ width: 18, height: 14 }}>
+                <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#f8fcff" strokeWidth="4.8" strokeLinecap="round" opacity="0.95"/>
+                <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke={row.color || "#2589c7"} strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            )}
+            {row.type === "custom" && (
+              <div className="legend-swatch-point" style={{ borderColor: row.color || "#94a3b8" }}>
+                {row.bieu_tuong && isImageSymbol(row.bieu_tuong)
+                  ? <img src={row.bieu_tuong} alt="" className="legend-symbol-img"/>
+                  : <span style={{ color: row.color || "#94a3b8" }}>{row.bieu_tuong || "●"}</span>}
+              </div>
+            )}
+            <span>{row.label}{row.osm && <span style={{ opacity: 0.6, fontStyle: "italic" }}> (OSM)</span>}</span>
+          </div>
+        );
+      };
       return (
         <div className="el-legend" style={{ background: `rgba(${hexToRgb(el.props.bgColor as string || "#ffffff")}, ${(el.props.bgOpacity as number) ?? 0.92})`, color: legendText, fontFamily: (el.props.fontFamily as string) || "Arial", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
           <div className="legend-title" style={{ fontSize: (el.props.titleFontSize as number) || 11, color: legendText }}>{el.props.title as string}</div>
           <div className="legend-items">
             {syncSnapshot
-              ? <>
+              ? (syncSnapshot.legendSections && syncSnapshot.legendSections.length > 0 ? <>
+                {syncSnapshot.legendSections.map((section, sectionIndex) => (
+                  <React.Fragment key={`legend-section-${sectionIndex}`}>
+                    {section.title && <div className="legend-subtitle" style={{ color: legendText }}>{section.title}</div>}
+                    {section.rows.map((row, rowIndex) => renderRichRow(row, `legend-section-${sectionIndex}-row-${rowIndex}`))}
+                  </React.Fragment>
+                ))}
+              </> : <>
                 {boundaryIds.map(renderLayerItem)}
                 {syncSnapshot.densityLegend && syncSnapshot.densityLegend.length > 0 && <div className="legend-subtitle" style={{ color: legendText }}>Mật độ dân số (người/km²)</div>}
                 {syncSnapshot.densityLegend?.map(item => (
@@ -466,7 +527,7 @@ const ElementContent: React.FC<{
                 </>}
                 {otherIds.map(renderLayerItem)}
                 {riverIds.map(renderLayerItem)}
-              </>
+              </>)
               : (
                 <div className="legend-empty" style={{ color: (el.props.textColor as string) || "#666666" }}>
                   Chưa có lớp nào đang bật — bấm 🔄 Đồng bộ để lấy chú giải đúng từ bản đồ chính

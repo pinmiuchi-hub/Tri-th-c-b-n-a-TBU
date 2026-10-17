@@ -14,7 +14,7 @@ import LayerSymbologyEditorModal, { type LayerSymbologyConfig } from "../compone
 import WardPieSelector from "../components/WardPieSelector";
 import WardEthnicEditorModal from "../components/WardEthnicEditorModal";
 import Earth3DModal from "../components/Earth3DModal";
-import MapComposer from '@/components/MapComposer';
+import MapComposer, { type ComposerLegendSection, type ComposerLegendRow } from '@/components/MapComposer';
 import html2canvas from "html2canvas";
 import { Printer } from 'lucide-react';
 
@@ -1816,6 +1816,79 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
         }))
       : [];
 
+    // Chú giải composer dựng lại theo đúng chú giải giao diện chính:
+    // cùng thứ tự (chuyên môn → nền địa lý), cùng nhóm con và ký hiệu.
+    const buildLegendSections = (): ComposerLegendSection[] => {
+      const sections: ComposerLegendSection[] = [];
+      // 1. Địa giới (phân cấp nét theo chuẩn)
+      if (viewMode === "province" || activeLayers.has("ward_boundaries")) {
+        const mainId = viewMode === "province" ? "province_boundaries" : "ward_boundaries";
+        const mainStyle = getLayerSymbology(mainId);
+        const rows: ComposerLegendRow[] = [{
+          type: "line",
+          label: viewMode === "province" ? "Ranh giới tỉnh" : "Ranh giới xã/phường",
+          color: mainStyle.color, lineWeight: mainStyle.lineWeight, lineDash: mainStyle.dashArray,
+        }];
+        if (viewMode === "province" && activeLayers.has("ward_boundaries")) {
+          const wardStyle = getLayerSymbology("ward_boundaries");
+          rows.push({ type: "line", label: "Ranh giới xã/phường (4 tỉnh)", color: wardStyle.color, lineWeight: wardStyle.lineWeight, lineDash: wardStyle.dashArray });
+        }
+        sections.push({ rows });
+      }
+      // 2. Mật độ dân số (chế độ xem cấp xã)
+      if (viewMode === "ward" && densityLegendEntries.length > 0) {
+        sections.push({
+          title: "Mật độ dân số (người/km²)",
+          rows: densityLegendEntries.map(entry => ({
+            type: "swatch", label: entry.label, color: entry.color, fillOpacity: entry.fillOpacity,
+            dimmed: entry.present === false,
+            dimTitle: entry.present === false ? "Chưa có xã nào ở bậc này" : undefined,
+          })),
+        });
+      }
+      // 3. Cơ cấu dân tộc
+      const ethnicRowsData = ethnicLegendItems.length > 0
+        ? ethnicLegendItems
+        : ethnicLegendComposition.map(item => ({ label: item.label, color: item.color }));
+      if (ethnicRowsData.length > 0) {
+        sections.push({ title: "Cơ cấu dân tộc", rows: ethnicRowsData.map(item => ({ type: "swatch", label: item.label, color: item.color })) });
+      }
+      // 4. Thủy lợi truyền thống (chỉ nhóm có thật trong dữ liệu)
+      if (activeLayers.has("irrigation")) {
+        const present = new Set(((layersData as any)?.irrigation || []).map((ir: any) => ir.loai));
+        const groups = [
+          { emoji: "💧", label: "Phai (đập)", ok: present.has("phai") },
+          { emoji: "🚿", label: "Mương · Lái (kênh, máng dẫn)", ok: present.has("muong") || present.has("lai") },
+          { emoji: "〰️", label: "Lịn (phân phối nước vào ruộng)", ok: present.has("lin") },
+          { emoji: "🌀", label: "Cọn (guồng nước)", ok: present.has("con") },
+        ];
+        const shown = groups.filter(g => g.ok);
+        if (shown.length > 0) sections.push({ title: "Thủy lợi truyền thống", rows: shown.map(g => ({ type: "emoji", label: g.label, emoji: g.emoji })) });
+        else sections.push({ rows: [{ type: "emoji", label: "Thủy lợi", emoji: "🚿" }] });
+      }
+      // 5. Phân vùng rừng (chỉ loại có trong dữ liệu)
+      if (activeLayers.has("forests")) {
+        const forestRows = (["vqg", "kbttn", "kbvcq", "rung_dac_dung"] as const)
+          .filter(k => !layersData || ((layersData as any).forests || []).some((f: any) => f.loai === k))
+          .map(k => ({ type: "forest" as const, label: FOREST_LABELS[k], color: FOREST_COLORS[k] }));
+        sections.push({ title: "Phân vùng rừng", rows: forestRows });
+      }
+      // 6. Mô hình VAC/VACR
+      if (activeLayers.has("vac_models")) sections.push({ rows: [{ type: "emoji", label: "VAC/VACR", emoji: "♻️" }] });
+      // 7. Cây thuốc quý
+      if (activeLayers.has("medicinal_plants")) sections.push({ rows: [{ type: "forest", label: "Cây thuốc quý", color: "#e63946" }] });
+      // 8. Các lớp tùy chỉnh của người dùng
+      customLayers.filter(layer => activeLayers.has(layer.id)).forEach(layer => {
+        sections.push({ rows: [{ type: "custom", label: layer.ten, color: layer.mau, bieu_tuong: layer.bieu_tuong }] });
+      });
+      // 9. Đối tượng vẽ tay
+      if (annotations.length > 0) sections.push({ rows: [{ type: "swatch", label: "Đối tượng của tôi", color: "#e9c46a" }] });
+      // 10. Hệ thống sông suối — yếu tố nền địa lý, luôn đứng cuối
+      if (activeLayers.has("rivers")) sections.push({ rows: [{ type: "river", label: "Hệ thống sông suối", osm: true }] });
+      return sections;
+    };
+    const legendSections = buildLegendSections();
+
     setComposerSnapshot({
       activeLayers: new Set(activeLayers),
       legendLayerIds,
@@ -1838,6 +1911,7 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       densityLegend: densityLegendEntries.map(entry => ({ label: entry.label, color: entry.color, fillOpacity: entry.fillOpacity, present: entry.present })),
       ethnicComposition: composerEthnicComposition,
       ethnicLegend: ethnicLegendItems,
+      legendSections,
       selectedAreaOnly,
       selectedAreaFade,
       capturedAt: Date.now(),
