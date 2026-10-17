@@ -83,8 +83,11 @@ const EDITABLE_LAYERS = new Set(["irrigation", "forests", "vac_models", "medicin
 const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
   rivers: "line", irrigation: "point", forests: "polygon", vac_models: "point",
   medicinal_plants: "polygon", population_density: "polygon",
+  province_boundaries: "line", ward_boundaries: "line",
 };
 const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
+  province_boundaries: { name: "Ranh giới tỉnh", color: "#3c5b45" },
+  ward_boundaries: { name: "Ranh giới xã/phường", color: "#345b41" },
   population_density: { name: "Mật độ dân số", color: "#fe9929" },
   rivers: { name: "Hệ thống sông suối", color: "#2589c7" },
   irrigation: { name: "Thủy lợi truyền thống", color: "#74c69d" },
@@ -134,8 +137,9 @@ const MAP_SCALE_OPTIONS = [5000, 10000, 25000, 50000, 100000, 250000, 500000, 10
 const scaleFromZoom = (lat: number, zoom: number) => Math.round((156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)) * 3779.52);
 const zoomFromScale = (scale: number, lat: number) => Math.max(1, Math.min(19, Math.log2((156543.03 * Math.cos(lat * Math.PI / 180) * 3779.52) / scale)));
 const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
-  province_boundaries: { title: "Ranh giới tỉnh", symbolType: "polygon", color: "#3c5b45", fillColor: "#f3efe9", lineWeight: 1.2, opacity: 0.9, fillOpacity: 0.02, dashArray: "", classes: [] },
-  ward_boundaries: { title: "Ranh giới xã/phường", symbolType: "line", color: "#345b41", fillColor: "#f7f6f3", lineWeight: 1.0, opacity: 0.9, fillOpacity: 0.01, dashArray: "", classes: [] },
+  // Phân cấp ký hiệu địa giới theo chuẩn bản đồ hành chính: cấp tỉnh nét đậm liền, cấp xã nét mảnh đứt
+  province_boundaries: { title: "Ranh giới tỉnh", symbolType: "polygon", color: "#3c5b45", fillColor: "#f3efe9", lineWeight: 1.9, opacity: 0.9, fillOpacity: 0.02, dashArray: "", classes: [] },
+  ward_boundaries: { title: "Ranh giới xã/phường", symbolType: "line", color: "#345b41", fillColor: "#f7f6f3", lineWeight: 1.0, opacity: 0.9, fillOpacity: 0.01, dashArray: "6,4", classes: [] },
   population_density: { title: "Mật độ dân số", symbolType: "ramp", color: "#0f4c5c", fillColor: "#0f4c5c", lineWeight: 1.1, opacity: 0.95, fillOpacity: 0.85, dashArray: "", classes: [
     { label: "< 50", color: "#fff7bc" },
     { label: "50–100", color: "#fee391" },
@@ -837,7 +841,7 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
       } else if (id === "ward_boundaries" && allWardsGeoJson && viewMode === "province") {
         const wardStyle = layerSymbologies.ward_boundaries || DEFAULT_LAYER_SYMBOLOGY.ward_boundaries;
         const layer = L.geoJSON(allWardsGeoJson as GeoJSON.FeatureCollection, {
-          style: () => ({ color: wardStyle.color, weight: wardStyle.lineWeight, opacity: wardStyle.opacity, fillColor: wardStyle.fillColor, fillOpacity: wardStyle.fillOpacity }),
+          style: () => ({ color: wardStyle.color, weight: wardStyle.lineWeight, opacity: wardStyle.opacity, fillColor: wardStyle.fillColor, fillOpacity: wardStyle.fillOpacity, dashArray: wardStyle.dashArray || undefined }),
           onEachFeature: (feat, lyr) => {
             const p = feat.properties as any;
             lyr.bindTooltip(`<div class="ward-tooltip"><b>${p.ten_xa}</b><br><span style="opacity:0.7">${p.ten_tinh||""}</span></div>`, { sticky: true, className: "custom-tooltip ward-tip" });
@@ -1191,14 +1195,14 @@ const getZoomAwareDashArray = (baseDashArray: string, zoom: number) =>
   const getWardValue = <K extends keyof WardProperties>(w:WardProperties,f:K):WardProperties[K] => { const ov=wardOverrides.get(w.ma_xa); return (ov&&f in ov?ov[f as string]:w[f]) as WardProperties[K]; };
   const getWardMapStyle = (p: WardProperties, baseStyle: LayerSymbologyConfig) => {
   const ov = wardOverrides.get(p.ma_xa);
-  const currentZoom = mapRef.current?.getZoom() ?? 7; // 🟢 Thêm dòng này để lấy zoom hiện tại của bản đồ
   return {
     color: (ov?.mau_vien as string) ?? baseStyle.color,
     weight: (ov?.do_day_vien as number) ?? baseStyle.lineWeight,
     opacity: (ov?.do_dam_vien as number) ?? baseStyle.opacity,
     fillColor: (ov?.mau_vung as string) ?? baseStyle.fillColor,
     fillOpacity: (ov?.do_dam_vung as number) ?? baseStyle.fillOpacity,
-    dashArray: getZoomAwareDashArray(baseStyle.dashArray, currentZoom), // Bây giờ currentZoom đã có dữ liệu
+    // Cấp xã giữ nét đứt ở mọi zoom để phân cấp với ranh giới cấp tỉnh (nét liền)
+    dashArray: baseStyle.dashArray || undefined,
   };
 };
 const refreshBoundaryStyles = () => {
@@ -1819,6 +1823,10 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       const features = layersData ? (layersData as any)[id] : null;
       return Array.isArray(features) && features.some(isVisibleFeature);
     });
+    // Bản đồ chính luôn vẽ ranh giới cấp tỉnh ở chế độ tỉnh — đưa vào chú giải để ký hiệu nào có trên bản đồ đều được giải thích
+    if (viewMode === "province" && !legendLayerIds.includes("province_boundaries")) {
+      legendLayerIds.unshift("province_boundaries");
+    }
     const composerEthnicComposition = showPieSelector
       ? (ethnicLegendComposition.length > 0 ? ethnicLegendComposition : wardDanToc.map(item => {
           const info = getDanTocInfo(item.dan_toc);
@@ -2390,6 +2398,13 @@ onEachFeature:(feat,lyr)=>{
   Object.entries(layerDisplayAll).forEach(([id, meta]) => {
     meta.geomType = layerGeomAll[id];
     meta.bieu_tuong = layerSymbolAll[id]?.bieu_tuong;
+    // Lớp dạng tuyến dùng ký hiệu thật từ symbology (màu, lực nét, kiểu nét) để chú giải khớp bản đồ
+    if (meta.geomType === "line") {
+      const sym = getLayerSymbology(id);
+      meta.color = sym.color;
+      meta.lineWeight = sym.lineWeight;
+      meta.lineDash = sym.dashArray || undefined;
+    }
   });
 
   const featureCounts: Record<string, number> = layersData ? {
@@ -2776,20 +2791,8 @@ onClick={() => setShowMapComposer(s => !s)}
 
             <div className="map-legend">
               <div className="legend-title">Chú giải</div>
-              {(ethnicLegendItems.length > 0 || ethnicLegendComposition.length > 0) && (
-                <div className="legend-ethnic-section">
-                  <div className="legend-subtitle">Chú giải màu cơ cấu dân tộc</div>
-                  {(ethnicLegendItems.length > 0 ? ethnicLegendItems : ethnicLegendComposition.map(item => ({ label: item.label, color: item.color }))).map(item => (
-                    <div className="legend-item" key={`ethnic-${item.label}`}>
-                      <span className="legend-color" style={{ background: item.color }} />
-                      <span>{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
 {(viewMode === "province" || activeLayers.has("ward_boundaries")) && (() => {
   const boundaryStyle = getLayerSymbology(viewMode === "province" ? "province_boundaries" : "ward_boundaries");
-  const boundaryDash = getZoomAwareDashArray(boundaryStyle.dashArray, mapRef.current?.getZoom() ?? 7);
   return (
     <div className="legend-item">
       <svg width="18" height="14" viewBox="0 0 18 14" className="legend-color legend-line-swatch" style={{ width: 18, height: 14, background: "transparent" }}>
@@ -2797,7 +2800,7 @@ onClick={() => setShowMapComposer(s => !s)}
           x1="1" y1="7" x2="17" y2="7"
           stroke={boundaryStyle.color}
           strokeWidth={Math.max(1.5, boundaryStyle.lineWeight)}
-          strokeDasharray={boundaryDash || undefined}
+          strokeDasharray={boundaryStyle.dashArray || undefined}
           strokeLinecap="round"
         />
       </svg>
@@ -2806,7 +2809,6 @@ onClick={() => setShowMapComposer(s => !s)}
   );
 })()}{activeLayers.has("ward_boundaries") && viewMode === "province" && (() => {
   const wardLegendStyle = getLayerSymbology("ward_boundaries");
-  const wardBoundaryDash = getZoomAwareDashArray(wardLegendStyle.dashArray, mapRef.current?.getZoom() ?? 7);
   return (
     <div className="legend-item">
       <svg width="18" height="14" viewBox="0 0 18 14" className="legend-color legend-line-swatch" style={{ width: 18, height: 14, background: "transparent" }}>
@@ -2814,21 +2816,39 @@ onClick={() => setShowMapComposer(s => !s)}
           x1="1" y1="7" x2="17" y2="7"
           stroke={wardLegendStyle.color}
           strokeWidth={Math.max(1.5, wardLegendStyle.lineWeight)}
-          strokeDasharray={wardBoundaryDash || undefined}
+          strokeDasharray={wardLegendStyle.dashArray || undefined}
           strokeLinecap="round"
         />
       </svg>
-      <span>Ranh giới xã (4 tỉnh)</span>
+      <span>Ranh giới xã/phường (4 tỉnh)</span>
     </div>
   );
 })()}
-{activeLayers.has("rivers")&&<div className="legend-item">
-  <svg width="18" height="14" viewBox="0 0 18 14" className="legend-color legend-line-swatch" style={{ width: 18, height: 14, background: "transparent" }}>
-    <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#f8fcff" strokeWidth="4.8" strokeLinecap="round" opacity="0.95"/>
-    <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#2589c7" strokeWidth="1.8" strokeLinecap="round"/>
-  </svg>
-  <span title="Nguồn: OpenStreetMap (Overpass API)">Hệ thống sông suối <span style={{opacity:0.6,fontSize:"inherit",fontStyle:"italic"}}>(OSM)</span></span>
-</div>}
+              {densityLegendEntries.length > 0 && viewMode === "ward" && <>
+                <div className="legend-subtitle">Mật độ dân số (người/km²)</div>
+                {densityLegendEntries.map((entry, index) => (
+                  <div
+                    className="legend-item"
+                    key={`density-${index}`}
+                    style={entry.present ? undefined : { opacity: 0.4 }}
+                    title={entry.present ? undefined : "Chưa có xã nào ở bậc này"}
+                  >
+                    <div className="legend-color" style={{background: entry.color, opacity: entry.fillOpacity ?? 1}}/>
+                    <span>{entry.label}</span>
+                  </div>
+                ))}
+              </>}
+              {(ethnicLegendItems.length > 0 || ethnicLegendComposition.length > 0) && (
+                <div className="legend-ethnic-section">
+                  <div className="legend-subtitle">Cơ cấu dân tộc</div>
+                  {(ethnicLegendItems.length > 0 ? ethnicLegendItems : ethnicLegendComposition.map(item => ({ label: item.label, color: item.color }))).map(item => (
+                    <div className="legend-item" key={`ethnic-${item.label}`}>
+                      <span className="legend-color" style={{ background: item.color }} />
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 {activeLayers.has("irrigation") && (() => {
   const present = new Set((layersData?.irrigation || []).map(ir => ir.loai));
   const groups: Array<{ emoji: string; label: string; ok: boolean }> = [
@@ -2864,21 +2884,14 @@ onClick={() => setShowMapComposer(s => !s)}
                 <span>Cây thuốc quý</span>
               </div>}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
-              {densityLegendEntries.length > 0 && viewMode === "ward" && <>
-                <div className="legend-subtitle">Mật độ dân số</div>
-                {densityLegendEntries.map((entry, index) => (
-                  <div
-                    className="legend-item"
-                    key={`density-${index}`}
-                    style={entry.present ? undefined : { opacity: 0.4 }}
-                    title={entry.present ? undefined : "Chưa có xã nào ở bậc này"}
-                  >
-                    <div className="legend-color" style={{background: entry.color, opacity: entry.fillOpacity ?? 1}}/>
-                    <span>{entry.label} người/km²</span>
-                  </div>
-                ))}
-              </>}
               {annotations.length>0&&<div className="legend-item"><div className="legend-color" style={{background:"#e9c46a"}}/><span>Đối tượng của tôi</span></div>}
+              {activeLayers.has("rivers")&&<div className="legend-item">
+                <svg width="18" height="14" viewBox="0 0 18 14" className="legend-color legend-line-swatch" style={{ width: 18, height: 14, background: "transparent" }}>
+                  <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#f8fcff" strokeWidth="4.8" strokeLinecap="round" opacity="0.95"/>
+                  <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#2589c7" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <span title="Nguồn: OpenStreetMap (Overpass API)">Hệ thống sông suối <span style={{opacity:0.6,fontSize:"inherit",fontStyle:"italic"}}>(OSM)</span></span>
+              </div>}
             </div>
           </div>
         </div>

@@ -346,6 +346,10 @@
 .scalebar-tick { width: 2px; height: 10px; background: #222; }
 .scalebar-body { flex: 1; height: 4px; background: repeating-linear-gradient(90deg, #222 0, #222 50%, #fff 50%, #fff 100%); background-size: 50% 100%; border: 1px solid #222; }
 .scalebar-labels { display: flex; justify-content: space-between; font-size: 9px; color: #333; font-family: var(--font-mono); margin-top: 2px; }
+.el-scalebar-text { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.scalebar-ratio { font-size: 12px; font-weight: 700; color: #111; font-family: var(--font-mono); text-align: center; }
+.scalebar-ratio-sub { font-size: 9px; color: #555; font-family: var(--font-mono); text-align: center; }
+.scalebar-ratio-cap { font-size: 9px; color: #333; font-family: var(--font-mono); text-align: center; margin-top: 2px; }
 
 /* North Arrow */
 .el-north {

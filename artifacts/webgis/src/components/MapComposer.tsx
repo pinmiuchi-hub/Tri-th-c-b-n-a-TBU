@@ -27,7 +27,7 @@ export interface MapSyncSnapshot {
   viewportBounds?: { north: number; south: number; east: number; west: number };
   annotations: any[];
   legendLayerIds?: string[];
-  layerDisplayAll: Record<string, { name: string; color: string; geomType?: "point" | "line" | "polygon"; bieu_tuong?: string; lineDash?: string; fillOpacity?: number }>;
+  layerDisplayAll: Record<string, { name: string; color: string; geomType?: "point" | "line" | "polygon"; bieu_tuong?: string; lineDash?: string; lineWeight?: number; fillOpacity?: number }>;
   capturedAt: number;
   ethnicComposition?: { label: string; value: number; color: string }[];
   ethnicLegend?: { label: string; color: string }[];
@@ -83,15 +83,17 @@ const makeElement = (type: ElementType, page: PageSize, existing: ComposerElemen
   const ph = page.height * DPI;
   const zIndex = existing.length + 1;
   const defaults: Record<ElementType, Partial<ComposerElement>> = {
-    mapFrame:   { x: pw*0.05, y: ph*0.08, width: pw*0.90, height: ph*0.75, props: { showGraticule: false, showGraticuleLabels: true, graticuleInterval: 1, graticuleColor: "#4a6fa1", graticuleOpacity: 0.65, graticuleLineStyle: "dashed" } },
-    scalebar:   { x: pw*0.05, y: ph*0.87, width: pw*0.25, height: 30,     props: { unit: "km", style: "line" } },
+    // Khung bản đồ thu về khoảng 2/3 bề ngang để chú giải, thước tỉ lệ đặt NGOÀI khung
+    // (theo QCVN 80:2024/BTNMT — bảng chú giải bố trí ngoài phạm vi thể hiện lãnh thổ)
+    mapFrame:   { x: pw*0.05, y: ph*0.08, width: pw*0.62, height: ph*0.75, props: { showGraticule: false, showGraticuleLabels: true, graticuleInterval: 1, graticuleColor: "#4a6fa1", graticuleOpacity: 0.65, graticuleLineStyle: "dashed" } },
+    scalebar:   { x: pw*0.05, y: ph*0.87, width: pw*0.25, height: 44,     props: { unit: "km", style: "line" } },
     northArrow: { x: pw*0.88, y: ph*0.88, width: 48,      height: 48,     props: { style: "classic" } },
-    legend:     { x: pw*0.72, y: ph*0.10, width: pw*0.22, height: ph*0.35, props: { title: "Chú giải", bgColor: "#ffffff", bgOpacity: 0.92, fontSize: 10, fontFamily: "Arial", titleFontSize: 11, textColor: "#333333" } },
+    legend:     { x: pw*0.70, y: ph*0.10, width: pw*0.25, height: ph*0.55, props: { title: "Chú giải", bgColor: "#ffffff", bgOpacity: 0.92, fontSize: 10, fontFamily: "Arial", titleFontSize: 11, textColor: "#333333" } },
     graticule:  { x: 0,       y: 0,       width: pw,       height: ph,     props: { interval: 1, showLabels: true } },
     title:      { x: pw*0.10, y: ph*0.01, width: pw*0.80, height: 50,     props: { text: "Tiêu đề bản đồ", fontSize: 24, fontFamily: "Arial", textColor: "#111111", align: "center" } },
     chart:      { x: pw*0.05, y: ph*0.55, width: pw*0.25, height: ph*0.25,props: { chartType: "pie", title: "Cơ cấu dân tộc", showPercent: true, chartScale: 1 } },
     image:      { x: pw*0.05, y: ph*0.05, width: 150,     height: 100,    props: { src: "", alt: "Hình ảnh" } },
-    textbox:    { x: pw*0.05, y: ph*0.90, width: pw*0.40, height: 40,     props: { text: "Nguồn: ...", fontSize: 11, fontFamily: "Arial", textColor: "#333333" } },
+    textbox:    { x: pw*0.05, y: ph*0.90, width: pw*0.55, height: 40,     props: { text: "Nguồn: Tổng cục Thống kê (TĐTDS&NO 2019) · OpenStreetMap · NASA SRTM", fontSize: 11, fontFamily: "Arial", textColor: "#333333" } },
   };
   return { id: uid(), type, zIndex, locked: false, visible: true, ...defaults[type] } as ComposerElement;
 };
@@ -197,18 +199,21 @@ const ScalebarContent: React.FC<{ el: ComposerElement; snapshot?: MapSyncSnapsho
     }
   }
 
+  const ratioZoom = snapshot ? (displayZoom ?? snapshot.mapCenter.zoom) : 7;
+  const ratioLat = snapshot?.mapCenter.lat ?? 21.7;
+  const ratioValue = Math.round((156543.03 * Math.cos(ratioLat * Math.PI / 180) / Math.pow(2, ratioZoom)) * 3779.52);
+
   if (style === "text_ratio") {
-    const zoom = snapshot ? (displayZoom ?? snapshot.mapCenter.zoom) : 7;
-    const lat = snapshot?.mapCenter.lat ?? 21.7;
-    const ratio = Math.round((156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)) * 3779.52);
-    const kmPerCm = ratio / 100000;
+    const kmPerCm = ratioValue / 100000;
     return (
       <div className="el-scalebar el-scalebar-text">
-        <div className="scalebar-ratio">1 : {ratio.toLocaleString("vi-VN")}</div>
+        <div className="scalebar-ratio">1 : {ratioValue.toLocaleString("vi-VN")}</div>
         <div className="scalebar-ratio-sub">1 cm ≈ {kmPerCm.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} km</div>
       </div>
     );
   }
+
+  const ratioCaption = <div className="scalebar-ratio-cap">Tỷ lệ 1 : {ratioValue.toLocaleString("vi-VN")}</div>;
 
   if (style === "alternating") {
     return (
@@ -219,6 +224,7 @@ const ScalebarContent: React.FC<{ el: ComposerElement; snapshot?: MapSyncSnapsho
           ))}
         </svg>
         <div className="scalebar-labels"><span>{label0}</span><span>{labelMid}</span><span>{labelEnd}</span></div>
+        {ratioCaption}
       </div>
     );
   }
@@ -236,6 +242,7 @@ const ScalebarContent: React.FC<{ el: ComposerElement; snapshot?: MapSyncSnapsho
           ))}
         </svg>
         <div className="scalebar-labels"><span>{label0}</span><span>{labelMid}</span><span>{labelEnd}</span></div>
+        {ratioCaption}
       </div>
     );
   }
@@ -252,6 +259,7 @@ const ScalebarContent: React.FC<{ el: ComposerElement; snapshot?: MapSyncSnapsho
         <span>{labelMid}</span>
         <span>{labelEnd}</span>
       </div>
+      {ratioCaption}
     </div>
   );
 };
@@ -276,7 +284,7 @@ const LegendSwatch: React.FC<{ d: MapSyncSnapshot["layerDisplayAll"][string] }> 
   if (d.geomType === "line") {
     return (
       <svg width="24" height="12" className="legend-swatch-line">
-        <line x1="0" y1="6" x2="24" y2="6" stroke={d.color} strokeWidth="3" strokeDasharray={d.lineDash || undefined}/>
+        <line x1="0" y1="6" x2="24" y2="6" stroke={d.color} strokeWidth={d.lineWeight ? Math.max(1.5, Math.min(4, d.lineWeight * 1.8)) : 3} strokeDasharray={d.lineDash || undefined}/>
       </svg>
     );
   }
@@ -401,38 +409,55 @@ const ElementContent: React.FC<{
       );
     }
 
-    case "legend":
+    case "legend": {
+      // Thứ tự theo QCVN 80:2024/BTNMT: yếu tố chuyên môn (địa giới, phân lớp số liệu, đồ thị)
+      // đứng trước, yếu tố nền địa lý (thủy văn) đứng cuối.
+      const ids = Array.from(syncSnapshot ? (syncSnapshot.legendLayerIds ?? syncSnapshot.activeLayers) : []);
+      const isBoundaryId = (id: string) => id === "province_boundaries" || id === "ward_boundaries";
+      const boundaryIds = ids.filter(isBoundaryId);
+      const riverIds = ids.filter(id => id === "rivers");
+      const otherIds = ids.filter(id => !isBoundaryId(id) && id !== "rivers");
+      const legendText = (el.props.textColor as string) || "#333333";
+      const ethnicEntries = syncSnapshot
+        ? (syncSnapshot.ethnicLegend?.length
+            ? syncSnapshot.ethnicLegend
+            : syncSnapshot.ethnicComposition?.map(item => ({ label: item.label, color: item.color })))
+        : undefined;
+      const renderLayerItem = (id: string) => {
+        const d = syncSnapshot?.layerDisplayAll[id];
+        if (!d) return null;
+        return (
+          <div key={id} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: legendText }}>
+            <LegendSwatch d={d}/>
+            <span>{d.name}</span>
+          </div>
+        );
+      };
       return (
-        <div className="el-legend" style={{ background: `rgba(${hexToRgb(el.props.bgColor as string || "#ffffff")}, ${(el.props.bgOpacity as number) ?? 0.92})`, color: (el.props.textColor as string) || "#333333", fontFamily: (el.props.fontFamily as string) || "Arial", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
-          <div className="legend-title" style={{ fontSize: (el.props.titleFontSize as number) || 11, color: (el.props.textColor as string) || "#333333" }}>{el.props.title as string}</div>
+        <div className="el-legend" style={{ background: `rgba(${hexToRgb(el.props.bgColor as string || "#ffffff")}, ${(el.props.bgOpacity as number) ?? 0.92})`, color: legendText, fontFamily: (el.props.fontFamily as string) || "Arial", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
+          <div className="legend-title" style={{ fontSize: (el.props.titleFontSize as number) || 11, color: legendText }}>{el.props.title as string}</div>
           <div className="legend-items">
             {syncSnapshot
               ? <>
-                {Array.from(syncSnapshot.legendLayerIds ?? syncSnapshot.activeLayers).map(id => {
-                  const d = syncSnapshot.layerDisplayAll[id];
-                  if (!d) return null;
-                  return (
-                    <div key={id} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: (el.props.textColor as string) || "#333333" }}>
-                      <LegendSwatch d={d}/>
-                      <span>{d.name}</span>
-                    </div>
-                  );
-                })}
-                {syncSnapshot.densityLegend && syncSnapshot.densityLegend.length > 0 && <div className="legend-subtitle" style={{ color: (el.props.textColor as string) || "#333333" }}>Mật độ dân số</div>}
+                {boundaryIds.map(renderLayerItem)}
+                {syncSnapshot.densityLegend && syncSnapshot.densityLegend.length > 0 && <div className="legend-subtitle" style={{ color: legendText }}>Mật độ dân số (người/km²)</div>}
                 {syncSnapshot.densityLegend?.map(item => (
-                  <div key={`density-${item.label}`} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: (el.props.textColor as string) || "#333333", opacity: item.present === false ? 0.4 : 1 }} title={item.present === false ? "Chưa có xã nào ở bậc này" : undefined}>
+                  <div key={`density-${item.label}`} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: legendText, opacity: item.present === false ? 0.4 : 1 }} title={item.present === false ? "Chưa có xã nào ở bậc này" : undefined}>
                     <span className="legend-ethnic-color" style={{ background: item.color, opacity: item.fillOpacity ?? 1 }} />
-                    <span>{item.label} người/km²</span>
-                  </div>
-                ))}
-                {(syncSnapshot.ethnicLegend?.length
-                  ? syncSnapshot.ethnicLegend
-                  : syncSnapshot.ethnicComposition?.map(item => ({ label: item.label, color: item.color })))?.map(item => (
-                  <div key={`ethnic-${item.label}`} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: (el.props.textColor as string) || "#333333" }}>
-                    <span className="legend-ethnic-color" style={{ background: item.color }} />
                     <span>{item.label}</span>
                   </div>
                 ))}
+                {ethnicEntries && ethnicEntries.length > 0 && <>
+                  <div className="legend-subtitle" style={{ color: legendText }}>Cơ cấu dân tộc</div>
+                  {ethnicEntries.map(item => (
+                    <div key={`ethnic-${item.label}`} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: legendText }}>
+                      <span className="legend-ethnic-color" style={{ background: item.color }} />
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </>}
+                {otherIds.map(renderLayerItem)}
+                {riverIds.map(renderLayerItem)}
               </>
               : (
                 <div className="legend-empty" style={{ color: (el.props.textColor as string) || "#666666" }}>
@@ -443,6 +468,7 @@ const ElementContent: React.FC<{
           </div>
         </div>
       );
+    }
 
     case "graticule":
       return (
