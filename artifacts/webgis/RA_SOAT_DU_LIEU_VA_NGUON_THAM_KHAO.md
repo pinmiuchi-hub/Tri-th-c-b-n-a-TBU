@@ -397,5 +397,23 @@ Dữ liệu xã có id `ethnic_la_ha` (10 xã), `ethnic_xinh_mun` (8), `ethnic_l
 2. **Snapshot đồng bộ cũ thiếu `layerDisplayAll`** → dòng "Ranh giới xã/phường" bị render `null` và biến mất khỏi chú giải → thêm `BUILTIN_LAYER_FALLBACK` (4 lớp tích hợp: tỉnh nét liền 1,9 · xã nét đứt 6,4 × 1,0 · mật độ · sông suối) để chú giải luôn đủ ký hiệu.
 - **Kiểm thực tế:** cài bản nháp cũ (khung `0.90pw`, chú giải `0.72pw`) → mở composer → frame 696px, legend 786/281/437 → **migration PASS, chú giải ngoài khung PASS**; thứ tự: ranh giới → mật độ (7 bậc, đơn vị người/km²) → cơ cấu dân tộc (12 mục + Dân tộc khác) → **PASS**; tổng biểu đồ 100,01 → **PASS**.
 
+## 14. Vòng 7 (17/10/2026): khung composer đúng khổ giấy + chú giải theo khung nhìn
+
+### 14.1. Khung bản đồ trong Biên tập bản đồ không đúng tỉ lệ A4 đã sửa
+
+- **Lỗi:** chọn khổ "A4 Ngang" nhưng khung bản đồ mặc định là 62% bề ngang × 75% bề cao → tỉ lệ **1,17 (gần vuông)**, không phải 1,414 của A4 ngang; đồng thời đổi khổ giấy không co giãn các phần tử đã đặt → bố cục lệch ngay khi đổi sang A4 Đứng/A3.
+- **Sửa (`MapComposer.tsx`):**
+  1. Mặc định khung = 62% × 62% hai chiều → **tỉ lệ khung = tỉ lệ khổ giấy** (A4 ngang 1,414 · A4 đứng 0,707 · Letter 1,29); chú giải vẫn ở x70%/w25% **ngoài khung** (QCVN 80:2024/BTNMT).
+  2. **Migration bản nháp cũ khi load:** khung 90% (bản rất cũ) hoặc đúng kích mặc định 62%×75% (±5% bề ngang, số thật như 681×595) → chuyển 62%×62% của khổ giấy hiện tại; bố cục người dùng tự chỉnh khác giữ nguyên.
+  3. **Đổi khổ giấy → co giãn toàn bộ phần tử** theo tỉ lệ trang mới (khung đang đúng tỉ lệ trang cũ vẫn đúng tỉ lệ trang mới).
+- **Kiểm thực tế (Playwright, 11/11 PASS):** bản nháp giống ảnh người dùng (`W681×H595`, x56/y63) → `696×492` (1,415); đổi A4 Đứng → `492×696` (0,707) + trang 0,707; quay lại A4 Ngang → `696×492`; bản nháp 90% cũ → `696×492`; ảnh chụp màn hình khớp. (commit `98404e6`)
+
+### 14.2. Chú giải tự theo vùng khung nhìn (ký hiệu nào trên bản đồ mới được giải thích)
+
+- **Trước:** nhóm con của **Phân vùng rừng** và **Thủy lợi truyền thống** lọc theo sự có mặt trong *toàn bộ* dữ liệu → zoom tới Sơn La, bản đồ chỉ vẽ polygon Khu bảo tồn thiên nhiên nhưng chú giải vẫn liệt kê Vườn quốc gia, Khu bảo vệ cảnh quan (và hiện cả nhóm Phai/Lịn khi hai điểm đó nằm ngoài vùng xem).
+- **Sửa (`WebGIS goc.tsx`):** helper toạ độ `coordsBBox` / `bboxInView` / `pointInView` (giao **bbox × khung nhìn**, polygon tràn mép vẫn tính); memo `legendInViewKinds` theo `mapBounds` + `mapMoveTick` (debounce 450 ms, đăng ký trong `initMap` — chạy **mọi lúc**, không chỉ khi mở composer); áp dụng đồng thời cho chú giải chính và `buildLegendSections` của composer: loại/group không có feature nào trong khung nhìn → **ẩn hàng** (không còn feature nào → ẩn cả nhóm), không còn tính theo toàn bộ dữ liệu. Mật độ dân số giữ nguyên cơ chế mờ bậc (thang liên tục). *Giới hạn:* các hàng đơn (sông suối, cây thuốc, VAC, lớp tùy chỉnh) vẫn theo bật/tắt lớp, chưa lọc theo khung nhìn.
+- **Dữ liệu dẫn chiếu:** 11 polygon rừng (kbttn 9 · vqg 1 · kbvcq 1 — kbvcq/vqg ở ngoài bbox Sơn La), 6 điểm thủy lợi (phai Nậm Rốm & phai Mường Lay ở Điện Biên, lin Y Tý ngoài Sơn La → tại fitBounds Sơn La chỉ hiện Mương·Lái + Cọn).
+- **Kiểm thực tế (Playwright, 12/12 PASS):** đo khung nhìn bằng toạ độ 4 mép bản đồ (thanh `mouse-coords-bar`), tính kỳ vọng bằng **cùng công thức bbox** với ±0,03° dung sai đo — 3 giai đoạn: **A** (fit Sơn La) · **B** (zoom sâu — đúng kịch bản người dùng: hàng rừng duy nhất **"Khu bảo tồn thiên nhiên"**) · **C** (zoom ra — đủ 3 loại + 4 nhóm); luôn thỏa chú giải ⊇ giao sâu và ⊆ giao nới; **composer = main từng dòng, đúng thứ tự** ở cả B và C; ảnh chụp màn hình 3 giai đoạn khớp.
+
 
 

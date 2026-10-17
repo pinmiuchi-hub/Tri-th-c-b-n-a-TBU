@@ -150,6 +150,34 @@ const ethnicLabelOf = (id: string, fallback: string | null | undefined): string 
   id === ETHNIC_OTHER_ID ? ETHNIC_OTHER_LABEL : (fallback || id);
 const MAP_SCALE_OPTIONS = [5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
 const scaleFromZoom = (lat: number, zoom: number) => Math.round((156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)) * 3779.52);
+
+// ── Chú giải theo khung nhìn: bbox của geometry (toạ độ [lng, lat] hoặc [lng, lat, ...]) ──
+type GeoBBox = [number, number, number, number]; // [west, south, east, north]
+const coordsBBox = (coords: unknown): GeoBBox | null => {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const visit = (value: unknown): void => {
+    if (!Array.isArray(value)) return;
+    if (value.length >= 2 && typeof value[0] === "number" && typeof value[1] === "number") {
+      const lng = value[0] as number;
+      const lat = value[1] as number;
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+      if (lng < minX) minX = lng;
+      if (lng > maxX) maxX = lng;
+      if (lat < minY) minY = lat;
+      if (lat > maxY) maxY = lat;
+      return;
+    }
+    (value as unknown[]).forEach(visit);
+  };
+  visit(coords);
+  return Number.isFinite(minX) && Number.isFinite(minY) ? [minX, minY, maxX, maxY] : null;
+};
+// Giao nhau (xấp xỉ) giữa bbox và khung nhìn — polygon lớn tràn vào khung vẫn được tính
+const bboxInView = (bbox: GeoBBox | null, bounds: L.LatLngBounds): boolean =>
+  !!bbox && bbox[0] <= bounds.getEast() && bbox[2] >= bounds.getWest() && bbox[1] <= bounds.getNorth() && bbox[3] >= bounds.getSouth();
+const pointInView = (lat: number, lng: number, bounds: L.LatLngBounds): boolean =>
+  Number.isFinite(lat) && Number.isFinite(lng) && bounds.contains([lat, lng]);
+
 const zoomFromScale = (scale: number, lat: number) => Math.max(1, Math.min(19, Math.log2((156543.03 * Math.cos(lat * Math.PI / 180) * 3779.52) / scale)));
 const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
   // Phân cấp ký hiệu địa giới theo chuẩn bản đồ hành chính: cấp tỉnh nét đậm liền, cấp xã nét mảnh đứt
@@ -1855,25 +1883,28 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       if (ethnicRowsData.length > 0) {
         sections.push({ title: "Cơ cấu dân tộc", rows: ethnicRowsData.map(item => ({ type: "swatch", label: item.label, color: item.color })) });
       }
-      // 4. Thủy lợi truyền thống (chỉ nhóm có thật trong dữ liệu)
+      // 4. Thủy lợi truyền thống (chỉ nhóm có điểm thật sự nằm trong khung nhìn)
       if (activeLayers.has("irrigation")) {
-        const present = new Set(((layersData as any)?.irrigation || []).map((ir: any) => ir.loai));
-        const groups = [
-          { emoji: "💧", label: "Phai (đập)", ok: present.has("phai") },
-          { emoji: "🚿", label: "Mương · Lái (kênh, máng dẫn)", ok: present.has("muong") || present.has("lai") },
-          { emoji: "〰️", label: "Lịn (phân phối nước vào ruộng)", ok: present.has("lin") },
-          { emoji: "🌀", label: "Cọn (guồng nước)", ok: present.has("con") },
-        ];
-        const shown = groups.filter(g => g.ok);
-        if (shown.length > 0) sections.push({ title: "Thủy lợi truyền thống", rows: shown.map(g => ({ type: "emoji", label: g.label, emoji: g.emoji })) });
-        else sections.push({ rows: [{ type: "emoji", label: "Thủy lợi", emoji: "🚿" }] });
+        const irrigationInView = ((layersData as any)?.irrigation || []).filter((ir: any) => pointInView(Number(ir.lat), Number(ir.lng), mapBounds));
+        if (irrigationInView.length > 0) {
+          const present = new Set(irrigationInView.map((ir: any) => ir.loai));
+          const groups = [
+            { emoji: "💧", label: "Phai (đập)", ok: present.has("phai") },
+            { emoji: "🚿", label: "Mương · Lái (kênh, máng dẫn)", ok: present.has("muong") || present.has("lai") },
+            { emoji: "〰️", label: "Lịn (phân phối nước vào ruộng)", ok: present.has("lin") },
+            { emoji: "🌀", label: "Cọn (guồng nước)", ok: present.has("con") },
+          ];
+          const shown = groups.filter(g => g.ok);
+          if (shown.length > 0) sections.push({ title: "Thủy lợi truyền thống", rows: shown.map(g => ({ type: "emoji", label: g.label, emoji: g.emoji })) });
+          else sections.push({ rows: [{ type: "emoji", label: "Thủy lợi", emoji: "🚿" }] });
+        }
       }
-      // 5. Phân vùng rừng (chỉ loại có trong dữ liệu)
+      // 5. Phân vùng rừng (chỉ loại có polygon trong khung nhìn — zoom Sơn La chỉ còn Khu bảo tồn thiên nhiên)
       if (activeLayers.has("forests")) {
         const forestRows = (["vqg", "kbttn", "kbvcq", "rung_dac_dung"] as const)
-          .filter(k => !layersData || ((layersData as any).forests || []).some((f: any) => f.loai === k))
+          .filter(k => ((layersData as any)?.forests || []).some((f: any) => f.loai === k && bboxInView(coordsBBox(f.coords), mapBounds)))
           .map(k => ({ type: "forest" as const, label: FOREST_LABELS[k], color: FOREST_COLORS[k] }));
-        sections.push({ title: "Phân vùng rừng", rows: forestRows });
+        if (forestRows.length > 0) sections.push({ title: "Phân vùng rừng", rows: forestRows });
       }
       // 6. Mô hình VAC/VACR
       if (activeLayers.has("vac_models")) sections.push({ rows: [{ type: "emoji", label: "VAC/VACR", emoji: "♻️" }] });
@@ -1937,16 +1968,6 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
     if (syncPending) { syncQueuedRef.current = true; return; }
     void syncToComposer();
   }, [showMapComposer, activeLayers, activeRaster, selectedProvince, selectedWard?.ma_xa, selectedWardIds, selectedAreaOnly, selectedAreaFade, currentProvinceGeoJson, layerSymbologies, wardOverrides, layersData, annotations, rasterOpacity, pieWardSelection, showPieSelector, customLayers, ethnicOverrides, wardLabelConfig, mapFrameAspect, mapMoveTick]);
-
-  /* Chụp lại ảnh cho composer khi người dùng pan/zoom bản đồ, tránh snapshot cũ lệch giao diện */
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!showMapComposer || !map) return;
-    let timer = 0;
-    const queue = () => { window.clearTimeout(timer); timer = window.setTimeout(() => setMapMoveTick(v => v + 1), 450); };
-    map.on("moveend zoomend", queue);
-    return () => { window.clearTimeout(timer); map.off("moveend zoomend", queue); };
-  }, [showMapComposer]);
 
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
@@ -2037,6 +2058,15 @@ style:()=>({
       refreshBoundaryStyles();
       setMapScale(scaleFromZoom(map.getCenter().lat, map.getZoom()));
     });
+    // Chú giải theo khung nhìn: báo (debounce) mỗi lần pan/zoom để chú giải chính dựng lại
+    // — chạy mọi lúc, không chỉ khi mở composer, vì chú giải chính cũng phải khớp vùng đang xem.
+    let legendMoveTimer = 0;
+    const queueLegendRebuild = () => {
+      window.clearTimeout(legendMoveTimer);
+      legendMoveTimer = window.setTimeout(() => setMapMoveTick(v => v + 1), 450);
+    };
+    map.on("moveend zoomend", queueLegendRebuild);
+    setMapMoveTick(v => v + 1); // đợt đầu: map đã sẵn sàng → chú giải tính ngay các loại trong khung nhìn
     let lastCoordsUpdate = 0;
     map.on("mousemove", (e: L.LeafletMouseEvent) => {
       const now = Date.now();
@@ -2417,6 +2447,20 @@ onEachFeature:(feat,lyr)=>{
     // Hiển thị ĐỦ các bậc; bậc chưa có xã nào rơi vào sẽ bị mờ để chú giải luôn liên tục
     return classes.map((entry, index) => ({ ...entry, fillOpacity: densityStyle.fillOpacity, present: present.has(index) }));
   }, [activeRaster, activeLayers, selectedProvince, currentProvinceGeoJson, selectedWard, wardOverrides, layerSymbologies]);
+  // Ký hiệu con trong chú giải (nhóm rừng, nhóm thủy lợi) chỉ hiện loại thật sự nằm trong
+  // khung nhìn hiện tại — ví dụ zoom tới Sơn La chỉ còn "Khu bảo tồn thiên nhiên".
+  // Cập nhật khi pan/zoom (mapMoveTick debounce 450ms) hoặc khi đổi dữ liệu lớp.
+  const legendInViewKinds = useMemo(() => {
+    const map = mapRef.current;
+    if (!map) return null;
+    const bounds = map.getBounds();
+    const forests = new Set<string>();
+    const irrigation = new Set<string>();
+    let irrigationVisible = 0;
+    (layersData?.forests || []).forEach(f => { if (bboxInView(coordsBBox(f.coords), bounds)) forests.add(String(f.loai)); });
+    (layersData?.irrigation || []).forEach(ir => { if (pointInView(Number(ir.lat), Number(ir.lng), bounds)) { irrigation.add(String(ir.loai)); irrigationVisible += 1; } });
+    return { forests, irrigation, irrigationVisible };
+  }, [layersData, mapMoveTick]);
   const wardPdfs=selectedWard?(pdfFiles.get(selectedWard.ma_xa)||[]):[];
   const stats=selectedProvince?getProvinceStat(selectedProvince):null;
   const layerCategoriesWithState = layerCategories.map(cat => ({
@@ -2915,7 +2959,9 @@ onClick={() => setShowMapComposer(s => !s)}
                 </div>
               )}
 {activeLayers.has("irrigation") && (() => {
-  const present = new Set((layersData?.irrigation || []).map(ir => ir.loai));
+  const irrInView = legendInViewKinds;
+  if (irrInView && irrInView.irrigationVisible === 0) return null;
+  const present = irrInView ? irrInView.irrigation : new Set((layersData?.irrigation || []).map(ir => ir.loai));
   const groups: Array<{ emoji: string; label: string; ok: boolean }> = [
     { emoji: "💧", label: "Phai (đập)", ok: present.has("phai") },
     { emoji: "🚿", label: "Mương · Lái (kênh, máng dẫn)", ok: present.has("muong") || present.has("lai") },
@@ -2934,15 +2980,22 @@ onClick={() => setShowMapComposer(s => !s)}
     ))}
   </>);
 })()}
-              {activeLayers.has("forests")&&<>
-                <div className="legend-subtitle">Phân vùng rừng</div>
-                {(["vqg","kbttn","kbvcq","rung_dac_dung"] as const).filter(k => !layersData || (layersData.forests||[]).some(f => f.loai === k)).map(k => (
-                  <div className="legend-item" key={`legend-forest-${k}`}>
-                    <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill={FOREST_COLORS[k]} fillOpacity="0.75" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
-                    <span>{FOREST_LABELS[k]}</span>
-                  </div>
-                ))}
-              </>}
+              {activeLayers.has("forests")&&(() => {
+                const kinds = legendInViewKinds;
+                const forestRows = (["vqg","kbttn","kbvcq","rung_dac_dung"] as const).filter(k =>
+                  kinds ? kinds.forests.has(k) : (!layersData || (layersData.forests||[]).some(f => f.loai === k))
+                );
+                if (!forestRows.length) return null;
+                return (<>
+                  <div className="legend-subtitle">Phân vùng rừng</div>
+                  {forestRows.map(k => (
+                    <div className="legend-item" key={`legend-forest-${k}`}>
+                      <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill={FOREST_COLORS[k]} fillOpacity="0.75" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
+                      <span>{FOREST_LABELS[k]}</span>
+                    </div>
+                  ))}
+                </>);
+              })()}
               {activeLayers.has("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
               {activeLayers.has("medicinal_plants")&&<div className="legend-item">
                 <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill="#e63946" fillOpacity="0.75" stroke="#e63946" strokeWidth="1.5"/></svg>
