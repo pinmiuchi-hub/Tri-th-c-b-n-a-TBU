@@ -13,6 +13,9 @@
   width: min(620px, 100%);
   max-height: min(88vh, 900px);
   background: #0f1f0f;
+  /* Chữ mặc định của trang là màu tối (#153224) — buộc modal dùng chữ sáng
+     để không hòa vào nền tối */
+  color: #eaf7ee;
   border: 1px solid rgba(82, 183, 136, 0.24);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
@@ -31,6 +34,7 @@
 
 .wen-title {
   font-weight: 700;
+  color: #f0fff4;
 }
 
 .wen-subtitle {
@@ -72,9 +76,9 @@
 }
 
 .wen-select, .wen-input, .wen-color {
-  border: 1px solid rgba(82, 183, 136, 0.25);
+  border: 1px solid rgba(82, 183, 136, 0.35);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   color: #f0fff4;
   padding: 8px 9px;
 }
@@ -102,6 +106,8 @@
 .wen-btn {
   padding: 8px 12px;
   font-weight: 600;
+  background: rgba(82, 183, 136, 0.16);
+  color: #d8f3dc;
 }
 
 .wen-btn.secondary {
@@ -140,6 +146,10 @@
   gap: 8px;
 }
 
+.wen-name {
+  color: #eaf7ee;
+}
+
 .wen-dot {
   width: 12px;
   height: 12px;
@@ -154,7 +164,7 @@
 }
 
 .wen-unit {
-  color: #95d5b2;
+  color: #b7e4c7;
 }
 
 .wen-remove {
