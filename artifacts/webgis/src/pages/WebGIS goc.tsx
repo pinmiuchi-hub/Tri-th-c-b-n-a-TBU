@@ -22,7 +22,7 @@ interface CustomLayer { id: string; categoryId: string; ten: string; mau: string
 interface LayerCategoryState { id: string; ten: string; icon: string; layers: { id: string; ten: string; mau: string; bieu_tuong: string; iconOnly?: boolean }[]; }
 
 /* ─── Types ─── */
-interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; dan_toc_trang_thai?: string; dan_toc_nguon?: string[]; dan_toc_ghi_chu?: string; }
+interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; dan_toc_trang_thai?: string; dan_toc_nguon?: string[]; dan_toc_ghi_chu?: string; dac_diem?: string; dac_diem_nguon?: string[]; dac_diem_trang_thai?: string; dan_so_nguon?: string; dan_so_ky?: string; dtts_so?: number; }
 interface GeoJsonData { type: string; features: { type: string; properties: Record<string, unknown>; geometry: unknown }[]; }
 interface BaiThuoc { ten: string; nguyen_lieu: string; cong_dung: string; }
 interface TriThuc { chu_de: string; bieu_tuong: string; noi_dung: string; bai_thuoc: BaiThuoc[]; }
@@ -2571,12 +2571,48 @@ onClick={() => setShowMapComposer(s => !s)}
                         onSave={v => updateWardField(selectedWard.ma_xa, "loai", v)}
                       />
                     </div>
+                    {(() => {
+                      const dom = (wardDanToc || []).filter(d => (d.ty_le || 0) > 0).slice().sort((a, b) => (b.ty_le || 0) - (a.ty_le || 0))[0];
+                      const info = dom ? getDanTocInfo(dom.dan_toc) : undefined;
+                      if (!info?.anh) return null;
+                      const ten = info.ten.replace("Dân tộc ", "").replace("Người ", "");
+                      const tt = selectedWard.dan_toc_trang_thai;
+                      const mucDo = tt === "co_nguon" ? "theo nguồn đã đối chiếu" : "ước tính — cần đối chiếu";
+                      return (
+                        <div className="ward-banner" onClick={() => setEthnicPhotoLightbox(assetUrl(info.anh))} title="Xem ảnh lớn">
+                          <img src={assetUrl(info.anh)} alt={info.ten} loading="lazy" />
+                          <div className="ward-banner-caption">
+                            <div className="ward-banner-title">Ảnh minh họa · {ten} — dân tộc chủ đạo của {selectedWard.ten_xa} ({dom.ty_le}%, {mucDo})</div>
+                            {info.anh_ghichu && <div className="ward-banner-credit">Nguồn ảnh: {info.anh_ghichu}</div>}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                    <div className="info-grid">
   <div className="info-row"><div className="info-label">Mã đơn vị</div><div className="info-value">{selectedWard.ma_xa}</div></div>
   <div className="info-row"><div className="info-label">Diện tích</div><div className="info-value">{renderEditWard({ field: "dtich_km2", suffix: " km²", type: "number", decimals: 2 })}</div></div>
   <div className="info-row"><div className="info-label">Dân số</div><div className="info-value">{renderEditWard({ field: "dan_so", suffix: " người", type: "number" })}</div></div>
   <div className="info-row"><div className="info-label">Mật độ</div><div className="info-value">{renderEditWard({ field: "matdo_km2", suffix: " ng/km²", type: "number", decimals: 1 })}</div></div>
   </div>
+  {selectedWard.dan_so_nguon && (
+    <div className="ward-data-src">
+      Dân số, mật độ: {selectedWard.dan_so_ky || "Số liệu chính thống"} ·{" "}
+      <a href={selectedWard.dan_so_nguon} target="_blank" rel="noopener noreferrer">Cổng dữ liệu mở tỉnh Sơn La</a>
+      {typeof selectedWard.dtts_so === "number" && <span> · DTTS: {selectedWard.dtts_so.toLocaleString("vi-VN")} người</span>}
+    </div>
+  )}
+
+                    {selectedWard.dac_diem && (
+                      <div className="ward-dacdiem">
+                        <div className="ethnic-section-title">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                          Đặc điểm địa bàn
+                        </div>
+                        <p className="ward-dacdiem-text">{selectedWard.dac_diem}</p>
+                        <SourceStatus item={{ trang_thai: selectedWard.dac_diem_trang_thai, nguon: selectedWard.dac_diem_nguon }} />
+                      </div>
+                    )}
 
                     {wardPdfs.length>0&&(
                       <div className="pdf-section">

@@ -328,5 +328,43 @@ Mức độ tin cậy: **A** = tài liệu thống kê/cơ quan nhà nước; **
 - **Panel "Lớp bản đồ" phẳng** (`LayerControl goc.tsx`): bỏ tiêu đề nhóm (`.layer-cat-title`), nút ✎/🗑 từng nhóm, khối "+ Thêm nhóm lớp mới" và **dòng "Tri thức & văn hóa bản địa"**; danh sách = `categories.flatMap(...)` trong một wrapper, chỉ còn **một** hàng "+ Thêm lớp trống / Nhập GeoJSON-KML" dùng `firstCatId`. (`IndigenousKnowledge` + dữ liệu tri thức vẫn còn trong mã nguồn, chỉ không mở từ panel lớp.)
 - **Verify `verify_round4.js` → 15/15 PASS**: seed localStorage `rev=4` nhưng chứa dữ liệu STALE `minh_hoa` → badge vẫn 7 sông/6 thủy lợi/8 VAC; panel 0 tiêu đề nhóm, không tên nhóm cũ, 1 hàng thêm lớp; xã **Mường Tè** (du_doan) hết khối ước tính, tag dân tộc còn; regression Y Tý 2 section / Tà Xùa 0 section / popup sông có nguồn.
 
+## 12. Vòng 5 (17/10/2026): Sơn La — số liệu cấp xã chính thống, đặc điểm địa bàn, banner ảnh
+
+**Phạm vi:** chỉ tỉnh Sơn La (yêu cầu người dùng). Mục tiêu: dân tộc từng xã có nguồn thật, đặc điểm riêng từng xã, thêm hình ảnh minh họa trong panel "Thông tin địa bàn".
+
+### 12.1. Nguồn chính thống mới tra được
+
+| Nguồn | Nội dung lấy được | Dùng cho |
+|---|---|---|
+| **Cổng dữ liệu mở tỉnh Sơn La** — `https://data.sonla.gov.vn/detail_data/du-lieu-dia-gioi-hanh-chinh` (Sở KH&CN, cập nhật 03/09/2026) | Dân số + "trong đó dân tộc thiểu số" của **đủ 75/75 xã/phường**; API JSON (`/api/json-dataset/1564`) yêu cầu Basic auth → đọc bảng HTML `?page=1..9` | Cập nhật `dan_so`, `matdo_km2`, thêm `dtts_so`, `dan_so_nguon`, `dan_so_ky` |
+| **Cổng dữ liệu mở Thanh Hóa** — `https://opendata.thanhhoa.gov.vn/dataset/csdl-ve-dan-toc/resource/07622da1-7f05-4fca-a616-873175fd3771/download/dan-s-dtts-cp-xa-63-tnh-thanh.xlsx` (Ban Dân tộc) | Kiểm tra kỹ: **sheet1 = số theo dân tộc CẤP TỈNH của 63 tỉnh**; sheet2 `DTTS_capxa` **chỉ chứa Thanh Hóa (635 xã)** → **không có Sơn La**. Lấy số toàn quốc TCTD 01/4/2019: Kháng 16.180, Xinh Mun 29.503, Lào 17.532, La Ha 10.157, Khơ Mú 90.612 | `dan_so_ca_nuoc` cho 4 dân tộc mới; đối chiếu cấp tỉnh |
+| **Cổng dữ liệu mở tỉnh Sơn La** — mục "Dữ liệu văn hóa các dân tộc Việt Nam" (`/iframe/detail_data/du-lieu-van-hoa-cac-dan-toc-viet-nam`) | Mô tả cấp **tỉnh** cho Xinh Mun, La Ha, Kháng, Khơ Mú, Lào (phân bố huyện, ngôn ngữ, sinh hoạt) | `mo_ta`, `tri_thuc` cho 4 dân tộc mới |
+| Số cấp tỉnh Sơn La 2019 (TCTD, từ file Ban Dân tộc trên) | Thái 669.265 · Kinh 203.008 · Mông 200.480 · Mường 84.676 · Xinh Mun 27.031 · Dao 21.995 · Khơ Mú 15.783 · La Ha 10.015 · Kháng 9.830 · Lào 4.134 · DTTS 1.045.400/1.248.415 (83,74%) | Đối chiếu (ghi vào mục này, không ghi vào geojson) |
+
+**Lưu ý dữ liệu:** cổng Sơn La ghi `Xã Yên Châu = 4087` (trùng mã `Xã Yên Sơn`) → ánh xạ theo **tên** đơn vị, không theo mã; tổng dân số 75 xã khớp đúng dòng tổng của cổng (1.429.834 người / DTTS 1.196.295).
+
+### 12.2. Research đặc điểm 75 xã (6 batch song song)
+
+Mỗi xã tìm (a) tỷ lệ dân tộc **cấp xã** (hoặc xã cũ trong `sap_nhap`), (b) `dac_diem` ≤350 ký tự kèm URL, (c) gợi ý ảnh. Kết quả gộp vào `xa_sonla.geojson` theo quy tắc: **không bịa số** — chỉ thay `dan_toc` khi nguồn nêu % cho đúng phạm vi xã hiện tại.
+
+- `dan_toc_trang_thai` sau gộp: **co_nguon 7 · mot_phan 49 · du_doan 19** (trước: 5 · 22 · 48).
+  - Nguồn cấp % đủ (co_nguon): Mường Chiên (Thái 72,4 / Dao 11 / Kháng 10,7 / Mông 5), Sốp Cộp (63,57 / 22,35 / 7,85 / 3,92 / 1,43), Tà Xùa (Mông >95%), Tân Phong (Mường 82,5%), Suối Tọ (Mông 100%).
+  - Áp % một phần cho đúng phạm vi xã (mot_phan): Chiềng La (Thái 82,76%), Co Mạ (Mông >91% — **sửa dữ liệu cũ ghi Thái 78%**), Muổi Nọi (Thái 81,5%), Mường Bám (Thái >75%), Mường Giôn (Thái 86%).
+  - 31 xã không tìm được % cấp xã → giữ nguyên số liệu cũ (vẫn gắn nhãn `du_doan`/`mot_phan`), ghi rõ trong `dan_toc_ghi_chu` nguồn nào nói gì; **không** dùng số cấp huyện/thay đổi mảng.
+- `dac_diem` + `dac_diem_nguon` + `dac_diem_trang_thai`: **75/75**, tối đa 298 ký tự (nguồn: cổng TTĐT các huyện/xã, baosonla.vn, vietnamnet, laodong, Wikipedia, thuvienphapluat/NQ 1681, dantocphattrien…).
+- Số dân 75 xã: đồng bộ về số cổng tỉnh (kỳ 2026), thêm nguồn hiển thị dưới khối thông tin.
+
+### 12.3. `dan_toc.json` — bổ sung 4 dân tộc đang bị ẩn
+
+Dữ liệu xã có id `ethnic_la_ha` (10 xã), `ethnic_xinh_mun` (8), `ethnic_lao` (4+1), `khang` (1) nhưng **không có bản ghi** → tag/bar không hiển thị. Bổ sung: `ethnic_khang`, `ethnic_la_ha`, `ethnic_xinh_mun`, `ethnic_lao` (mô tả/tri thức lấy từ cổng dữ liệu mở Sơn La, số dân từ TCTD 2019); chuẩn hóa `lao → ethnic_lao`, `khang → ethnic_khang`; bổ sung URL cổng Sơn La vào `nguon` của `kho_mu`. **Chưa có ảnh** cho 6 nhóm: Khơ Mú, La Hủ, Kháng, La Ha, Xinh Mun, Lào (không thêm ảnh khi chưa có nguồn giấy phép rõ).
+
+### 12.4. Giao diện (`WebGIS goc.tsx` + `index.css`)
+
+- **Banner ảnh** trên panel "Thông tin địa bàn": ảnh của **dân tộc chủ đạo** trong `dan_toc` (đã sort %) nếu có `anh` — kèm caption "dân tộc chủ đạo của {xã} ({%}, theo nguồn đã đối chiếu | ước tính — cần đối chiếu)" + dòng `Nguồn ảnh: anh_ghichu` (giấy phép trong `NGUON_ANH.md`); click → lightbox. Kiểm tra: 4 nhóm chủ đạo của 75 xã (Thái 48, Mông 16, Mường 7, Kinh 4) **đều đã có ảnh** → 75/75 xã hiển thị banner.
+- **Khối "Đặc điểm địa bàn"**: `dac_diem` + `SourceStatus` (chip trạng thái + danh sách `dac_diem_nguon`).
+- **Dòng nguồn dân số** dưới `info-grid`: `dan_so_ky` + link `dan_so_nguon` + số DTTS (`dtts_so`).
+- `WardProperties` mở rộng: `dac_diem`, `dac_diem_nguon`, `dac_diem_trang_thai`, `dan_so_nguon`, `dan_so_ky`, `dtts_so`.
+- Typecheck + `vite build` (PORT/BASE_PATH) PASS.
+
 
 

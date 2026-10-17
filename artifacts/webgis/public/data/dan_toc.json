@@ -276,7 +276,8 @@
       ],
       "nam_dan_so": 2019,
       "nguon": [
-        "Tổng cục Thống kê (2020), Đặc trưng cơ bản của 53 dân tộc thiểu số năm 2019 (số liệu Điều tra 01/4/2019) — dùng cho: số dân"
+        "Tổng cục Thống kê (2020), Đặc trưng cơ bản của 53 dân tộc thiểu số năm 2019 (số liệu Điều tra 01/4/2019) — dùng cho: số dân",
+        "https://data.sonla.gov.vn/iframe/detail_data/du-lieu-van-hoa-cac-dan-toc-viet-nam — dùng cho: địa bàn & ngôn ngữ người Khơ Mú ở Sơn La"
       ],
       "trang_thai_tri_thuc": "chua_xac_minh",
       "ghi_chu_nguon": "Số dân đã đối chiếu NSO 2019. Phần mô tả & tri thức chưa có tài liệu đính kèm trừ các mục ghi trong \"nguon\"; cần đối chiếu Ủy ban Dân tộc \"Các dân tộc ở Việt Nam\", Bảo tàng Dân tộc học."
@@ -655,6 +656,110 @@
       "ghi_chu_nguon": "Số dân đã đối chiếu NSO 2019. Phần mô tả & tri thức chưa có tài liệu đính kèm trừ các mục ghi trong \"nguon\"; cần đối chiếu Ủy ban Dân tộc \"Các dân tộc ở Việt Nam\", Bảo tàng Dân tộc học.",
       "anh": "data/images/dan_toc/phu_la.jpg",
       "anh_ghichu": "Ảnh: Viethavvh / Wikimedia Commons (Public domain) — Trang phục truyền thống dân tộc Phù Lá"
+    },
+    {
+      "id": "ethnic_khang",
+      "ten": "Dân tộc Kháng",
+      "mau": "#bc6c25",
+      "dan_so_ca_nuoc": 16180,
+      "ngon_ngu": "Ngữ hệ Nam Á (Mon–Khmer)",
+      "mo_ta": "Người Kháng ở Sơn La có hơn 30 bản với 6.573 người (2019, chiếm 0,83% dân số tỉnh, đứng thứ 9), sống chủ yếu dọc sông Đà ở các huyện vùng hồ thủy điện. Canh tác nương rẫy (lúa nếp, ngô) kết hợp đánh cá và nuôi cá ao, hồ; nổi tiếng nghề làm thuyền độc mộc. Khi xây dựng thủy điện Sơn La, người Kháng thuộc nhóm phải di dời, nhường đất cho vùng lòng hồ.",
+      "tri_thuc": [
+        {
+          "chu_de": "Sinh hoạt & kinh tế",
+          "bieu_tuong": "🛶",
+          "noi_dung": "Người Kháng canh tác nương rẫy theo lối chọc lỗ bỏ hạt, trồng lúa nếp và ngô. Sống dọc sông Đà nên có nghề làm thuyền độc mộc, đánh bắt cá trên sông và nuôi cá ở ao, hồ; nuôi thêm gia cầm phục vụ nghi lễ. Tính đến 2019, Sơn La có hơn 30 bản người Kháng với 1.252 hộ, 6.573 người.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Bảo tồn văn hóa",
+          "bieu_tuong": "🎊",
+          "noi_dung": "Người Kháng bảo tồn tương đối tốt tiếng nói, nghệ thuật trình diễn dân gian, phong tục tập quán, đặc biệt là các nghi lễ nông nghiệp và nghi lễ của thầy cúng. Khi xây dựng nhà máy thủy điện Sơn La, một bộ phận dân cư di dời lên cao, một phần di chuyển nội huyện.",
+          "bai_thuoc": []
+        }
+      ],
+      "nam_dan_so": 2019,
+      "nguon": [
+        "https://data.sonla.gov.vn/iframe/detail_data/du-lieu-van-hoa-cac-dan-toc-viet-nam",
+        "https://opendata.thanhhoa.gov.vn/dataset/csdl-ve-dan-toc/resource/07622da1-7f05-4fca-a616-873175fd3771/download/dan-s-dtts-cp-xa-63-tnh-thanh.xlsx"
+      ],
+      "trang_thai_tri_thuc": "co_nguon",
+      "ghi_chu_nguon": "Mô tả & tri thức trích từ Cổng dữ liệu mở tỉnh Sơn La (Sở KH&CN, mục “Dữ liệu văn hóa các dân tộc Việt Nam”, 2026); số dân toàn quốc theo số liệu Tổng điều tra dân số & nhà ở 01/4/2019 do Ban Dân tộc công bố. Chưa có ảnh minh họa có giấy phép."
+    },
+    {
+      "id": "ethnic_la_ha",
+      "ten": "Dân tộc La Ha",
+      "mau": "#0096c7",
+      "dan_so_ca_nuoc": 10157,
+      "ngon_ngu": "Ngữ hệ Nam Á (Mon–Khmer)",
+      "mo_ta": "Người La Ha ở Sơn La cư trú chủ yếu ở các huyện Thuận Châu, Mường La, Quỳnh Nhai, sống thành từng bản xen kẽ với người Thái, Khơ Mú, Kháng. Trước đây kinh tế chủ yếu là nương rẫy du canh du cư kết hợp đánh bắt cá; nay sống định canh, kết hợp làm ruộng nước. Hai bản người La Ha ở Mường La đã di chuyển đến xã Tân Lập (Mộc Châu) khi xây dựng thủy điện Sơn La.",
+      "tri_thuc": [
+        {
+          "chu_de": "Địa bàn & kinh tế",
+          "bieu_tuong": "⛰️",
+          "noi_dung": "Trước kia kinh tế chủ yếu của người La Ha là nương rẫy du canh, du cư kết hợp đánh bắt cá; ngày nay sống định canh, kết hợp làm ruộng nước và đánh bắt cá. Kinh tế ở một số bản còn khó khăn, tỷ lệ hộ nghèo tương đối cao; ở các bản tái định cư thủy điện Sơn La, đời sống đã tương đối ổn định.",
+          "bai_thuoc": []
+        }
+      ],
+      "nam_dan_so": 2019,
+      "nguon": [
+        "https://data.sonla.gov.vn/iframe/detail_data/du-lieu-van-hoa-cac-dan-toc-viet-nam",
+        "https://opendata.thanhhoa.gov.vn/dataset/csdl-ve-dan-toc/resource/07622da1-7f05-4fca-a616-873175fd3771/download/dan-s-dtts-cp-xa-63-tnh-thanh.xlsx"
+      ],
+      "trang_thai_tri_thuc": "co_nguon",
+      "ghi_chu_nguon": "Mô tả & tri thức trích từ Cổng dữ liệu mở tỉnh Sơn La (Sở KH&CN, mục “Dữ liệu văn hóa các dân tộc Việt Nam”, 2026); số dân toàn quốc theo số liệu Tổng điều tra dân số & nhà ở 01/4/2019 do Ban Dân tộc công bố. Chưa có ảnh minh họa có giấy phép."
+    },
+    {
+      "id": "ethnic_xinh_mun",
+      "ten": "Dân tộc Xinh Mun",
+      "mau": "#8ac926",
+      "dan_so_ca_nuoc": 29503,
+      "ngon_ngu": "Ngữ hệ Nam Á (Mon–Khmer)",
+      "mo_ta": "Người Xinh Mun ở Sơn La đứng thứ 5 trong 12 dân tộc của tỉnh, chiếm 2,16% dân số (2019: 27.031 người), cư trú chủ yếu ở các huyện Sông Mã, Mai Sơn, Yên Châu, Mộc Châu. Có hai ngành: Xinh Mun dạ và Xinh Mun nghẹt (chủ yếu ngành nghẹt). Không có chữ viết nhưng có tiếng nói riêng; ở các bản dọc biên giới Việt–Lào, 100% dân số vẫn nói tiếng Xinh Mun.",
+      "tri_thuc": [
+        {
+          "chu_de": "Ngôn ngữ & cư trú",
+          "bieu_tuong": "🗣️",
+          "noi_dung": "Người Xinh Mun có tiếng nói riêng thuộc nhóm ngôn ngữ Mon–Khmer, không có chữ viết; nhiều vùng đã dùng tiếng Thái làm ngôn ngữ giao tiếp, tiếng mẹ đẻ bị mai một, nhưng ở các bản dọc biên giới Việt–Lào 100% dân số vẫn nói tiếng Xinh Mun (và giao tiếp bằng Lào, Thái, Mông, Kinh). Họ sống thành từng bản xen kẽ với Thái, Khơ Mú, Mông.",
+          "bai_thuoc": []
+        }
+      ],
+      "nam_dan_so": 2019,
+      "nguon": [
+        "https://data.sonla.gov.vn/iframe/detail_data/du-lieu-van-hoa-cac-dan-toc-viet-nam",
+        "https://opendata.thanhhoa.gov.vn/dataset/csdl-ve-dan-toc/resource/07622da1-7f05-4fca-a616-873175fd3771/download/dan-s-dtts-cp-xa-63-tnh-thanh.xlsx"
+      ],
+      "trang_thai_tri_thuc": "co_nguon",
+      "ghi_chu_nguon": "Mô tả & tri thức trích từ Cổng dữ liệu mở tỉnh Sơn La (Sở KH&CN, mục “Dữ liệu văn hóa các dân tộc Việt Nam”, 2026); số dân toàn quốc theo số liệu Tổng điều tra dân số & nhà ở 01/4/2019 do Ban Dân tộc công bố. Chưa có ảnh minh họa có giấy phép."
+    },
+    {
+      "id": "ethnic_lao",
+      "ten": "Dân tộc Lào",
+      "mau": "#7f4f24",
+      "dan_so_ca_nuoc": 17532,
+      "ngon_ngu": "Ngữ hệ Tày–Thái (Tai-Kadai)",
+      "mo_ta": "Người Lào có mặt ở Sơn La từ rất sớm, chiếm 0,33% dân số tỉnh (2019: 4.134 người), tập trung chủ yếu ở hai huyện Sông Mã và Sốp Cộp. Sống định cư ở nhà sàn mái cao, lòng rộng, có kỹ thuật chạm khắc trên cột, kèo; làm ruộng nước kết hợp nương rẫy và chăn nuôi. Phụ nữ Lào giỏi trồng bông dệt vải, thêu thùa, mặc váy đen gấu váy thêu sáng màu với hàng khuy bạc.",
+      "tri_thuc": [
+        {
+          "chu_de": "Kiến trúc & sinh hoạt",
+          "bieu_tuong": "🏠",
+          "noi_dung": "Người Lào sống định cư, ở nhà sàn có mái cao, lòng rộng, kỹ thuật chạm khắc trên cột và kèo; quanh nhà có khuôn viên làm vườn trồng cây gia vị. Kinh tế chủ yếu là ruộng nước kết hợp nương rẫy, chăn nuôi gia súc, gia cầm và làm thủy lợi.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Tín ngưỡng & trang phục",
+          "bieu_tuong": "🧵",
+          "noi_dung": "Phụ nữ Lào giỏi trồng bông dệt vải và thêu thùa, thường mặc váy đen gấu váy thêu màu sáng, áo ngắn bó sát với hàng khuy bạc. Người Lào theo đạo Phật, thờ tổ tiên và có nhiều nghi thức tín ngưỡng liên quan đến nông nghiệp, chịu ảnh hưởng lớn của Phật giáo và tín ngưỡng vạn vật hữu linh.",
+          "bai_thuoc": []
+        }
+      ],
+      "nam_dan_so": 2019,
+      "nguon": [
+        "https://data.sonla.gov.vn/iframe/detail_data/du-lieu-van-hoa-cac-dan-toc-viet-nam",
+        "https://opendata.thanhhoa.gov.vn/dataset/csdl-ve-dan-toc/resource/07622da1-7f05-4fca-a616-873175fd3771/download/dan-s-dtts-cp-xa-63-tnh-thanh.xlsx"
+      ],
+      "trang_thai_tri_thuc": "co_nguon",
+      "ghi_chu_nguon": "Mô tả & tri thức trích từ Cổng dữ liệu mở tỉnh Sơn La (Sở KH&CN, mục “Dữ liệu văn hóa các dân tộc Việt Nam”, 2026); số dân toàn quốc theo số liệu Tổng điều tra dân số & nhà ở 01/4/2019 do Ban Dân tộc công bố. Chưa có ảnh minh họa có giấy phép."
     }
   ]
 }

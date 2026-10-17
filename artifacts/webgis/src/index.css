@@ -764,6 +764,67 @@ html, body, #root {
   line-height: 1.4;
 }
 
+/* ---- Banner ảnh dân tộc chủ đạo trong panel "Thông tin địa bàn" ---- */
+.ward-banner {
+  margin-top: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(82, 183, 136, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  cursor: zoom-in;
+}
+
+.ward-banner img {
+  display: block;
+  width: 100%;
+  height: 122px;
+  object-fit: cover;
+}
+
+.ward-banner-caption {
+  padding: 7px 9px 8px;
+}
+
+.ward-banner-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d8f3dc;
+  line-height: 1.45;
+}
+
+.ward-banner-credit {
+  font-size: 9px;
+  color: #94a3b8;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* ---- Dòng nguồn dân số + khối Đặc điểm địa bàn ---- */
+.ward-data-src {
+  font-size: 9.5px;
+  color: rgba(149, 213, 178, 0.65);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.ward-data-src a {
+  color: #8ecfae;
+  text-decoration: underline;
+}
+
+.ward-dacdiem {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(82, 183, 136, 0.15);
+}
+
+.ward-dacdiem-text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #cfe9d9;
+  margin: 6px 0 0;
+}
+
 /* ---- Source status (chips nguồn trong panel xã) ---- */
 .src-status {
   margin-top: 7px;
