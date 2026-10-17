@@ -415,5 +415,26 @@ Dữ liệu xã có id `ethnic_la_ha` (10 xã), `ethnic_xinh_mun` (8), `ethnic_l
 - **Dữ liệu dẫn chiếu:** 11 polygon rừng (kbttn 9 · vqg 1 · kbvcq 1 — kbvcq/vqg ở ngoài bbox Sơn La), 6 điểm thủy lợi (phai Nậm Rốm & phai Mường Lay ở Điện Biên, lin Y Tý ngoài Sơn La → tại fitBounds Sơn La chỉ hiện Mương·Lái + Cọn).
 - **Kiểm thực tế (Playwright, 12/12 PASS):** đo khung nhìn bằng toạ độ 4 mép bản đồ (thanh `mouse-coords-bar`), tính kỳ vọng bằng **cùng công thức bbox** với ±0,03° dung sai đo — 3 giai đoạn: **A** (fit Sơn La) · **B** (zoom sâu — đúng kịch bản người dùng: hàng rừng duy nhất **"Khu bảo tồn thiên nhiên"**) · **C** (zoom ra — đủ 3 loại + 4 nhóm); luôn thỏa chú giải ⊇ giao sâu và ⊆ giao nới; **composer = main từng dòng, đúng thứ tự** ở cả B và C; ảnh chụp màn hình 3 giai đoạn khớp.
 
+## 15. Vòng 8 (17/10/2026): chú giải giao cả vùng chọn (mặt nạ "Chỉ khu vực chọn") + rà soát toàn bộ lớp
+
+### 15.1. Chọn Sơn La, bản đồ chỉ có Khu bảo tồn thiên nhiên nhưng chú giải vẫn hiện cả VQG/KBVCQ
+
+- **Lỗi (phản ánh người dùng):** tìm "Sơn La" → `fitBounds` có **padding 40px** (`handleProvinceClick`) làm khung nhìn vượt ranh tỉnh (đo được `[103.118, 20.511, 105.127, 22.093]` so với bbox Sơn La (union 75 xã, `xa_sonla.geojson`) `[103.2122, 20.5736, 105.0329, 22.0305]`) → polygon **Khu bảo vệ cảnh quan Mường Phăng** `[103.048–103.176]` lọt mép khung. Chú giải (chỉ lọc theo khung nhìn) hiện nó, trong khi mặt nạ trắng của "Chỉ khu vực chọn" (tự bật khi tìm tỉnh, `z-index 660`, alpha = thanh "Ngoại vi") đã che khu vực ngoài tỉnh → người dùng thấy chú giải "giải thích ký hiệu không có trên bản đồ".
+- **Sửa (`WebGIS goc.tsx`) — quy tắc chung: ký hiệu xuất hiện khi `bbox ∩ khung nhìn ∩ vùng chọn`:**
+  1. Helper `selectedRegionBBoxOf` — bbox vùng chọn **cùng tập xã với mặt nạ** (`selectedAreaOnly && selectedProvince` → các xã trong `selectedWardIds`, không chọn xã nào → toàn tỉnh; tắt mặt nạ → `null` → chỉ theo khung nhìn), `bboxInRegion` / `latLngInRegion` giao bbox.
+  2. Memo `legendRegionBBox` → đưa vào `legendInViewKinds` (deps thêm vùng chọn) → nhóm rừng/thủy lợi của chú giải chính và `buildLegendSections` của composer đều giao thêm vùng chọn.
+- **Dữ liệu dẫn chiếu:** kbvcq Mường Phăng và vqg Hoàng Liên nằm ngoài bbox Sơn La → loại khỏi chú giải ở **mọi mức zoom** khi mặt nạ bật; phai ×2 Điện Biên + lin Y Tý cũng bị loại (Sơn La chỉ còn Mương + Cọn).
+
+### 15.2. Rà soát lỗi "hàng chú giải không khớp bản đồ" ở các lớp còn lại
+
+- **Các hàng đơn** (trước chỉ theo bật/tắt lớp — giới hạn ghi ở 14.2 nay được khắc phục): **VAC/VACR, Cây thuốc quý, Hệ thống sông suối, lớp tùy chỉnh, Đối tượng vẽ tay** — nay lọc theo cùng quy tắc: helper `legendFeatureVisible` (điểm `lat/lng` hoặc bbox `coords`) + `legendLayerHasFeature` + `legendAnnotationsVisible` (tọa độ vẽ tay là `[lat, lng]` — đổi qua `annotationBBox`); không có đối tượng nào trong khung nhìn ∩ vùng chọn → **ẩn hẳn hàng**.
+- **Composer:** `featureVisible`/`annotationVisible` dùng chung quy tắc cho thủy lợi, rừng, VAC, cây thuốc, lớp tùy chỉnh, vẽ tay, sông và cả path cũ `legendLayerIds`.
+- **Giữ nguyên (đã đúng):** Mật độ dân số (mờ bậc, đã theo tỉnh/xã chọn, `isolateSelectedDensity` khi chọn xã) · Cơ cấu dân tộc (theo vùng chọn) · ranh giới (nền, luôn hiển thị khi bật lớp).
+
+### 15.3. Kiểm thực tế
+
+- **`legend-region-verify.js` — ALL PASS** (Playwright, kỳ vọng tính bằng **cùng công thức** với bbox vùng từ `xa_sonla.geojson`): **A** fit Sơn La → đúng kịch bản người dùng (bẫy xác nhận: view-only vẫn thấy KBVCQ, chú giải chỉ "Khu bảo tồn thiên nhiên"; thủy lợi thiếu Phai/Lịn; tự bật mặt nạ khi tìm tỉnh) · **B** zoom sâu → không bao giờ lòi VQG/KBVCQ · **C** zoom ra 4 tỉnh (view-only đủ 3 loại + 4 nhóm) mặt nạ vẫn bật → chú giải vẫn chỉ KBTN; **composer = main từng dòng** · **D** tắt mặt nạ → vùng `null` → đủ 3 loại + 4 nhóm theo khung nhìn.
+- **Hồi quy:** `legend-parity-check.js` PASS · `legend-fix-verify.js` PASS · `tsc` + `vite build` PASS.
+
 
 

@@ -177,6 +177,36 @@ const bboxInView = (bbox: GeoBBox | null, bounds: L.LatLngBounds): boolean =>
   !!bbox && bbox[0] <= bounds.getEast() && bbox[2] >= bounds.getWest() && bbox[1] <= bounds.getNorth() && bbox[3] >= bounds.getSouth();
 const pointInView = (lat: number, lng: number, bounds: L.LatLngBounds): boolean =>
   Number.isFinite(lat) && Number.isFinite(lng) && bounds.contains([lat, lng]);
+// Giao (xấp xỉ) giữa bbox và vùng chọn — null = chưa chọn vùng (hoặc tắt "Chỉ khu vực chọn") → chỉ theo khung nhìn
+const bboxInRegion = (bbox: GeoBBox | null, region: GeoBBox | null): boolean =>
+  !region ? !!bbox : (!!bbox && bbox[0] <= region[2] && bbox[2] >= region[0] && bbox[1] <= region[3] && bbox[3] >= region[1]);
+const latLngInRegion = (lat: number, lng: number, region: GeoBBox | null): boolean =>
+  !region || (Number.isFinite(lat) && Number.isFinite(lng) && lng >= region[0] && lng <= region[2] && lat >= region[1] && lat <= region[3]);
+// bbox vùng "Chỉ khu vực chọn" — cùng tập xã với lớp mặt nạ trắng (z-index 660) đang che ngoại vi:
+// ký hiệu ngoài vùng bị phủ trắng nên không được đưa vào chú giải, kể cả khi lọt khung nhìn do padding.
+const selectedRegionBBoxOf = (
+  provinceGeo: { features?: Array<{ properties?: unknown; geometry?: unknown }> } | null | undefined,
+  selectedAreaOnly: boolean,
+  selectedProvince: string | null,
+  wardIds: Set<string>,
+): GeoBBox | null => {
+  if (!selectedAreaOnly || !selectedProvince || !provinceGeo?.features?.length) return null;
+  const feats = wardIds.size > 0
+    ? provinceGeo.features.filter(f => wardIds.has(String((f?.properties as { ma_xa?: unknown } | undefined)?.ma_xa)))
+    : provinceGeo.features;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  feats.forEach(f => walkGeoCoords(f?.geometry, (lng, lat) => {
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    if (lng < minX) minX = lng;
+    if (lng > maxX) maxX = lng;
+    if (lat < minY) minY = lat;
+    if (lat > maxY) maxY = lat;
+  }));
+  return Number.isFinite(minX) && Number.isFinite(minY) ? [minX, minY, maxX, maxY] : null;
+};
+// Toạ độ đối tượng vẽ tay là [lat, lng] (đảo so với GeoJSON) — đổi về [lng, lat] để tính bbox
+const annotationBBox = (coords: Array<[number, number]> | undefined): GeoBBox | null =>
+  coordsBBox((coords || []).map(([lat, lng]) => [lng, lat]));
 
 const zoomFromScale = (scale: number, lat: number) => Math.max(1, Math.min(19, Math.log2((156543.03 * Math.cos(lat * Math.PI / 180) * 3779.52) / scale)));
 const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
@@ -1810,19 +1840,20 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
     }
     const base64Image = canvas.toDataURL("image/png");
     const mapBounds = mapRef.current.getBounds();
-    const isVisibleFeature = (feature: any): boolean => {
-      if (Number.isFinite(Number(feature?.lat)) && Number.isFinite(Number(feature?.lng))) {
-        return mapBounds.contains([Number(feature.lat), Number(feature.lng)]);
-      }
-      const visit = (value: any): boolean => {
-        if (!Array.isArray(value)) return false;
-        if (value.length >= 2 && value.every((entry: any) => typeof entry === "number")) {
-          return mapBounds.contains([Number(value[1]), Number(value[0])]);
-        }
-        return value.some(visit);
-      };
-      return visit(feature?.coords);
+    // Vùng "Chỉ khu vực chọn" — cùng tập xã với mặt nạ trắng đang che ngoại vi trên bản đồ.
+    // Ký hiệu ngoài vùng (bị phủ trắng) phải bị loại khỏi chú giải, kể cả khi bbox lọt khung nhìn.
+    const regionBBox = selectedRegionBBoxOf(currentProvinceGeoJson, selectedAreaOnly, selectedProvince, selectedWardIds);
+    const featureVisible = (feature: any): boolean => {
+      const lat = Number(feature?.lat), lng = Number(feature?.lng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) return mapBounds.contains([lat, lng]) && latLngInRegion(lat, lng, regionBBox);
+      const bbox = coordsBBox(feature?.coords ?? feature?.geometry);
+      return bboxInView(bbox, mapBounds) && bboxInRegion(bbox, regionBBox);
     };
+    const annotationVisible = (ann: { coords?: Array<[number, number]> }): boolean => {
+      const bbox = annotationBBox(ann.coords);
+      return bboxInView(bbox, mapBounds) && bboxInRegion(bbox, regionBBox);
+    };
+    const isVisibleFeature = featureVisible;
     const legendLayerIds = Array.from(activeLayers).filter(id => {
       if (id === "population_density") return false;
       if (id === "ward_boundaries" || id === "population_density") {
@@ -1883,9 +1914,9 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       if (ethnicRowsData.length > 0) {
         sections.push({ title: "Cơ cấu dân tộc", rows: ethnicRowsData.map(item => ({ type: "swatch", label: item.label, color: item.color })) });
       }
-      // 4. Thủy lợi truyền thống (chỉ nhóm có điểm thật sự nằm trong khung nhìn)
+      // 4. Thủy lợi truyền thống (chỉ nhóm có điểm thật sự nằm trong khung nhìn + vùng chọn)
       if (activeLayers.has("irrigation")) {
-        const irrigationInView = ((layersData as any)?.irrigation || []).filter((ir: any) => pointInView(Number(ir.lat), Number(ir.lng), mapBounds));
+        const irrigationInView = ((layersData as any)?.irrigation || []).filter((ir: any) => featureVisible(ir));
         if (irrigationInView.length > 0) {
           const present = new Set(irrigationInView.map((ir: any) => ir.loai));
           const groups = [
@@ -1899,25 +1930,31 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
           else sections.push({ rows: [{ type: "emoji", label: "Thủy lợi", emoji: "🚿" }] });
         }
       }
-      // 5. Phân vùng rừng (chỉ loại có polygon trong khung nhìn — zoom Sơn La chỉ còn Khu bảo tồn thiên nhiên)
+      // 5. Phân vùng rừng (chỉ loại có polygon trong khung nhìn + vùng chọn — zoom Sơn La chỉ còn Khu bảo tồn thiên nhiên)
       if (activeLayers.has("forests")) {
         const forestRows = (["vqg", "kbttn", "kbvcq", "rung_dac_dung"] as const)
-          .filter(k => ((layersData as any)?.forests || []).some((f: any) => f.loai === k && bboxInView(coordsBBox(f.coords), mapBounds)))
+          .filter(k => ((layersData as any)?.forests || []).some((f: any) => f.loai === k && featureVisible(f)))
           .map(k => ({ type: "forest" as const, label: FOREST_LABELS[k], color: FOREST_COLORS[k] }));
         if (forestRows.length > 0) sections.push({ title: "Phân vùng rừng", rows: forestRows });
       }
-      // 6. Mô hình VAC/VACR
-      if (activeLayers.has("vac_models")) sections.push({ rows: [{ type: "emoji", label: "VAC/VACR", emoji: "♻️" }] });
-      // 7. Cây thuốc quý
-      if (activeLayers.has("medicinal_plants")) sections.push({ rows: [{ type: "forest", label: "Cây thuốc quý", color: "#e63946" }] });
-      // 8. Các lớp tùy chỉnh của người dùng
-      customLayers.filter(layer => activeLayers.has(layer.id)).forEach(layer => {
+      // 6. Mô hình VAC/VACR (chỉ khi có điểm trong khung nhìn + vùng chọn)
+      if (activeLayers.has("vac_models") && ((layersData as any)?.vac_models || []).some((v: any) => featureVisible(v))) {
+        sections.push({ rows: [{ type: "emoji", label: "VAC/VACR", emoji: "♻️" }] });
+      }
+      // 7. Cây thuốc quý (chỉ khi có đối tượng trong khung nhìn + vùng chọn)
+      if (activeLayers.has("medicinal_plants") && ((layersData as any)?.medicinal_plants || []).some((m: any) => featureVisible(m))) {
+        sections.push({ rows: [{ type: "forest", label: "Cây thuốc quý", color: "#e63946" }] });
+      }
+      // 8. Các lớp tùy chỉnh của người dùng (cùng điều kiện hiển thị như bản đồ chính)
+      customLayers.filter(layer => activeLayers.has(layer.id) && ((layersData as any)?.[layer.id] || []).some((f: any) => featureVisible(f))).forEach(layer => {
         sections.push({ rows: [{ type: "custom", label: layer.ten, color: layer.mau, bieu_tuong: layer.bieu_tuong }] });
       });
-      // 9. Đối tượng vẽ tay
-      if (annotations.length > 0) sections.push({ rows: [{ type: "swatch", label: "Đối tượng của tôi", color: "#e9c46a" }] });
-      // 10. Hệ thống sông suối — yếu tố nền địa lý, luôn đứng cuối
-      if (activeLayers.has("rivers")) sections.push({ rows: [{ type: "river", label: "Hệ thống sông suối", osm: true }] });
+      // 9. Đối tượng vẽ tay (toạ độ [lat, lng] — đã đổi khi tính bbox)
+      if (annotations.some(ann => annotationVisible(ann))) sections.push({ rows: [{ type: "swatch", label: "Đối tượng của tôi", color: "#e9c46a" }] });
+      // 10. Hệ thống sông suối — yếu tố nền địa lý, luôn đứng cuối (chỉ khi thật sự có nét trong khung nhìn + vùng chọn)
+      if (activeLayers.has("rivers") && ((layersData as any)?.rivers || []).some((r: any) => featureVisible(r))) {
+        sections.push({ rows: [{ type: "river", label: "Hệ thống sông suối", osm: true }] });
+      }
       return sections;
     };
     const legendSections = buildLegendSections();
@@ -2450,17 +2487,51 @@ onEachFeature:(feat,lyr)=>{
   // Ký hiệu con trong chú giải (nhóm rừng, nhóm thủy lợi) chỉ hiện loại thật sự nằm trong
   // khung nhìn hiện tại — ví dụ zoom tới Sơn La chỉ còn "Khu bảo tồn thiên nhiên".
   // Cập nhật khi pan/zoom (mapMoveTick debounce 450ms) hoặc khi đổi dữ liệu lớp.
+  // Khi bật "Chỉ khu vực chọn" phải giao thêm với vùng chọn: khung nhìn sau fitBounds có padding
+  // vẫn lọt mép tỉnh bên cạnh (VD kbvcq Mường Phăng) nhưng mặt nạ trắng đã che nó đi.
+  const legendRegionBBox = useMemo<GeoBBox | null>(
+    () => selectedRegionBBoxOf(currentProvinceGeoJson, selectedAreaOnly, selectedProvince, selectedWardIds),
+    [selectedAreaOnly, selectedProvince, currentProvinceGeoJson, selectedWardIds],
+  );
   const legendInViewKinds = useMemo(() => {
     const map = mapRef.current;
     if (!map) return null;
     const bounds = map.getBounds();
+    const region = legendRegionBBox;
     const forests = new Set<string>();
     const irrigation = new Set<string>();
     let irrigationVisible = 0;
-    (layersData?.forests || []).forEach(f => { if (bboxInView(coordsBBox(f.coords), bounds)) forests.add(String(f.loai)); });
-    (layersData?.irrigation || []).forEach(ir => { if (pointInView(Number(ir.lat), Number(ir.lng), bounds)) { irrigation.add(String(ir.loai)); irrigationVisible += 1; } });
-    return { forests, irrigation, irrigationVisible };
-  }, [layersData, mapMoveTick]);
+    (layersData?.forests || []).forEach(f => { const bb = coordsBBox(f.coords); if (bboxInView(bb, bounds) && bboxInRegion(bb, region)) forests.add(String(f.loai)); });
+    (layersData?.irrigation || []).forEach(ir => {
+      if (pointInView(Number(ir.lat), Number(ir.lng), bounds) && latLngInRegion(Number(ir.lat), Number(ir.lng), region)) { irrigation.add(String(ir.loai)); irrigationVisible += 1; }
+    });
+    return { forests, irrigation, irrigationVisible, bounds, region };
+  }, [layersData, mapMoveTick, legendRegionBBox]);
+  // Lớp đơn dòng trong chú giải (VAC, cây thuốc, sông, lớp tùy chỉnh): chỉ hiện khi có đối tượng
+  // thật sự nằm trên bản đồ (trong khung nhìn và — khi bật mặt nạ — trong vùng chọn).
+  const legendFeatureVisible = (feature: unknown): boolean => {
+    const k = legendInViewKinds;
+    if (!k) return true; // map chưa sẵn sàng — giữ theo bật/tắt, sẽ tự chốt khi map lên
+    const anyFeature = feature as { lat?: unknown; lng?: unknown; coords?: unknown; geometry?: unknown } | null | undefined;
+    const lat = Number(anyFeature?.lat), lng = Number(anyFeature?.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) return pointInView(lat, lng, k.bounds) && latLngInRegion(lat, lng, k.region);
+    const bbox = coordsBBox(anyFeature?.coords ?? anyFeature?.geometry);
+    return bboxInView(bbox, k.bounds) && bboxInRegion(bbox, k.region);
+  };
+  const legendLayerHasFeature = (id: string): boolean => {
+    if (!activeLayers.has(id)) return false;
+    if (!legendInViewKinds) return true;
+    const features = (layersData as any)?.[id];
+    return Array.isArray(features) && features.some(legendFeatureVisible);
+  };
+  const legendAnnotationsVisible = (): boolean => {
+    if (!annotations.length) return false;
+    if (!legendInViewKinds) return true;
+    return annotations.some(ann => {
+      const bbox = annotationBBox(ann.coords);
+      return bboxInView(bbox, legendInViewKinds.bounds) && bboxInRegion(bbox, legendInViewKinds.region);
+    });
+  };
   const wardPdfs=selectedWard?(pdfFiles.get(selectedWard.ma_xa)||[]):[];
   const stats=selectedProvince?getProvinceStat(selectedProvince):null;
   const layerCategoriesWithState = layerCategories.map(cat => ({
@@ -2996,14 +3067,14 @@ onClick={() => setShowMapComposer(s => !s)}
                   ))}
                 </>);
               })()}
-              {activeLayers.has("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
-              {activeLayers.has("medicinal_plants")&&<div className="legend-item">
+              {legendLayerHasFeature("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
+              {legendLayerHasFeature("medicinal_plants")&&<div className="legend-item">
                 <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill="#e63946" fillOpacity="0.75" stroke="#e63946" strokeWidth="1.5"/></svg>
                 <span>Cây thuốc quý</span>
               </div>}
-              {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
-              {annotations.length>0&&<div className="legend-item"><div className="legend-color" style={{background:"#e9c46a"}}/><span>Đối tượng của tôi</span></div>}
-              {activeLayers.has("rivers")&&<div className="legend-item">
+              {customLayers.filter(layer => legendLayerHasFeature(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}
+              {legendAnnotationsVisible()&&<div className="legend-item"><div className="legend-color" style={{background:"#e9c46a"}}/><span>Đối tượng của tôi</span></div>}
+              {legendLayerHasFeature("rivers")&&<div className="legend-item">
                 <svg width="18" height="14" viewBox="0 0 18 14" className="legend-color legend-line-swatch" style={{ width: 18, height: 14, background: "transparent" }}>
                   <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#f8fcff" strokeWidth="4.8" strokeLinecap="round" opacity="0.95"/>
                   <path d="M1,10 C5,4 8,12 12,6 S16,3 17,4" fill="none" stroke="#2589c7" strokeWidth="1.8" strokeLinecap="round"/>
