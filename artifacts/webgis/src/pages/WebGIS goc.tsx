@@ -2063,7 +2063,6 @@ onEachFeature:(feat,lyr)=>{
     return classes.map((entry, index) => ({ ...entry, fillOpacity: densityStyle.fillOpacity, present: present.has(index) }));
   }, [activeRaster, activeLayers, selectedProvince, currentProvinceGeoJson, selectedWard, wardOverrides, layerSymbologies]);
   const wardPdfs=selectedWard?(pdfFiles.get(selectedWard.ma_xa)||[]):[];
-  const wardCustom=selectedWard?wardOverrides.get(selectedWard.ma_xa):undefined;
   const stats=selectedProvince?getProvinceStat(selectedProvince):null;
   const layerCategoriesWithState = layerCategories.map(cat => ({
   ...cat,
@@ -2577,12 +2576,7 @@ onClick={() => setShowMapComposer(s => !s)}
   <div className="info-row"><div className="info-label">Diện tích</div><div className="info-value">{renderEditWard({ field: "dtich_km2", suffix: " km²", type: "number", decimals: 2 })}</div></div>
   <div className="info-row"><div className="info-label">Dân số</div><div className="info-value">{renderEditWard({ field: "dan_so", suffix: " người", type: "number" })}</div></div>
   <div className="info-row"><div className="info-label">Mật độ</div><div className="info-value">{renderEditWard({ field: "matdo_km2", suffix: " ng/km²", type: "number", decimals: 1 })}</div></div>
-</div>                                          {/* ✅ THÊM DÒNG NÀY */}
-<div className="custom-fields">
-  {[{f:"ghi_chu",l:"Ghi chú",p:"Click để thêm"},{f:"san_pham",l:"Sản phẩm chính",p:"VD: Ngô, Sắn, Lúa"},{f:"tinh_trang",l:"Tình trạng",p:"VD: Đang phát triển"}].map(({f,l,p})=>(
-    <div key={f} className="info-row"><div className="info-label">{l}</div><div className="info-value"><EditableValue value={(wardCustom?.[f] as string)||""} placeholder={p} onSave={v=>updateWardField(selectedWard.ma_xa,f,v)}/></div></div>
-  ))}
-</div>
+  </div>
 
                     {wardPdfs.length>0&&(
                       <div className="pdf-section">
@@ -2802,26 +2796,6 @@ onClick={() => setShowMapComposer(s => !s)}
                     {(() => { const sourceNote = STATS_SOURCE_NOTE[selectedProvince] || STATS_SOURCE_DEFAULT_NOTE; return (
                     <div className="stats-source" title={sourceNote} style={{ marginTop: 6, fontSize: 9.5, lineHeight: 1.4, color: "rgba(149,213,177,0.65)", fontStyle: "italic" }}>{sourceNote}</div>
                     ); })()}
-                  </div>
-                )}
-
-                {selectedWard && (
-                  <div className="province-stats" style={{ marginTop: 10 }}>
-                    <div className="stats-title">Tổng quan nhanh</div>
-                    <div className="stats-grid">
-                      <div className="stat-item">
-                        <div className="stat-value">{wardDanToc.length}</div>
-                        <div className="stat-label">Dân tộc</div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-value">{customLayers.length}</div>
-                        <div className="stat-label">Lớp tùy chỉnh</div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-value">{totalLayerFeatures}</div>
-                        <div className="stat-label">Tổng đối tượng</div>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
