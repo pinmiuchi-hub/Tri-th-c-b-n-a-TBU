@@ -91,7 +91,7 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   population_density: { name: "Mật độ dân số", color: "#fe9929" },
   rivers: { name: "Hệ thống sông suối", color: "#2589c7" },
   irrigation: { name: "Thủy lợi truyền thống", color: "#74c69d" },
-  forests: { name: "Phân vùng rừng", color: "#2d6a4f" },
+  forests: { name: "Phân vùng rừng", color: "#52b788" },
   vac_models: { name: "Mô hình VAC/VACR", color: "#b5e48c" },
   medicinal_plants: { name: "Cây thuốc quý", color: "#e63946" },
 };
@@ -121,7 +121,9 @@ const walkGeoCoords = (node: unknown, visit: (lng: number, lat: number) => void)
   if (typeof node === "object") walkGeoCoords((node as { coordinates?: unknown }).coordinates, visit);
 };
 
-const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#2d6a4f", kbvcq: "#023e8a", rung_dac_dung: "#40916c" };
+// Màu phân vùng rừng — cố ý tách sáng/tối/độ bão hòa (rất đậm · bạc hà sáng · xanh dương · tím)
+// để phân biệt được ở ô chú giải nhỏ và cả khi tô mờ 0.3 trên bản đồ
+const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#52b788", kbvcq: "#023e8a", rung_dac_dung: "#9b5de5" };
 const FOREST_LABELS: Record<string, string> = { vqg: "Vườn quốc gia", kbttn: "Khu bảo tồn thiên nhiên", kbvcq: "Khu bảo vệ cảnh quan", rung_dac_dung: "Rừng đặc dụng khác" };
 const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (phân phối nước vào ruộng)", lai: "Lái (máng dẫn)", con: "Cọn (guồng nước)" };
 const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946", tay: "#1d3557", giay: "#06a77d", ha_nhi: "#a4243b", nung: "#5a189a", phu_la: "#ff8c42", la_chi: "#ffc857" };
@@ -164,7 +166,7 @@ const DEFAULT_LAYER_SYMBOLOGY: Record<string, LayerSymbologyConfig> = {
   ] },
   rivers: { title: "Sông suối chính", symbolType: "line", color: "#4b9ad6", fillColor: "#4b9ad6", lineWeight: 1.8, opacity: 0.85, fillOpacity: 0.7, dashArray: "", classes: [] },
   irrigation: { title: "Thủy lợi truyền thống", symbolType: "point", color: "#74c69d", fillColor: "#74c69d", lineWeight: 1.4, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
-  forests: { title: "Phân vùng rừng", symbolType: "polygon", color: "#2d6a4f", fillColor: "#2d6a4f", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
+  forests: { title: "Phân vùng rừng", symbolType: "polygon", color: "#52b788", fillColor: "#52b788", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
   vac_models: { title: "Mô hình VAC/VACR", symbolType: "point", color: "#40916c", fillColor: "#40916c", lineWeight: 1.3, opacity: 0.95, fillOpacity: 0.95, dashArray: "", classes: [] },
   medicinal_plants: { title: "Cây thuốc quý", symbolType: "polygon", color: "#e63946", fillColor: "#e63946", lineWeight: 1.3, opacity: 0.9, fillOpacity: 0.3, dashArray: "", classes: [] },
 };
@@ -2936,14 +2938,14 @@ onClick={() => setShowMapComposer(s => !s)}
                 <div className="legend-subtitle">Phân vùng rừng</div>
                 {(["vqg","kbttn","kbvcq","rung_dac_dung"] as const).filter(k => !layersData || (layersData.forests||[]).some(f => f.loai === k)).map(k => (
                   <div className="legend-item" key={`legend-forest-${k}`}>
-                    <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill={FOREST_COLORS[k]} fillOpacity="0.5" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
+                    <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill={FOREST_COLORS[k]} fillOpacity="0.75" stroke={FOREST_COLORS[k]} strokeWidth="1.5"/></svg>
                     <span>{FOREST_LABELS[k]}</span>
                   </div>
                 ))}
               </>}
               {activeLayers.has("vac_models")&&<div className="legend-item"><span className="legend-symbol">♻️</span><span>VAC/VACR</span></div>}
               {activeLayers.has("medicinal_plants")&&<div className="legend-item">
-                <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill="#e63946" fillOpacity="0.5" stroke="#e63946" strokeWidth="1.5"/></svg>
+                <svg width="18" height="12" viewBox="0 0 18 12" className="legend-color legend-line-swatch" style={{width:18,height:12,background:"transparent"}}><rect x="1" y="1" width="16" height="10" rx="2" fill="#ffffff" fillOpacity="0.88"/><rect x="1" y="1" width="16" height="10" rx="2" fill="#e63946" fillOpacity="0.75" stroke="#e63946" strokeWidth="1.5"/></svg>
                 <span>Cây thuốc quý</span>
               </div>}
               {customLayers.filter(layer => activeLayers.has(layer.id)).map(layer => <div className="legend-item" key={`custom-legend-${layer.id}`}><span className="legend-symbol" style={{color: layer.mau}}>{layer.bieu_tuong?.startsWith("data:image") ? <img src={layer.bieu_tuong} alt="" style={{width: 18, height: 18, objectFit: "contain"}}/> : layer.bieu_tuong}</span><span>{layer.ten}</span></div>)}

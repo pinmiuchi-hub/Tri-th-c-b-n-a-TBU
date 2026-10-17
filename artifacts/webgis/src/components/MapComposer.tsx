@@ -475,7 +475,7 @@ const ElementContent: React.FC<{
             {row.type === "forest" && (
               <svg width="18" height="14" viewBox="0 0 18 14" className="legend-swatch-line" style={{ width: 18, height: 14 }}>
                 <rect x="1" y="1" width="16" height="12" rx="2" fill="#ffffff" fillOpacity="0.88"/>
-                <rect x="1" y="1" width="16" height="12" rx="2" fill={row.color} fillOpacity="0.5" stroke={row.color} strokeWidth="1.5"/>
+                <rect x="1" y="1" width="16" height="12" rx="2" fill={row.color} fillOpacity="0.75" stroke={row.color} strokeWidth="1.5"/>
               </svg>
             )}
             {row.type === "river" && (
