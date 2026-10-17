@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+﻿import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import EditableValue from "../components/EditableValue";
@@ -1653,10 +1653,15 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
         clippedContext.fill("evenodd");
         const outputContext = canvas.getContext("2d");
         if (outputContext) {
+          outputContext.save();
+          outputContext.setTransform(1, 0, 0, 1, 0, 0);
+          outputContext.globalAlpha = 1;
+          outputContext.globalCompositeOperation = "source-over";
           outputContext.clearRect(0, 0, canvas.width, canvas.height);
           outputContext.fillStyle = "#ffffff";
           outputContext.fillRect(0, 0, canvas.width, canvas.height);
           outputContext.drawImage(clipped, 0, 0);
+          outputContext.restore();
         }
       }
     }
@@ -1704,7 +1709,17 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
           });
         });
         fadeContext.fill("evenodd");
-        canvas.getContext("2d")?.drawImage(fadeCanvas, 0, 0);
+        // html2canvas để lại transform dư trên context của canvas kết quả (dịch theo vị trí
+        // phần tử trong document) → drawImage bị lệch, vùng trắng chỉ phủ được một phần khung.
+        const outputContext = canvas.getContext("2d");
+        if (outputContext) {
+          outputContext.save();
+          outputContext.setTransform(1, 0, 0, 1, 0, 0);
+          outputContext.globalAlpha = 1;
+          outputContext.globalCompositeOperation = "source-over";
+          outputContext.drawImage(fadeCanvas, 0, 0);
+          outputContext.restore();
+        }
       }
     }
     // Cắt ảnh chụp về đúng vùng nội dung khi "Chỉ khu vực chọn" làm trắng ngoại vi,
