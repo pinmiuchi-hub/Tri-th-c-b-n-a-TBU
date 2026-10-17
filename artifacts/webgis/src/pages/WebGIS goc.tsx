@@ -212,42 +212,6 @@ const statusNote = (x: { trang_thai?: string; nguon?: string[] } | null | undefi
   return `<p style="margin:6px 0 0;font-size:11px;color:${color}">${msg}</p>${src}`;
 };
 
-const TRANG_THAI_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  co_nguon: { label: "✓ Đã có nguồn", color: "#15803d", bg: "#dcfce7", border: "#86efac" },
-  mot_phan: { label: "~ Một phần có nguồn", color: "#a16207", bg: "#fef9c3", border: "#fde047" },
-  chua_xac_minh: { label: "ⓘ Chưa xác minh", color: "#475569", bg: "#f1f5f9", border: "#cbd5e1" },
-  minh_hoa: { label: "⚠ Dữ liệu minh họa", color: "#b45309", bg: "#ffedd5", border: "#fdba74" },
-};
-/** Chip trạng thái nguồn + danh sách link + ghi chú (JSX, dùng trong panel "Thông tin địa bàn"). */
-const SourceStatus = ({ item }: { item: { trang_thai?: string; nguon?: string[]; ghi_chu?: string } | null | undefined }) => {
-  const nguon = item?.nguon || [];
-  if (!item?.trang_thai && !nguon.length && !item?.ghi_chu) return null;
-  const meta = TRANG_THAI_META[item?.trang_thai || ""] || TRANG_THAI_META.mot_phan;
-  return (
-    <div className="src-status">
-      <div className="src-status-head">
-        {item?.trang_thai && <span className="src-chip" style={{ color: meta.color, background: meta.bg, borderColor: meta.border }}>{meta.label}</span>}
-        {nguon.length > 0 && <span className="src-count">📚 {nguon.length} nguồn</span>}
-      </div>
-      {nguon.length > 0 && (
-        <ul className="src-list">
-          {nguon.map((u, i) => (
-            <li key={i}>{/^https?:\/\//.test(u)
-              ? <a href={u} target="_blank" rel="noopener noreferrer">{u.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a>
-              : <span>{u}</span>}</li>
-          ))}
-        </ul>
-      )}
-      {item?.ghi_chu && (
-        <details className="src-note-details">
-          <summary>📝 Ghi chú nguồn</summary>
-          <p className="src-note">{item.ghi_chu}</p>
-        </details>
-      )}
-    </div>
-  );
-};
-
 export default function WebGIS() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -3037,7 +3001,6 @@ onClick={() => setShowMapComposer(s => !s)}
                                     {v.anh_ghichu && <div className="ward-place-credit">Nguồn ảnh: {v.anh_ghichu}</div>}
                                   </div>
                                 )}
-                                <SourceStatus item={v} />
                               </div>
                             );
                           })}
@@ -3059,7 +3022,6 @@ onClick={() => setShowMapComposer(s => !s)}
                               </div>
                               {z.dia_ban_hien_tai && <div className="ward-place-dia-ban">📍 {z.dia_ban_hien_tai}</div>}
                               {z.mo_ta && <p className="ward-place-desc">{z.mo_ta}</p>}
-                              <SourceStatus item={z} />
                             </div>
                           ))}
                         </div>
