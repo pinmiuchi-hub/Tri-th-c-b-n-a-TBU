@@ -103,8 +103,9 @@ const makeElement = (type: ElementType, page: PageSize, existing: ComposerElemen
   const zIndex = existing.length + 1;
   const defaults: Record<ElementType, Partial<ComposerElement>> = {
     // Khung bản đồ thu về khoảng 2/3 bề ngang để chú giải, thước tỉ lệ đặt NGOÀI khung
-    // (theo QCVN 80:2024/BTNMT — bảng chú giải bố trí ngoài phạm vi thể hiện lãnh thổ)
-    mapFrame:   { x: pw*0.05, y: ph*0.08, width: pw*0.62, height: ph*0.75, props: { showGraticule: false, showGraticuleLabels: true, graticuleInterval: 1, graticuleColor: "#4a6fa1", graticuleOpacity: 0.65, graticuleLineStyle: "dashed" } },
+    // (theo QCVN 80:2024/BTNMT — bảng chú giải bố trí ngoài phạm vi thể hiện lãnh thổ).
+    // Tỉ lệ khung = tỉ lệ khổ giấy (cùng hệ số 0.62 ở 2 chiều): A4 ngang → 1.414, A4 dọc → 0.707.
+    mapFrame:   { x: pw*0.05, y: ph*0.08, width: pw*0.62, height: ph*0.62, props: { showGraticule: false, showGraticuleLabels: true, graticuleInterval: 1, graticuleColor: "#4a6fa1", graticuleOpacity: 0.65, graticuleLineStyle: "dashed" } },
     scalebar:   { x: pw*0.05, y: ph*0.87, width: pw*0.25, height: 44,     props: { unit: "km", style: "line" } },
     northArrow: { x: pw*0.88, y: ph*0.88, width: 48,      height: 48,     props: { style: "classic" } },
     legend:     { x: pw*0.70, y: ph*0.10, width: pw*0.25, height: ph*0.55, props: { title: "Chú giải", bgColor: "#ffffff", bgOpacity: 0.92, fontSize: 10, fontFamily: "Arial", titleFontSize: 11, textColor: "#333333" } },
@@ -1095,7 +1096,11 @@ const MapComposer: React.FC<MapComposerProps> = ({
         const elements: ComposerElement[] = parsed.elements.map((el: ComposerElement) => {
           if (!el || typeof el.x !== "number") return el;
           if (el.type === "mapFrame" && near(el.x, pw * 0.05) && near(el.y, ph * 0.08) && near(el.width, pw * 0.9)) {
-            return { ...el, width: Math.round(pw * 0.62) };
+            return { ...el, width: Math.round(pw * 0.62), height: Math.round(ph * 0.62) };
+          }
+          // Bản nháp cũ: khung mặc định 62%×75% (gần vuông, lệch khổ giấy) → 62%×62% (đúng tỉ lệ A4)
+          if (el.type === "mapFrame" && near(el.height, ph * 0.75) && typeof el.width === "number" && Math.abs(el.width - pw * 0.62) <= Math.max(4, pw * 0.05)) {
+            return { ...el, width: Math.round(pw * 0.62), height: Math.round(ph * 0.62) };
           }
           if (el.type === "legend" && near(el.x, pw * 0.72) && near(el.width, pw * 0.22)) {
             return { ...el, x: Math.round(pw * 0.7), width: Math.round(pw * 0.25), height: Math.round(ph * 0.55) };
@@ -1130,6 +1135,22 @@ const MapComposer: React.FC<MapComposerProps> = ({
 
   const pageW = pageSize.width * DPI * zoom;
   const pageH = pageSize.height * DPI * zoom;
+
+  // Đổi khổ giấy → co giãn toàn bộ phần tử theo tỉ lệ trang mới, giữ nguyên bố cục
+  // (khung bản đồ đang đúng tỉ lệ trang cũ sẽ thành đúng tỉ lệ trang mới).
+  const changePageSize = (next: PageSize) => {
+    if (next.label === pageSize.label) return;
+    const rx = next.width / pageSize.width;
+    const ry = next.height / pageSize.height;
+    setElements(prev => prev.map(el => ({
+      ...el,
+      x: Math.round(el.x * rx),
+      y: Math.round(el.y * ry),
+      width: Math.round(el.width * rx),
+      height: Math.round(el.height * ry),
+    })));
+    setPageSize(next);
+  };
 
   const addElement = (type: ElementType) => {
     const el = makeElement(type, pageSize, elements);
@@ -1263,7 +1284,7 @@ const target = canvasRef.current;    if (!target) return;
         
         {/* ĐÃ CẬP NHẬT TOPBAR-CENTER THEO YÊU CẦU */}
         <div className="topbar-center">
-          <select className="page-select" value={pageSize.label} onChange={e => setPageSize(PAGE_SIZES.find(p => p.label === e.target.value)!)}>
+          <select className="page-select" value={pageSize.label} onChange={e => changePageSize(PAGE_SIZES.find(p => p.label === e.target.value)!)}>
             {PAGE_SIZES.map(p => <option key={p.label}>{p.label}</option>)}
           </select>
           <div className="zoom-control">
