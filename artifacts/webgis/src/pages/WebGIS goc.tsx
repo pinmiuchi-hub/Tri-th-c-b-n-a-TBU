@@ -3089,7 +3089,6 @@ onClick={() => setShowMapComposer(s => !s)}
                             <EditableValue value={triThuc[activeTriThuc].noi_dung} className="knowledge-text-editable" onSave={v=>updateTriThucField(info.id,activeTriThuc,"noi_dung",v)} multiline/>
                             <div className="recipes">
                               <div className="recipes-title-row">
-                                <div className="recipes-title">Bài thuốc / Kỹ thuật</div>
                                 <button className="add-recipe-btn" onClick={()=>setEditingRecipe({ethId:info.id,topicIdx:activeTriThuc,recipeIdx:null,data:{ten:"",nguyen_lieu:"",cong_dung:""}})}>+ Thêm</button>
                               </div>
                               {triThuc[activeTriThuc].bai_thuoc.map((bt,i)=>(

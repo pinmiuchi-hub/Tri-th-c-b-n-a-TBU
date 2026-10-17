@@ -979,15 +979,6 @@ html, body, #root {
 }
 
 /* ---- Recipe cards ---- */
-.recipes-title {
-  font-size: 10px;
-  font-weight: 700;
-  color: #74c69d;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom: 8px;
-}
-
 .recipe-card {
   background: rgba(255,255,255,0.03);
   border: 1px solid;
@@ -1970,7 +1961,7 @@ th.month-col { width: 36px; }
 .topic-delete-btn:hover { opacity: 1; }
 .add-tab { background: rgba(82,183,136,0.1) !important; border: 1px dashed rgba(82,183,136,0.3) !important; color: #52b788 !important; font-size: 16px !important; }
 .recipes-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.add-recipe-btn { background: rgba(82,183,136,0.1); border: 1px solid rgba(82,183,136,0.25); color: #74c69d; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; }
+.add-recipe-btn { margin-left: auto; background: rgba(82,183,136,0.1); border: 1px solid rgba(82,183,136,0.25); color: #74c69d; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; }
 .recipe-name-row { display: flex; align-items: center; justify-content: space-between; }
 .recipe-delete-btn { background: transparent; border: none; color: rgba(230,57,70,0.5); cursor: pointer; font-size: 11px; padding: 2px 4px; }
 .recipe-delete-btn:hover { color: #e63946; }
