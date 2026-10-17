@@ -366,5 +366,36 @@ Dữ liệu xã có id `ethnic_la_ha` (10 xã), `ethnic_xinh_mun` (8), `ethnic_l
 - `WardProperties` mở rộng: `dac_diem`, `dac_diem_nguon`, `dac_diem_trang_thai`, `dan_so_nguon`, `dan_so_ky`, `dtts_so`.
 - Typecheck + `vite build` (PORT/BASE_PATH) PASS.
 
+## 13. Vòng 6 (17/10/2026): rà soát cơ cấu dân tộc cho biểu đồ tròn + chuẩn hóa chú giải Biên tập bản đồ
+
+### 13.1. Rà soát nội bộ 75 xã (`xa_sonla.geojson` × `dan_toc.json`)
+
+- 75/75 có `dan_toc`; **0 id lạ** (18/18 id đều có trong `dan_toc.json`), **0 trùng lặp**, **0 giá trị âm/vượt 100%**, **0 `trang_thai` sai chuẩn** (`co_nguon` 7 · `mot_phan` 49 · `du_doan` 19 — khớp §12.2); 7 xã `co_nguon` đều có mảng nguồn.
+- Tổng %/xã: **60 xã = 100%**; **15 xã < 100%** (nguồn chỉ nêu % một phần): Chiềng An 50 · Thảo Nguyên 50 · Tô Hiệu 50 · Chiềng Hặc 87,3 · Lóng Phiêng 87,3 · Yên Sơn 87,3 · Chiềng La 82,76 · Co Mạ 91 · Muổi Nọi 81,5 · Mường Bám 75 · Mường Giôn 86 · Mường Chiên 99,1 · Sốp Cộp 99,12 · Tà Xùa 95 · Tân Phong 82,5 (11 `mot_phan` + 4 `co_nguon`).
+- 7 id trong `dan_toc.json` chưa xã Sơn La nào dùng (`la_hu`, `lu`, `mang`, `giay`, `ha_nhi`, `nung`, `phu_la`) — dữ liệu sẵn cho tỉnh khác, không phải lỗi.
+
+### 13.2. Đối chiếu web 3 mẫu (khớp tuyệt đối)
+
+- **Sốp Cộp** — Cổng TTĐT xã Sốp Cộp (`sopcop.sonla.gov.vn/dieu-kien-tu-nhien`): "Thái 63,57%, Kinh 22,35%, Mông 7,85%, Khơ Mú 3,92%, Lào 1,43% … các dân tộc khác (Mường, Tày, Dao, Ba Na, Kháng) 0,88%" → khớp **từng số** với geojson; tổng 99,12 + bù "Dân tộc khác" 0,88% = đúng phần "dân tộc khác" nguồn nêu.
+- **Mường Chiên** — `nguoiquansat.vn` 22/7/2025 (và baosonla.vn): "Thái 72,4%, Dao 11%, Kháng 10,7%, Mông 5% và một số dân tộc khác" → khớp; tổng 99,1 + bù 0,9 = "một số dân tộc khác".
+- **Chiềng An & Tô Hiệu** — nguồn nêu "12 dân tộc cùng sinh sống, chỉ người Thái ~50%" (ghi trong `dan_toc_ghi_chu` kèm URL) → danh sách `[thai 50]` + bù 50 đúng tinh thần nguồn; không phân bổ bịa.
+
+### 13.3. Sửa biểu đồ tròn: mục bù "Dân tộc khác" (phép trừ chính xác, không bịa số)
+
+- **Lỗi trước đây:** 15 xã tổng % < 100 → marker/biểu đồ tự chuẩn hóa theo tổng → hình tròn vẽ "Thái chiếm toàn bộ" nhưng tooltip/nhãn ghi 50% → **mâu thuẫn, sai**.
+- **Sửa (`WebGIS goc.tsx`):** helper `withOtherEthnic()` + id `khac`, nhãn `Dân tộc khác`, màu xám `#94a3b8`; phần bù = `100 − tổng` (phép trừ với % nguồn nêu, tuyệt đối đúng). Áp dụng ở: marker tròn (góc vẽ + tooltip), `ethnicLegendComposition` (trọng số dân số, có mục riêng), `ethnicLegendItems` (chú giải chính), dữ liệu biểu đồ composer (fallback), thanh cơ cấu panel xã (segment xám cuối). **Không sửa `dan_toc` trong geojson** — số liệu nguồn giữ nguyên.
+- **Kiểm thực tế (Playwright):** biểu đồ composer cộng = 100,01 (làm tròn 2 chữ số); marker Chiềng An/Tô Hiệu: "Thái: 50% / Dân tộc khác: 50%".
+
+### 13.4. Đối chiếu tổng tỉnh (tính từ dân số 75 xã × %)
+
+- Tỷ trọng ước tính: Thái 54,5% · Mông 17,3% · Kinh 12,3% · Mường 6,0% · Dao 1,6% · Khơ Mú 1,4% (TCTD 2019: 53,6 / 16,1 / 16,3 / 6,8 / 1,76 / 1,26) — cùng hướng; sai khác do kỳ số liệu (2026 vs 2019) và 15 xã thiếu % nhóm nhỏ.
+- **Chênh lệch ghi nhận, KHÔNG tự sửa:** Xinh Mun ~7,7 nghìn vs TCTD 2019 **27.031**; Kháng ~1,5 nghìn vs **9.830** — các xã có 2 nhóm này chủ yếu chưa nêu % riêng (nguồn chỉ nêu dân tộc chủ đạo). Chờ nguồn cấp xã mới; **không** phân bổ số tỉnh xuống huyện/xã (vi phạm nguyên tắc không bịa). DTTS ước ~95,3% vs TCTD 83,7% chủ yếu do Kinh thấp hơn + 15 xã thiếu % — chỉ số này không hiển thị trong app, chỉ dùng kiểm tra.
+
+### 13.5. Chú giải Biên tập bản đồ — 2 lỗi "không đúng quy chuẩn và sai" đã sửa
+
+1. **Bản nháp localStorage `webgis-composer-draft`** (bố cục trước chuẩn hóa) giữ khung 90% ngang, chú giải lọt vào trong khung → **migration khi load** (`MapComposer.tsx`): nếu khớp đúng bố cục mặc định cũ → chuyển sang chuẩn hiện tại (khung 62%, chú giải x 70% / w 25% / h 55% — **ngoài khung**, theo QCVN 80:2024/BNTMT); bố cục người dùng tự chỉnh khác vẫn giữ nguyên.
+2. **Snapshot đồng bộ cũ thiếu `layerDisplayAll`** → dòng "Ranh giới xã/phường" bị render `null` và biến mất khỏi chú giải → thêm `BUILTIN_LAYER_FALLBACK` (4 lớp tích hợp: tỉnh nét liền 1,9 · xã nét đứt 6,4 × 1,0 · mật độ · sông suối) để chú giải luôn đủ ký hiệu.
+- **Kiểm thực tế:** cài bản nháp cũ (khung `0.90pw`, chú giải `0.72pw`) → mở composer → frame 696px, legend 786/281/437 → **migration PASS, chú giải ngoài khung PASS**; thứ tự: ranh giới → mật độ (7 bậc, đơn vị người/km²) → cơ cấu dân tộc (12 mục + Dân tộc khác) → **PASS**; tổng biểu đồ 100,01 → **PASS**.
+
 
 

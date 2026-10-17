@@ -98,6 +98,14 @@ const makeElement = (type: ElementType, page: PageSize, existing: ComposerElemen
   return { id: uid(), type, zIndex, locked: false, visible: true, ...defaults[type] } as ComposerElement;
 };
 
+// Ký hiệu chuẩn cho các lớp tích hợp — dùng khi snapshot đồng bộ cũ chưa kèm layerDisplayAll
+const BUILTIN_LAYER_FALLBACK: Record<string, { name: string; color: string; geomType?: "point" | "line" | "polygon"; lineDash?: string; lineWeight?: number }> = {
+  province_boundaries: { name: "Ranh giới tỉnh", color: "#3c5b45", geomType: "line", lineWeight: 1.9 },
+  ward_boundaries: { name: "Ranh giới xã/phường", color: "#345b41", geomType: "line", lineDash: "6,4", lineWeight: 1.0 },
+  population_density: { name: "Mật độ dân số", color: "#fe9929", geomType: "polygon" },
+  rivers: { name: "Hệ thống sông suối", color: "#4b9ad6", geomType: "line", lineWeight: 1.8 },
+};
+
 const TOOLS: { type: ElementType; icon: string; label: string }[] = [
   { type: "mapFrame",   icon: "🗺️", label: "Khung bản đồ" },
   { type: "scalebar",   icon: "📏", label: "Thước đo" },
@@ -424,7 +432,7 @@ const ElementContent: React.FC<{
             : syncSnapshot.ethnicComposition?.map(item => ({ label: item.label, color: item.color })))
         : undefined;
       const renderLayerItem = (id: string) => {
-        const d = syncSnapshot?.layerDisplayAll[id];
+        const d = syncSnapshot?.layerDisplayAll[id] ?? BUILTIN_LAYER_FALLBACK[id];
         if (!d) return null;
         return (
           <div key={id} className="legend-item" style={{ fontSize: (el.props.fontSize as number) || 10, color: legendText }}>
@@ -1016,7 +1024,25 @@ const MapComposer: React.FC<MapComposerProps> = ({
       const parsed = JSON.parse(raw);
       if (parsed.pageSize) setPageSize(parsed.pageSize);
       if (parsed.zoom) setZoom(Math.max(0.3, Math.min(2, Math.round(parsed.zoom * 10) / 10)));
-      if (Array.isArray(parsed.elements)) setElements(parsed.elements);
+      if (Array.isArray(parsed.elements)) {
+        // Cập nhật bố cục bản nháp cũ (khung 90% ngang, chú giải lọt vào trong khung)
+        // sang chuẩn hiện tại: khung 62% — chú giải đặt NGOÀI khung (QCVN 80:2024/BTNMT).
+        const dp: PageSize = parsed.pageSize && typeof parsed.pageSize.width === "number" ? parsed.pageSize : pageSize;
+        const pw = dp.width * DPI;
+        const ph = dp.height * DPI;
+        const near = (a: unknown, b: number) => typeof a === "number" && Math.abs(a - b) < 2;
+        const elements: ComposerElement[] = parsed.elements.map((el: ComposerElement) => {
+          if (!el || typeof el.x !== "number") return el;
+          if (el.type === "mapFrame" && near(el.x, pw * 0.05) && near(el.y, ph * 0.08) && near(el.width, pw * 0.9)) {
+            return { ...el, width: Math.round(pw * 0.62) };
+          }
+          if (el.type === "legend" && near(el.x, pw * 0.72) && near(el.width, pw * 0.22)) {
+            return { ...el, x: Math.round(pw * 0.7), width: Math.round(pw * 0.25), height: Math.round(ph * 0.55) };
+          }
+          return el;
+        });
+        setElements(elements);
+      }
       if (parsed.selectedId) setSelectedId(parsed.selectedId);
     } catch {
       // ignore invalid draft

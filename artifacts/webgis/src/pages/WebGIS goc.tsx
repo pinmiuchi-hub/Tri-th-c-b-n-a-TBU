@@ -133,6 +133,19 @@ const slugEthnicName = (name: string) => `ethnic_${name.normalize("NFD").replace
 const EXTRA_ETHNIC_OPTIONS = VIETNAMESE_ETHNIC_NAMES.map((name, index) => ({ id: slugEthnicName(name), ten: `Dân tộc ${name}`, mau: EXTRA_ETHNIC_COLORS[index % EXTRA_ETHNIC_COLORS.length] }));
 const DENSITY_COLORS = ["#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404"];
 const DENSITY_LABELS = ["< 50", "50–100", "100–200", "200–500", "500–1000", "1000–2000", "> 2000"];
+// Một số xã nguồn chỉ công bố % của vài dân tộc (tổng < 100) — phần còn lại là các dân tộc
+// khác cộng lại (đúng phép), đưa vào thành mục "Dân tộc khác" để biểu đồ/tròn luôn đủ 100%
+// mà không bịa số cho từng dân tộc riêng lẻ.
+const ETHNIC_OTHER_ID = "khac";
+const ETHNIC_OTHER_LABEL = "Dân tộc khác";
+const ETHNIC_OTHER_COLOR = "#94a3b8";
+const withOtherEthnic = (list: DanTocTyLe[]): DanTocTyLe[] => {
+  const sum = list.reduce((s, d) => s + (Number(d.ty_le) > 0 ? Number(d.ty_le) : 0), 0);
+  const rest = Math.round((100 - sum) * 100) / 100;
+  return rest > 0.01 ? [...list, { dan_toc: ETHNIC_OTHER_ID, ty_le: rest }] : list;
+};
+const ethnicLabelOf = (id: string, fallback: string | null | undefined): string =>
+  id === ETHNIC_OTHER_ID ? ETHNIC_OTHER_LABEL : (fallback || id);
 const MAP_SCALE_OPTIONS = [5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
 const scaleFromZoom = (lat: number, zoom: number) => Math.round((156543.03 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom)) * 3779.52);
 const zoomFromScale = (scale: number, lat: number) => Math.max(1, Math.min(19, Math.log2((156543.03 * Math.cos(lat * Math.PI / 180) * 3779.52) / scale)));
@@ -952,7 +965,7 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
       const props = feature.properties as unknown as WardProperties;
       if (!pieWardSelection.has(props.ma_xa)) return;
       const wardData = { ...props } as WardProperties;
-      const composition = (wardOverrides.get(wardData.ma_xa)?.dan_toc ?? wardData.dan_toc ?? []).slice().sort((a,b) => b.ty_le - a.ty_le);
+      const composition = withOtherEthnic((wardOverrides.get(wardData.ma_xa)?.dan_toc ?? wardData.dan_toc ?? []).slice()).sort((a,b) => b.ty_le - a.ty_le);
       const total = composition.reduce((sum, item) => sum + item.ty_le, 0);
       const safeSlices = composition.filter(item => item.ty_le > 0);
       const geoLayer = L.geoJSON(feature as GeoJSON.Feature);
@@ -975,7 +988,8 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
       }).join("") : `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="#e2e8f0" stroke="${stroke}" stroke-width="2"></circle>`;
       const tooltipContent = safeSlices.length > 0 ? `<div class="ward-tooltip"><b>${props.ten_xa}</b><br/>${safeSlices.map(item => {
         const info = getDanTocInfo(item.dan_toc);
-        return `${info?.ten.replace("Dân tộc ", "").replace("Người ", "")}: ${item.ty_le}%`;
+        const nm = item.dan_toc === ETHNIC_OTHER_ID ? ETHNIC_OTHER_LABEL : (info?.ten || item.dan_toc).replace("Dân tộc ", "").replace("Người ", "");
+        return `${nm}: ${item.ty_le}%`;
       }).join("<br/>")}</div>` : `<div class="ward-tooltip"><b>${props.ten_xa}</b><br/>Chưa có dữ liệu dân tộc</div>`;
       const icon = L.divIcon({
         html: `<div class="pie-chart-marker" title="${props.ten_xa}"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">${paths}<circle cx="${centerX}" cy="${centerY}" r="${radius * 0.58}" fill="#ffffff" opacity="0.92"></circle><circle cx="${centerX}" cy="${centerY}" r="${radius * 0.56}" fill="rgba(15,31,15,0.95)"></circle></svg></div>`,
@@ -1792,12 +1806,12 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       legendLayerIds.unshift("province_boundaries");
     }
     const composerEthnicComposition = showPieSelector
-      ? (ethnicLegendComposition.length > 0 ? ethnicLegendComposition : wardDanToc.map(item => {
+      ? (ethnicLegendComposition.length > 0 ? ethnicLegendComposition : withOtherEthnic(wardDanToc).map(item => {
           const info = getDanTocInfo(item.dan_toc);
           return {
-            label: info?.ten || item.dan_toc,
+            label: ethnicLabelOf(item.dan_toc, info?.ten),
             value: item.ty_le,
-            color: info?.mau || ETHNIC_COLORS[item.dan_toc] || "#94a3b8",
+            color: info?.mau || ETHNIC_COLORS[item.dan_toc] || ETHNIC_OTHER_COLOR,
           };
         }))
       : [];
@@ -2248,9 +2262,16 @@ onEachFeature:(feat,lyr)=>{
     if (!showPieSelector || pieWardSelection.size === 0 || viewMode !== "ward") return [];
     const totals = new Map<string, number>();
     const addComposition = (composition: DanTocTyLe[], weight: number) => {
+      let listed = 0;
       composition.forEach(item => {
-        if (item.ty_le > 0) totals.set(item.dan_toc, (totals.get(item.dan_toc) || 0) + item.ty_le * weight);
+        if (item.ty_le > 0) {
+          totals.set(item.dan_toc, (totals.get(item.dan_toc) || 0) + item.ty_le * weight);
+          listed += item.ty_le;
+        }
       });
+      // Các dân tộc không được nêu % riêng = phần còn lại để tổng đủ 100%
+      const rest = Math.round((100 - listed) * 100) / 100;
+      if (rest > 0.01) totals.set(ETHNIC_OTHER_ID, (totals.get(ETHNIC_OTHER_ID) || 0) + rest * weight);
     };
 
     if (selectedWard) {
@@ -2275,9 +2296,9 @@ onEachFeature:(feat,lyr)=>{
       .map(([id, value]) => {
         const info = getDanTocInfo(id);
         return {
-          label: info?.ten || id,
+          label: ethnicLabelOf(id, info?.ten),
           value: Math.round((value / total) * 10000) / 100,
-          color: info?.mau || ETHNIC_COLORS[id] || "#94a3b8",
+          color: info?.mau || ETHNIC_COLORS[id] || ETHNIC_OTHER_COLOR,
         };
       })
       .sort((a, b) => b.value - a.value);
@@ -2285,15 +2306,19 @@ onEachFeature:(feat,lyr)=>{
   const ethnicLegendItems = useMemo(() => {
     if (!showPieSelector || pieWardSelection.size === 0 || viewMode !== "ward" || !currentProvinceGeoJson) return [];
     const ids = new Set<string>();
+    let hasOther = false;
     currentProvinceGeoJson.features.forEach(feature => {
       const props = feature.properties as unknown as WardProperties;
       if (!pieWardSelection.has(props.ma_xa)) return;
       const composition = wardOverrides.get(props.ma_xa)?.dan_toc ?? props.dan_toc ?? [];
+      const listed = composition.reduce((sum, item) => sum + (Number(item.ty_le) > 0 ? Number(item.ty_le) : 0), 0);
+      if (listed < 99.99) hasOther = true;
       composition.filter(item => item.ty_le > 0).forEach(item => ids.add(item.dan_toc));
     });
+    if (hasOther) ids.add(ETHNIC_OTHER_ID);
     return Array.from(ids).map(id => {
       const info = getDanTocInfo(id);
-      return { label: info?.ten || id, color: info?.mau || ETHNIC_COLORS[id] || "#94a3b8" };
+      return { label: ethnicLabelOf(id, info?.ten), color: info?.mau || ETHNIC_COLORS[id] || ETHNIC_OTHER_COLOR };
     });
   }, [showPieSelector, pieWardSelection, viewMode, currentProvinceGeoJson, wardOverrides, ethnicOverrides, danTocData]);
   const densityLegendEntries = useMemo(() => {
@@ -2975,7 +3000,14 @@ onClick={() => setShowMapComposer(s => !s)}
                             </div>);
                           })}
                         </div>
-                        <div className="ethnic-bar-wrap">{wardDanToc.map(({dan_toc,ty_le})=>{const info=getDanTocInfo(dan_toc);return info?<div key={dan_toc} className="ethnic-bar-seg" style={{width:`${ty_le}%`,background:info.mau}} title={`${info.ten.replace("Dân tộc ","")}: ${ty_le}%`}/>:null;})}</div>
+                        <div className="ethnic-bar-wrap">{(() => {
+                          const listed = wardDanToc.reduce((s, d) => s + (Number(d.ty_le) > 0 ? Number(d.ty_le) : 0), 0);
+                          const rest = Math.round((100 - listed) * 100) / 100;
+                          return <>
+                            {wardDanToc.map(({dan_toc,ty_le})=>{const info=getDanTocInfo(dan_toc);return info?<div key={dan_toc} className="ethnic-bar-seg" style={{width:`${ty_le}%`,background:info.mau}} title={`${info.ten.replace("Dân tộc ","")}: ${ty_le}%`}/>:null;})}
+                            {rest > 0.01 && <div className="ethnic-bar-seg" style={{width:`${rest}%`,background:ETHNIC_OTHER_COLOR}} title={`${ETHNIC_OTHER_LABEL}: ${rest}%`}/>}
+                          </>;
+                        })()}</div>
                       </div>
                     )}
 
