@@ -1700,6 +1700,104 @@ html, body, #root {
 .layer-cat-title { padding: 4px 14px 6px; font-size: 10px; font-weight: 700; color: rgba(116,198,157,0.7); text-transform: uppercase; letter-spacing: 0.6px; }
 .layer-cat-title > span { flex: 1 1 auto; min-width: 0; line-height: 1.35; overflow-wrap: normal; word-break: normal; }
 
+/* ─── Layer folders (thư mục) ─── */
+.layer-folder { border-bottom: 1px solid rgba(82,183,136,0.07); padding-bottom: 4px; margin-bottom: 2px; }
+.layer-folder-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 10px 7px 8px;
+  background: rgba(82,183,136,0.05);
+  border-left: 2px solid rgba(82,183,136,0.35);
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.layer-folder.is-thematic .layer-folder-head { background: rgba(72,149,239,0.08); border-left-color: rgba(72,149,239,0.45); }
+.lf-caret {
+  width: 18px; height: 18px; flex-shrink: 0;
+  background: transparent; border: none; color: rgba(149,213,178,0.75);
+  font-size: 11px; line-height: 1; cursor: pointer; padding: 0;
+}
+.lf-caret:hover { color: #95d5b2; }
+.lf-icon { font-size: 12px; flex-shrink: 0; }
+.lf-name {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 10.5px; font-weight: 700; color: #b7e4c7;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lf-count {
+  font-size: 9.5px; font-weight: 700; color: rgba(149,213,178,0.7);
+  background: rgba(82,183,136,0.12); border: 1px solid rgba(82,183,136,0.25);
+  border-radius: 8px; padding: 0 6px; flex-shrink: 0;
+}
+.lf-btn {
+  width: 20px; height: 20px; flex-shrink: 0;
+  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  color: rgba(149,213,178,0.55); font-size: 11px; cursor: pointer; padding: 0; line-height: 1;
+  opacity: 0; transition: opacity 0.15s;
+}
+.layer-folder-head:hover .lf-btn, .layer-folder-head:focus-within .lf-btn { opacity: 1; }
+.lf-btn:hover { background: rgba(82,183,136,0.15); color: #d8f3dc; border-color: rgba(82,183,136,0.35); }
+.lf-btn-danger:hover { background: rgba(230,57,70,0.18); color: #ff8fa3; border-color: rgba(230,57,70,0.45); }
+.lf-rename {
+  flex: 1 1 auto; min-width: 0;
+  background: #13251d; border: 1px solid rgba(82,183,136,0.5); border-radius: 4px;
+  color: #d8f3dc; font-size: 11px; padding: 3px 6px; outline: none; font-family: inherit;
+}
+.layer-folder-body .layer-item { padding-left: 22px; }
+.lf-empty { padding: 8px 14px 8px 24px; font-size: 10px; color: rgba(149,213,178,0.45); font-style: italic; }
+.layer-folder-new { padding: 8px 12px 4px; }
+.lf-new-btn {
+  width: 100%; padding: 7px 10px;
+  background: rgba(82,183,136,0.08); border: 1px dashed rgba(82,183,136,0.4); border-radius: 6px;
+  color: #74c69d; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.lf-new-btn:hover { background: rgba(82,183,136,0.18); border-color: #52b788; color: #d8f3dc; }
+.lf-new-form { display: flex; gap: 6px; align-items: center; }
+.lf-thematic-tools { padding: 4px 12px 8px; }
+.lf-thematic-tools .thematic-opacity { margin-top: 4px; }
+.lf-thematic-tools .thematic-clear { margin-top: 8px; }
+
+/* ─── Nhãn tên xã (marker 0×0, span căn giữa theo toạ độ) ─── */
+.ward-label-icon { background: none !important; border: none !important; width: 0 !important; height: 0 !important; overflow: visible; }
+.ward-label-icon > span {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
+  font-weight: 600; white-space: nowrap; pointer-events: none;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 1px 2px rgba(255, 255, 255, 0.85);
+}
+.ward-label-style {
+  margin: 4px 12px 8px; padding: 8px 10px;
+  border: 1px solid rgba(82, 183, 136, 0.25); border-radius: 8px;
+  background: rgba(15, 31, 24, 0.9);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ward-label-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #b7e4c7; }
+.ward-label-row label { flex: 0 0 auto; min-width: 88px; }
+.ward-label-row input[type="color"] {
+  width: 34px; height: 24px; padding: 0;
+  border: 1px solid rgba(82, 183, 136, 0.35); border-radius: 5px;
+  background: none; cursor: pointer;
+}
+.ward-label-row input[type="range"] { flex: 1; min-width: 0; accent-color: #52b788; }
+.ward-label-preview { margin-left: auto; font-weight: 700; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ─── Layer drag & drop (nhấn giữ rồi kéo) ─── */
+.layer-item { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.layer-item.is-dragging { opacity: 0.35; background: rgba(82,183,136,0.1); }
+body.layer-dnd-active { user-select: none; -webkit-user-select: none; }
+body.layer-dnd-active * { cursor: grabbing !important; }
+.layer-drag-ghost {
+  position: fixed; z-index: 3000; pointer-events: none;
+  background: rgba(19,37,29,0.96); color: #d8f3dc;
+  border: 1px solid rgba(82,183,136,0.65); border-radius: 6px;
+  padding: 6px 10px; font-size: 11px; font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+  max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.layer-item.drop-before { box-shadow: inset 0 2px 0 0 #7bed9f; }
+.layer-item.drop-after { box-shadow: inset 0 -2px 0 0 #7bed9f; }
+.layer-folder.drop-into > .layer-folder-head { background: rgba(82,183,136,0.22); outline: 1px dashed rgba(82,183,136,0.7); outline-offset: -1px; }
+.layer-folder.drop-into > .layer-folder-body { min-height: 26px; background: rgba(82,183,136,0.06); }
+
 /* ─── Layer item ─── */
 .layer-item {
   display: flex; align-items: center; justify-content: space-between;
@@ -3007,6 +3105,12 @@ th.month-col { width: 36px; }
   .layer-panel-close { font-size: 22px; padding: 4px 10px; }
   .layer-panel-body { padding: 10px 0 80px; }
   .layer-cat-title { font-size: 12px; padding: 8px 14px 4px; }
+  .layer-folder-head { padding: 10px 12px 10px 8px; min-height: 44px; }
+  .lf-name { font-size: 12px; }
+  .lf-btn { opacity: 1; width: 28px; height: 28px; font-size: 14px; }
+  .lf-caret { width: 26px; height: 26px; font-size: 14px; }
+  .layer-folder-body .layer-item { padding-left: 26px; }
+  .lf-new-btn { padding: 12px 10px; font-size: 13px; }
   .layer-item { padding: 10px 14px !important; min-height: 48px; }
   .layer-name { font-size: 13px; }
   .layer-symbol { font-size: 16px; }
@@ -3320,48 +3424,6 @@ th.month-col { width: 36px; }
 }
 .ethnic-photo-add:hover { background: rgba(255,255,255,0.95); transform: translateY(-1px); }
 
-/* ─── Thematic raster panel ─── */
-.thematic-panel {
-  position: absolute;
-  top: 70px;
-  right: 16px;
-  width: 280px;
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  background: rgba(20, 28, 44, 0.96);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(72,149,239,0.35);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-  color: #e0e8f5;
-  z-index: 1000;
-  font-size: 13px;
-}
-.thematic-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.thematic-title { font-weight: 700; font-size: 14px; color: #fff; }
-.thematic-close {
-  background: none; border: none; color: #aab; font-size: 22px; line-height: 1;
-  cursor: pointer; padding: 0 4px;
-}
-.thematic-close:hover { color: #fff; }
-.thematic-body { padding: 10px 12px 14px; }
-.thematic-group { margin-bottom: 12px; }
-.thematic-group-label {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-  color: #8aa3c0; margin: 6px 0 4px;
-}
-.thematic-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 8px; border-radius: 6px; cursor: pointer;
-  transition: background 0.15s;
-}
-.thematic-row:hover { background: rgba(72,149,239,0.12); }
-.thematic-row.active { background: rgba(72,149,239,0.22); }
-.thematic-row input[type="radio"] { accent-color: #4895ef; cursor: pointer; }
-.thematic-row-label { flex: 1; font-size: 13px; }
 .thematic-clear {
   display: block; width: 100%; margin-top: 8px;
   padding: 8px; background: rgba(255,90,90,0.15); border: 1px solid rgba(255,90,90,0.35);
@@ -3411,10 +3473,7 @@ th.month-col { width: 36px; }
 }
 .thematic-raster { image-rendering: auto; }
 .thematic-raster-soil_type { image-rendering: auto; }
-.thematic-3d-btn { width: 100%; margin-top: 8px; padding: 9px 10px; border: 1px solid rgba(147,197,253,0.45); border-radius: 7px; color: #dbeafe; background: rgba(59,130,246,0.2); cursor: pointer; font-weight: 700; }
-.thematic-3d-btn:hover { background: rgba(59,130,246,0.35); }
 
 @media (max-width: 768px) {
-  .thematic-panel { width: calc(100vw - 24px); right: 12px; top: 60px; }
   .thematic-legend { left: 12px; right: 12px; bottom: 12px; max-width: none; }
 }

@@ -6,12 +6,20 @@ import "./Earth3DModal.css";
 
 type Basemap = "sat" | "osm";
 
+export interface EarthRasterLayer {
+  url: string;
+  bounds: [[number, number], [number, number]];
+  opacity: number;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   center?: [number, number];
   zoom?: number;
   overlay?: unknown;
+  raster?: EarthRasterLayer | null;
+  vectors?: GeoJSON.FeatureCollection | null;
 }
 
 const SATELLITE_ATTR = "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics";
@@ -51,15 +59,62 @@ const buildStyle = (satVisible: boolean): any => ({
   ],
 });
 
-export default function Earth3DModal({ open, onClose, center, zoom, overlay }: Props) {
+export default function Earth3DModal({ open, onClose, center, zoom, overlay, raster, vectors }: Props) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const overlayRef = useRef<unknown>(overlay);
+  const rasterRef = useRef<EarthRasterLayer | null | undefined>(raster);
+  const vectorsRef = useRef<GeoJSON.FeatureCollection | null | undefined>(vectors);
   const exagRef = useRef(1.4);
   const [exag, setExag] = useState(1.4);
   const [basemap, setBasemap] = useState<Basemap>("sat");
   const [ready, setReady] = useState(false);
   overlayRef.current = overlay;
+  rasterRef.current = raster;
+  vectorsRef.current = vectors;
+
+  /* Thêm/cập nhật các lớp đang bật của WebGIS lên bản đồ 3D (idempotent) */
+  function applyActiveData(map: MapLibreMap) {
+    const r = rasterRef.current;
+    try {
+      if (r) {
+        const [[latS, lngW], [latN, lngE]] = r.bounds;
+        const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [[lngW, latN], [lngE, latN], [lngE, latS], [lngW, latS]];
+        const source = map.getSource("act-raster") as { updateImage?: (img: { url: string; coordinates: [number, number][] }) => void } | undefined;
+        if (source && typeof source.updateImage === "function") {
+          source.updateImage({ url: r.url, coordinates });
+        } else if (!source) {
+          map.addSource("act-raster", { type: "image", url: r.url, coordinates });
+        }
+        if (!map.getLayer("act-raster-layer")) {
+          map.addLayer({ id: "act-raster-layer", type: "raster", source: "act-raster", paint: { "raster-opacity": r.opacity } } as any, map.getLayer("overlay-fill") ? "overlay-fill" : undefined);
+        }
+        map.setPaintProperty("act-raster-layer", "raster-opacity", r.opacity);
+      } else if (map.getLayer("act-raster-layer")) {
+        map.removeLayer("act-raster-layer");
+        if (map.getSource("act-raster")) map.removeSource("act-raster");
+      }
+    } catch (e) { console.warn("Lớp raster chuyên đề trong 3D lỗi:", e); }
+
+    const v = vectorsRef.current;
+    try {
+      if (v && Array.isArray(v.features) && v.features.length > 0) {
+        const source = map.getSource("act-vectors") as { setData: (data: unknown) => void } | undefined;
+        if (source) {
+          source.setData(v);
+        } else {
+          map.addSource("act-vectors", { type: "geojson", data: v as any });
+          const beforeId = map.getLayer("overlay-fill") ? "overlay-fill" : undefined;
+          map.addLayer({ id: "act-fill", type: "fill", source: "act-vectors", filter: ["==", ["get", "__geom"], "polygon"], paint: { "fill-color": ["get", "__fillColor"], "fill-opacity": ["get", "__fill"], "fill-outline-color": ["get", "__color"] } } as any, beforeId);
+          map.addLayer({ id: "act-line", type: "line", source: "act-vectors", filter: ["==", ["get", "__geom"], "line"], paint: { "line-color": ["get", "__color"], "line-width": ["get", "__weight"] } } as any, beforeId);
+          map.addLayer({ id: "act-circle", type: "circle", source: "act-vectors", filter: ["==", ["get", "__geom"], "point"], paint: { "circle-color": ["get", "__color"], "circle-radius": 5, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1 } } as any, beforeId);
+        }
+      } else if (map.getLayer("act-fill")) {
+        ["act-fill", "act-line", "act-circle"].forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
+        if (map.getSource("act-vectors")) map.removeSource("act-vectors");
+      }
+    } catch (e) { console.warn("Lớp vector trong 3D lỗi:", e); }
+  }
 
   useEffect(() => {
     if (!open || !mountRef.current) return;
@@ -88,6 +143,7 @@ export default function Earth3DModal({ open, onClose, center, zoom, overlay }: P
           map.addLayer({ id: "overlay-line", type: "line", source: "overlay", paint: { "line-color": "#eafff5", "line-width": 1.7 } });
         } catch (e) { console.warn("Thêm lớp ranh giới 3D lỗi:", e); }
       }
+      applyActiveData(map);
       setReady(true);
     };
     map.on("load", onLoad);
@@ -115,6 +171,13 @@ export default function Earth3DModal({ open, onClose, center, zoom, overlay }: P
     if (m.getLayer("base-sat")) m.setLayoutProperty("base-sat", "visibility", basemap === "sat" ? "visible" : "none");
     if (m.getLayer("base-osm")) m.setLayoutProperty("base-osm", "visibility", basemap === "osm" ? "visible" : "none");
   }, [basemap, open, ready]);
+
+  // Đồng bộ lớp raster/vector khi props đổi trong lúc đang mở
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!open || !ready || !m) return;
+    applyActiveData(m);
+  }, [raster, vectors, open, ready]);
 
   if (!open) return null;
   return (

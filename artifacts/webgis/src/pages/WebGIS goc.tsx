@@ -3,7 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import EditableValue from "../components/EditableValue";
 import ImportModal, { type WardOverrides, type EthnicOverride, type PdfFile, type DanTocTyLe } from "../components/ImportModal";
-import LayerControl, { type NewLayerInput } from "../components/LayerControl goc";
+import LayerControl, { type NewLayerInput, type LayerCategory } from "../components/LayerControl goc";
 import TransectDiagram, { DEFAULT_ZONES_BY_ETHNIC, DEFAULT_ETHNIC_ZONES, type TransectZone, type EthnicZone } from "../components/TransectDiagram";
 import SeasonalCalendar, { DEFAULT_ACTIVITIES_BY_ETHNIC, type CalendarGroup } from "../components/SeasonalCalendar";
 import { toEthnicKey, type EthnicKey } from "../components/ethnicConfig";
@@ -19,7 +19,7 @@ import html2canvas from "html2canvas";
 import { Printer } from 'lucide-react';
 
 interface CustomLayer { id: string; categoryId: string; ten: string; mau: string; bieu_tuong: string; geomType: "point" | "line" | "polygon"; }
-interface LayerCategoryState { id: string; ten: string; icon: string; layers: { id: string; ten: string; mau: string; bieu_tuong: string; iconOnly?: boolean }[]; }
+interface LayerCategoryState { id: string; ten: string; icon: string; collapsed?: boolean; layers: { id: string; ten: string; mau: string; bieu_tuong: string; iconOnly?: boolean }[]; }
 
 /* ─── Types ─── */
 interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; dan_toc_trang_thai?: string; dan_toc_nguon?: string[]; dan_toc_ghi_chu?: string; dac_diem?: string; dac_diem_nguon?: string[]; dac_diem_trang_thai?: string; dan_so_nguon?: string; dan_so_ky?: string; dtts_so?: number; }
@@ -91,6 +91,31 @@ const LAYER_DISPLAY: Record<string, { name: string; color: string }> = {
   forests: { name: "Phân vùng rừng", color: "#2d6a4f" },
   vac_models: { name: "Mô hình VAC/VACR", color: "#b5e48c" },
   medicinal_plants: { name: "Cây thuốc quý", color: "#e63946" },
+};
+
+const THEMATIC_KEYS = ["temperature", "precipitation", "elevation", "aspect", "soil_type", "soil_ph"] as const;
+const THEMATIC_ICONS: Record<string, string> = { temperature: "🌡️", precipitation: "🌧️", elevation: "⛰️", aspect: "🧭", soil_type: "🌱", soil_ph: "🧪" };
+const thematicColor = (stops: unknown): string => {
+  if (stops === "wheel") return "#ff9f1c";
+  if (Array.isArray(stops) && stops.length) {
+    const mid = stops[Math.floor(stops.length / 2)] as any;
+    const first = stops[0] as any;
+    if (Array.isArray(mid?.color)) return `rgb(${mid.color[0]},${mid.color[1]},${mid.color[2]})`;
+    if (mid?.r !== undefined) return `rgb(${mid.r},${mid.g},${mid.b})`;
+    if (Array.isArray(first?.color)) return `rgb(${first.color[0]},${first.color[1]},${first.color[2]})`;
+    if (first?.r !== undefined) return `rgb(${first.r},${first.g},${first.b})`;
+  }
+  return "#4895ef";
+};
+const escapeHtmlText = (value: string): string => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const walkGeoCoords = (node: unknown, visit: (lng: number, lat: number) => void): void => {
+  if (!node) return;
+  if (Array.isArray(node)) {
+    if (node.length >= 2 && typeof node[0] === "number" && typeof node[1] === "number") { visit(node[0] as number, node[1] as number); return; }
+    node.forEach(child => walkGeoCoords(child, visit));
+    return;
+  }
+  if (typeof node === "object") walkGeoCoords((node as { coordinates?: unknown }).coordinates, visit);
 };
 
 const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#2d6a4f", kbvcq: "#023e8a", rung_dac_dung: "#40916c" };
@@ -224,6 +249,7 @@ export default function WebGIS() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const provincesLayerRef = useRef<L.GeoJSON | null>(null);
   const wardsLayerRef = useRef<L.GeoJSON | null>(null);
+const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
   const densityLayerRef = useRef<L.GeoJSON | null>(null);
   const pieChartLayerRef = useRef<L.LayerGroup | null>(null);
   const overlayGroupRef = useRef<L.LayerGroup | null>(null);
@@ -320,7 +346,11 @@ export default function WebGIS() {
       });
       setActiveLayers(prev => new Set([...prev, entry.layer.id]));
     } else if (entry.type === "category") {
-      setLayerCategories(prev => prev.some(c => c.id === entry.category.id) ? prev : [...prev, entry.category]);
+      const restoredIds = new Set((entry.category.layers || []).map((l: any) => l.id));
+      setLayerCategories(prev => prev.some(c => c.id === entry.category.id) ? prev : [
+        ...prev.map(c => c.id === entry.category.id ? c : { ...c, layers: c.layers.filter((l: any) => !restoredIds.has(l.id)) }),
+        entry.category,
+      ]);
       setDeletedCategoryIds(prev => prev.filter((id: string) => id !== entry.category.id));
       if (Array.isArray(entry.customLayers) && entry.customLayers.length) {
         setCustomLayers(prev => [...prev, ...entry.customLayers.filter((c: any) => !prev.some(x => x.id === c.id))]);
@@ -396,14 +426,18 @@ export default function WebGIS() {
       const savedCats = saved.layerCategories as LayerCategoryState[];
       const deletedCategoryIds: string[] = Array.isArray(saved?.deletedCategoryIds) ? saved.deletedCategoryIds : [];
       const hiddenLayerIds: Record<string, string[]> = saved?.hiddenLayerIds && typeof saved.hiddenLayerIds === "object" ? saved.hiddenLayerIds : {};
+      const hiddenAll = new Set<string>(Object.values(hiddenLayerIds).flat());
       // Gộp lớp mặc định mới (vd: rivers) vào config đã lưu, tôn trọng nhóm/lớp người dùng đã ẩn
+      const presentIds = new Set<string>();
+      savedCats.forEach(c => c.layers.forEach(l => presentIds.add(l.id)));
       DEFAULT_LAYER_CATEGORIES.forEach(def => {
         if (deletedCategoryIds.includes(def.id)) return;
         let existing = savedCats.find(c => c.id === def.id);
         if (!existing) { existing = { ...def, layers: [] }; savedCats.push(existing); }
         def.layers.forEach(dl => {
-          if ((hiddenLayerIds[def.id] || []).includes(dl.id)) return;
-          if (!existing!.layers.some(l => l.id === dl.id)) existing!.layers.push({ ...dl });
+          if (hiddenAll.has(dl.id)) return;
+          if (presentIds.has(dl.id)) return;
+          if (!existing!.layers.some(l => l.id === dl.id)) { existing!.layers.push({ ...dl }); presentIds.add(dl.id); }
         });
       });
       // Round 3: gỡ 2 lớp (villages, customary_zones) khỏi config đã lưu của người dùng cũ
@@ -428,11 +462,24 @@ export default function WebGIS() {
   /* ─── UI state ─── */
   const [showImport, setShowImport] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
-  const [showThematic, setShowThematic] = useState(false);
   const [activeRaster, setActiveRaster] = useState<string | null>(null);
-  const [earth3d, setEarth3d] = useState<{ open: boolean; center?: [number, number]; zoom?: number; overlay?: unknown }>({ open: false });
+  const [earth3d, setEarth3d] = useState<{ open: boolean; center?: [number, number]; zoom?: number; overlay?: unknown; raster?: { url: string; bounds: [[number, number], [number, number]]; opacity: number } | null; vectors?: GeoJSON.FeatureCollection | null }>({ open: false });
   const [rasterOpacity, setRasterOpacity] = useState(0.8);
   const [rasterMeta, setRasterMeta] = useState<{ bounds: [[number,number],[number,number]]; layers: Record<string, { file: string; unit: string; label: string; source: string; stops: any }> } | null>(null);
+  /* Nhãn tên xã: bật/tắt + màu chữ + cỡ chữ (lưu localStorage) */
+  const [wardLabelConfig, setWardLabelConfig] = useState<{ on: boolean; color: string; size: number }>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("webgis-ward-labels") || "null");
+      return {
+        on: !!saved?.on,
+        color: typeof saved?.color === "string" ? saved.color : "#1b4332",
+        size: Number.isFinite(Number(saved?.size)) ? Number(saved.size) : 11,
+      };
+    } catch { return { on: false, color: "#1b4332", size: 11 }; }
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("webgis-ward-labels", JSON.stringify(wardLabelConfig)); } catch { /* bỏ qua lỗi dung lượng */ }
+  }, [wardLabelConfig]);
   const [transectFor, setTransectFor] = useState<EthnicKey | null>(null);
   const [calendarFor, setCalendarFor] = useState<EthnicKey | null>(null);
   // Tự động lưu lược đồ mặt cắt & nông lịch theo dân tộc vào localStorage
@@ -486,8 +533,10 @@ export default function WebGIS() {
   const [pdfViewer, setPdfViewer] = useState<PdfFile | null>(null);
   const [editingEthnicPct, setEditingEthnicPct] = useState<string|null>(null);
   const [editingLayer, setEditingLayer] = useState<string | null>(null); const [composerSnapshot, setComposerSnapshot] = useState<any>(null);
-const [showMapComposer, setShowMapComposer] = useState(false);
-const [syncPending, setSyncPending] = useState(false);
+  const [showMapComposer, setShowMapComposer] = useState(false);
+  const [syncPending, setSyncPending] = useState(false);
+  const [mapMoveTick, setMapMoveTick] = useState(0);
+  const [mapFrameAspect, setMapFrameAspect] = useState<number | null>(null);
   const [pieWardSelection, setPieWardSelection] = useState<Set<string>>(new Set());
   const [editingWardComposition, setEditingWardComposition] = useState<WardProperties | null>(null); const [editingWardStyle, setEditingWardStyle] = useState<WardProperties | null>(null);
   const [currentProvinceGeoJson, setCurrentProvinceGeoJson] = useState<GeoJsonData | null>(null);
@@ -868,6 +917,47 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
       }
     };
   }, [activeLayers, activeRaster, selectedProvince, currentProvinceGeoJson, wardOverrides, layerSymbologies]);
+
+  /* ─── Nhãn tên xã vĩnh viễn (bật/tắt · màu chữ · cỡ chữ) ─── */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (wardLabelsLayerRef.current) {
+      map.removeLayer(wardLabelsLayerRef.current);
+      wardLabelsLayerRef.current = null;
+    }
+    if (!wardLabelConfig.on) return;
+    const source = currentProvinceGeoJson || allWardsGeoJson;
+    if (!source?.features?.length) return;
+    const features = selectedAreaOnly && selectedWardIds.size > 0 && currentProvinceGeoJson
+      ? currentProvinceGeoJson.features.filter(feature => selectedWardIds.has(String((feature.properties as unknown as WardProperties)?.ma_xa)))
+      : source.features;
+    const group = L.layerGroup();
+    features.forEach(feature => {
+      const props = (feature.properties ?? {}) as unknown as WardProperties;
+      const name = String(props.ten_xa || "").trim();
+      if (!name || !feature.geometry) return;
+      const probe = L.geoJSON(feature as GeoJSON.Feature);
+      const bounds = probe.getBounds();
+      probe.remove();
+      if (!bounds.isValid()) return;
+      const center = bounds.getCenter();
+      const icon = L.divIcon({
+        className: "ward-label-icon",
+        html: `<span style="color:${escapeHtmlText(wardLabelConfig.color)};font-size:${wardLabelConfig.size}px">${escapeHtmlText(name)}</span>`,
+        iconSize: [0, 0],
+      });
+      L.marker([center.lat, center.lng], { icon, interactive: false, keyboard: false, bubblingMouseEvents: false, opacity: 1 }).addTo(group);
+    });
+    group.addTo(map);
+    wardLabelsLayerRef.current = group;
+    return () => {
+      if (wardLabelsLayerRef.current === group) {
+        map.removeLayer(group);
+        wardLabelsLayerRef.current = null;
+      }
+    };
+  }, [wardLabelConfig, currentProvinceGeoJson, allWardsGeoJson, selectedAreaOnly, selectedWardIds]);
 
   /* ─── Ward ethnic pie-chart markers ─── */
   useEffect(() => {
@@ -1319,7 +1409,22 @@ const deleteLayerCategory = (categoryId: string) => {
   if (DEFAULT_LAYER_CATEGORIES.some(c => c.id === categoryId)) {
     setDeletedCategoryIds(prev => prev.includes(categoryId) ? prev : [...prev, categoryId]);
   }
-  setLayerCategories(prev => prev.filter(c => c.id !== categoryId));
+  setLayerCategories(prev => {
+    const next = prev.filter(c => c.id !== categoryId);
+    const hiddenAll = new Set<string>(Object.values(hiddenLayerIds).flat());
+    // Lớp builtin bị gom vào thư mục người dùng: trả về nhóm gốc khi thư mục bị xóa
+    cat.layers.forEach(l => {
+      const def = DEFAULT_LAYER_CATEGORIES.find(d => d.layers.some(x => x.id === l.id));
+      if (!def || def.id === categoryId) return;
+      if (deletedCategoryIds.includes(def.id)) return;
+      if (hiddenAll.has(l.id)) return;
+      const target = next.find(c => c.id === def.id);
+      if (target && !target.layers.some(x => x.id === l.id)) {
+        next[next.indexOf(target)] = { ...target, layers: [...target.layers, l] };
+      }
+    });
+    return next;
+  });
   if (editingLayer && cat.layers.some(l => l.id === editingLayer)) setEditingLayer(null);
   const customData: Record<string, any[]> = {};
   customInCat.forEach(layer => { if (layersData) customData[layer.id] = (layersData as any)[layer.id] || []; });
@@ -1361,6 +1466,53 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
   };
   const renameCategory = (id: string, name: string) => {
     setLayerCategories(prev => prev.map(category => category.id === id ? { ...category, ten: name } : category));
+  };
+  const toggleFolderCollapse = (id: string) => {
+    setLayerCategories(prev => prev.map(category => category.id === id ? { ...category, collapsed: !category.collapsed } : category));
+  };
+  const combinedLayerIds = (categoryId: string): string[] => [
+    ...(layerCategories.find(c => c.id === categoryId)?.layers.map(l => l.id) ?? []),
+    ...customLayers.filter(c => c.categoryId === categoryId).map(c => c.id),
+  ];
+  const moveLayer = (layerId: string, targetCategoryId: string, index: number) => {
+    if (!layerCategories.some(c => c.id === targetCategoryId)) return;
+    const builtin = layerCategories.flatMap(c => c.layers).find(l => l.id === layerId);
+    const custom = customLayers.find(c => c.id === layerId);
+    if (!builtin && !custom) return;
+    const sourceCategoryId = builtin
+      ? layerCategories.find(c => c.layers.some(l => l.id === layerId))?.id
+      : custom!.categoryId;
+    if (!sourceCategoryId) return;
+    const srcOrder = combinedLayerIds(sourceCategoryId).filter(id => id !== layerId);
+    const tgtWithout = combinedLayerIds(targetCategoryId).filter(id => id !== layerId);
+    const tgtOrder = [...tgtWithout];
+    tgtOrder.splice(Math.max(0, Math.min(index, tgtWithout.length)), 0, layerId);
+    const orderBuiltin = (layers: LayerCategoryState["layers"], order: string[], extra?: typeof builtin) => {
+      const byId = new Map(layers.map(l => [l.id, l] as const));
+      if (extra && !byId.has(extra.id)) byId.set(extra.id, extra);
+      return order.map(id => byId.get(id)).filter((l): l is LayerCategoryState["layers"][number] => !!l);
+    };
+    const sameFolder = sourceCategoryId === targetCategoryId;
+    setLayerCategories(prev => prev.map(c => {
+      if (c.id === targetCategoryId) return { ...c, layers: orderBuiltin(c.layers, tgtOrder, builtin) };
+      if (!sameFolder && c.id === sourceCategoryId) return { ...c, layers: orderBuiltin(c.layers, srcOrder) };
+      return c;
+    }));
+    setCustomLayers(prev => {
+      const moved = custom && prev.find(c => c.id === layerId);
+      const withCat = moved ? prev.map(c => c.id === layerId ? { ...c, categoryId: targetCategoryId } : c) : prev;
+      const reorder = (list: CustomLayer[], catId: string, order: string[]) => {
+        const firstIdx = list.findIndex(c => c.categoryId === catId);
+        if (firstIdx < 0) return list;
+        const inCat = list.filter(c => c.categoryId === catId);
+        const ordered = order.map(id => inCat.find(c => c.id === id)).filter((c): c is CustomLayer => !!c);
+        return [...list.slice(0, firstIdx), ...ordered, ...list.slice(firstIdx).filter(c => c.categoryId !== catId)];
+      };
+      let out = withCat;
+      if (!sameFolder) out = reorder(out, sourceCategoryId, srcOrder);
+      out = reorder(out, targetCategoryId, tgtOrder);
+      return out;
+    });
   };
 
   /* ─── Import/Export Layer ─── */
@@ -1420,39 +1572,9 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
     mapRef.current.invalidateSize({ animate: false });
     refreshBoundaryStyles();
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    const maskElement = mapContainerRef.current.parentElement?.querySelector(".selected-area-mask") as HTMLElement | null;
-    let captureMask: HTMLElement | null = null;
-    if (maskElement) {
-      captureMask = maskElement.cloneNode(true) as HTMLElement;
-      captureMask.style.cssText = `${maskElement.style.cssText};position:absolute;inset:0;`;
-      const mapRect = mapContainerRef.current.getBoundingClientRect();
-      const hostRect = maskElement.parentElement?.getBoundingClientRect();
-      const offsetX = mapRect.left - (hostRect?.left ?? mapRect.left);
-      const offsetY = mapRect.top - (hostRect?.top ?? mapRect.top);
-      const width = Math.max(1, Math.round(mapRect.width));
-      const height = Math.max(1, Math.round(mapRect.height));
-      const svg = captureMask.querySelector("svg");
-      const svgMask = captureMask.querySelector("mask");
-      const selectedPath = captureMask.querySelector("mask path");
-      const maskBase = captureMask.querySelector("mask rect");
-      const whiteOverlay = svg?.querySelector(`rect[mask]`);
-      if (svg && svgMask && selectedPath && maskBase && whiteOverlay) {
-        const captureMaskId = `composer-capture-mask-${Date.now()}`;
-        svgMask.setAttribute("id", captureMaskId);
-        whiteOverlay.setAttribute("mask", `url(#${captureMaskId})`);
-        svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-        svg.setAttribute("width", String(width));
-        svg.setAttribute("height", String(height));
-        svgMask.setAttribute("width", String(width));
-        svgMask.setAttribute("height", String(height));
-        selectedPath.setAttribute("transform", `translate(${-offsetX} ${-offsetY})`);
-        maskBase.setAttribute("width", String(width));
-        maskBase.setAttribute("height", String(height));
-        whiteOverlay.setAttribute("width", String(width));
-        whiteOverlay.setAttribute("height", String(height));
-      }
-      mapContainerRef.current.appendChild(captureMask);
-    }
+    // Không chụp phần tử mask DOM (vùng Ngoại vi trắng): html2canvas từng render lệch mask
+    // (dịch kép toạ độ) làm Ngoại vi = trắng cắt nhầm nội dung tỉnh. Thay vào đó, vùng trắng
+    // được vẽ lại bằng canvas theo toạ độ ward gốc ngay bên dưới.
     let canvas: HTMLCanvasElement;
     const densityPaths: L.Path[] = [];
     const isolateSelectedDensity = selectedAreaOnly && selectedWardIds.size > 0;
@@ -1471,7 +1593,7 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       canvas = await html2canvas(mapContainerRef.current, {
         useCORS: true,
         allowTaint: false,
-        ignoreElements: (el) => el.classList.contains('leaflet-control-container'),
+        ignoreElements: (el) => el.classList.contains('leaflet-control-container') || el.classList.contains('selected-area-mask'),
         // html2canvas serialize SVG kèm cả CSS transform của Leaflet (zoom-animation) rồi
         // lại vẽ theo bounds đã gồm transform → dịch vị trí kép, làm mất fill ở một số vùng.
         // Gỡ transform + chuẩn hóa viewBox trong bản clone trước khi chụp.
@@ -1487,7 +1609,6 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
         },
       });
     } finally {
-      captureMask?.remove();
       densityPaths.forEach(layer => {
         const feature = (layer as unknown as L.GeoJSON).feature as GeoJSON.Feature | undefined;
         const density = getDensityValue(feature?.properties as WardProperties);
@@ -1539,6 +1660,127 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
         }
       }
     }
+    // Vẽ lại vùng ngoại vi trắng (thanh "Ngoại vi") thẳng lên ảnh chụp theo toạ độ ward gốc,
+    // thay vì dựa vào phần tử mask DOM — html2canvas từng render lệch mask nên Ngoại vi = trắng
+    // cắt nhầm vào nội dung tỉnh.
+    if (selectedAreaOnly && selectedAreaFade > 0 && selectedProvince && currentProvinceGeoJson) {
+      const whiteFeatures = selectedWardIds.size > 0
+        ? currentProvinceGeoJson.features.filter(feature => selectedWardIds.has(String(feature.properties.ma_xa)))
+        : currentProvinceGeoJson.features;
+      const fadeRect = mapContainerRef.current.getBoundingClientRect();
+      const fadeScaleX = canvas.width / Math.max(1, fadeRect.width);
+      const fadeScaleY = canvas.height / Math.max(1, fadeRect.height);
+      const fadeCanvas = document.createElement("canvas");
+      fadeCanvas.width = canvas.width;
+      fadeCanvas.height = canvas.height;
+      const fadeContext = fadeCanvas.getContext("2d");
+      if (fadeContext) {
+        fadeContext.globalAlpha = Math.min(1, Math.max(0, selectedAreaFade));
+        fadeContext.fillStyle = "#ffffff";
+        fadeContext.fillRect(0, 0, fadeCanvas.width, fadeCanvas.height);
+        fadeContext.globalAlpha = 1;
+        fadeContext.globalCompositeOperation = "destination-out";
+        fadeContext.beginPath();
+        whiteFeatures.forEach(feature => {
+          const geometry = feature.geometry as { type?: string; coordinates?: unknown } | null;
+          const polygons = geometry?.type === "Polygon"
+            ? [geometry.coordinates]
+            : geometry?.type === "MultiPolygon"
+              ? (geometry.coordinates as unknown[])
+              : [];
+          (polygons as unknown[]).forEach(polygon => {
+            (polygon as unknown[]).forEach(ring => {
+              if (!Array.isArray(ring) || ring.length < 3) return;
+              ring.forEach((point, pointIndex) => {
+                if (!Array.isArray(point) || point.length < 2) return;
+                const projected = mapRef.current!.latLngToContainerPoint([Number(point[1]), Number(point[0])]);
+                const x = projected.x * fadeScaleX;
+                const y = projected.y * fadeScaleY;
+                if (pointIndex === 0) fadeContext.moveTo(x, y);
+                else fadeContext.lineTo(x, y);
+              });
+              fadeContext.closePath();
+            });
+          });
+        });
+        fadeContext.fill("evenodd");
+        canvas.getContext("2d")?.drawImage(fadeCanvas, 0, 0);
+      }
+    }
+    // Cắt ảnh chụp về đúng vùng nội dung khi "Chỉ khu vực chọn" làm trắng ngoại vi,
+    // giúp khung bản đồ trong composer được lấp đầy thay vì các khoảng trắng lớn quanh vùng chọn.
+    const liveBounds = mapRef.current.getBounds();
+    let capturedViewportBounds = { north: liveBounds.getNorth(), south: liveBounds.getSouth(), east: liveBounds.getEast(), west: liveBounds.getWest() };
+    if (selectedAreaOnly && selectedProvince && currentProvinceGeoJson) {
+      const cropFeatures = selectedWardIds.size > 0
+        ? currentProvinceGeoJson.features.filter(feature => selectedWardIds.has(String(feature.properties.ma_xa)))
+        : currentProvinceGeoJson.features;
+      const cropRect = mapContainerRef.current.getBoundingClientRect();
+      const cropScaleX = canvas.width / Math.max(1, cropRect.width);
+      const cropScaleY = canvas.height / Math.max(1, cropRect.height);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const trackPoint = (lng: number, lat: number) => {
+        const p = mapRef.current!.latLngToContainerPoint([lat, lng]);
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      };
+      cropFeatures.forEach(feature => walkGeoCoords(feature.geometry, trackPoint));
+      if (Number.isFinite(minX) && maxX > minX && maxY > minY) {
+        const pad = 18;
+        let sx = Math.max(0, Math.floor((minX - pad) * cropScaleX));
+        let sy = Math.max(0, Math.floor((minY - pad) * cropScaleY));
+        let sw = Math.min(canvas.width, Math.ceil((maxX + pad) * cropScaleX)) - sx;
+        let sh = Math.min(canvas.height, Math.ceil((maxY + pad) * cropScaleY)) - sy;
+        // Mở rộng khung cắt cho đúng tỉ lệ khung bản đồ trong composer (thêm vùng nền trắng hai bên
+        // thay vì để objectFit: cover cắt mất phần đầu/cuối của vùng chọn).
+        if (mapFrameAspect && mapFrameAspect > 0 && sw > 0 && sh > 0) {
+          const currentAspect = sw / sh;
+          const clampX = (value: number, width: number) => Math.max(0, Math.min(value, canvas.width - width));
+          const clampY = (value: number, height: number) => Math.max(0, Math.min(value, canvas.height - height));
+          if (currentAspect < mapFrameAspect) {
+            const wantedW = Math.min(canvas.width, sh * mapFrameAspect);
+            sx = clampX(sx + sw / 2 - wantedW / 2, wantedW);
+            sw = wantedW;
+            if (sw < sh * mapFrameAspect) {
+              const wantedH = sw / mapFrameAspect;
+              sy = clampY(sy + sh / 2 - wantedH / 2, wantedH);
+              sh = wantedH;
+            }
+          } else if (currentAspect > mapFrameAspect) {
+            const wantedH = Math.min(canvas.height, sw / mapFrameAspect);
+            sy = clampY(sy + sh / 2 - wantedH / 2, wantedH);
+            sh = wantedH;
+            if (sh < sw / mapFrameAspect) {
+              const wantedW = sh * mapFrameAspect;
+              sx = clampX(sx + sw / 2 - wantedW / 2, wantedW);
+              sw = wantedW;
+            }
+          }
+          sx = Math.round(sx); sy = Math.round(sy); sw = Math.round(sw); sh = Math.round(sh);
+        }
+        const coversCanvas = sx <= 2 && sy <= 2 && sw >= canvas.width - 4 && sh >= canvas.height - 4;
+        if (sw > 48 && sh > 48 && !coversCanvas) {
+          const croppedCanvas = document.createElement("canvas");
+          croppedCanvas.width = sw;
+          croppedCanvas.height = sh;
+          const cropContext = croppedCanvas.getContext("2d");
+          if (cropContext) {
+            cropContext.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+            canvas = croppedCanvas;
+            const topLeft = mapRef.current!.containerPointToLatLng(L.point(sx / cropScaleX, sy / cropScaleY));
+            const bottomRight = mapRef.current!.containerPointToLatLng(L.point((sx + sw) / cropScaleX, (sy + sh) / cropScaleY));
+            capturedViewportBounds = {
+              north: Math.max(topLeft.lat, bottomRight.lat),
+              south: Math.min(topLeft.lat, bottomRight.lat),
+              east: Math.max(topLeft.lng, bottomRight.lng),
+              west: Math.min(topLeft.lng, bottomRight.lng),
+            };
+          }
+        }
+      }
+    }
     const base64Image = canvas.toDataURL("image/png");
     const mapBounds = mapRef.current.getBounds();
     const isVisibleFeature = (feature: any): boolean => {
@@ -1585,10 +1827,10 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
         zoom: mapRef.current.getZoom(),
       },
       viewportBounds: {
-        north: mapBounds.getNorth(),
-        south: mapBounds.getSouth(),
-        east: mapBounds.getEast(),
-        west: mapBounds.getWest(),
+        north: capturedViewportBounds.north,
+        south: capturedViewportBounds.south,
+        east: capturedViewportBounds.east,
+        west: capturedViewportBounds.west,
       },
       annotations,
       layerDisplayAll,
@@ -1617,10 +1859,24 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
     if (!showMapComposer) { syncQueuedRef.current = false; return; }
     if (syncPending) { syncQueuedRef.current = true; return; }
     void syncToComposer();
-  }, [showMapComposer, activeLayers, activeRaster, selectedProvince, selectedWard?.ma_xa, selectedWardIds, selectedAreaOnly, selectedAreaFade, currentProvinceGeoJson, layerSymbologies, wardOverrides, layersData, annotations]);
+  }, [showMapComposer, activeLayers, activeRaster, selectedProvince, selectedWard?.ma_xa, selectedWardIds, selectedAreaOnly, selectedAreaFade, currentProvinceGeoJson, layerSymbologies, wardOverrides, layersData, annotations, rasterOpacity, pieWardSelection, showPieSelector, customLayers, ethnicOverrides, wardLabelConfig, mapFrameAspect, mapMoveTick]);
+
+  /* Chụp lại ảnh cho composer khi người dùng pan/zoom bản đồ, tránh snapshot cũ lệch giao diện */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!showMapComposer || !map) return;
+    let timer = 0;
+    const queue = () => { window.clearTimeout(timer); timer = window.setTimeout(() => setMapMoveTick(v => v + 1), 450); };
+    map.on("moveend zoomend", queue);
+    return () => { window.clearTimeout(timer); map.off("moveend zoomend", queue); };
+  }, [showMapComposer]);
 
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
+    if (THEMATIC_KEYS.includes(id as (typeof THEMATIC_KEYS)[number])) {
+      setActiveRaster(prev => prev === id ? null : id);
+      return;
+    }
     if(id==="ward_boundaries") wardBoundaryAutoOnRef.current=false;
     setActiveLayers(prev=>{
       const next=new Set(prev);
@@ -1914,9 +2170,20 @@ onEachFeature:(feat,lyr)=>{
       }).join(" "));
     };
     updateMask();
-    map.on("move zoom resize", updateMask);
+    map.on("move zoom resize moveend zoomend", updateMask);
+    // Theo dõi kích thước khung map: khi panel/thanh bên đổi cỡ (transition) mà không có
+    // sự kiện move/resize của Leaflet thì hộp mask cũ khiến vùng trắng lệch ranh giới
+    // (nội dung ở rìa bản đồ, ví dụ Mường Chiêng/Sốp Cộp bị "cắt" mất).
+    let maskRaf = 0;
+    const maskResizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => {
+      window.cancelAnimationFrame(maskRaf);
+      maskRaf = window.requestAnimationFrame(() => updateMask());
+    }) : null;
+    maskResizeObserver?.observe(map.getContainer());
     return () => {
-      map.off("move zoom resize", updateMask);
+      map.off("move zoom resize moveend zoomend", updateMask);
+      window.cancelAnimationFrame(maskRaf);
+      try { maskResizeObserver?.disconnect(); } catch { /* bỏ qua */ }
       if (selectedAreaMaskRef.current) selectedAreaMaskRef.current.remove();
       selectedAreaMaskRef.current = null;
     };
@@ -2074,6 +2341,16 @@ onEachFeature:(feat,lyr)=>{
   ]
 }));
   const customLayerIds = customLayers.map(c => c.id);
+  const thematicCategory: LayerCategory | null = rasterMeta ? {
+    id: "__thematic__",
+    ten: "Bản đồ chuyên đề",
+    icon: "🗺️",
+    isThematic: true,
+    layers: THEMATIC_KEYS.filter(k => rasterMeta.layers[k]).map(k => {
+      const info = rasterMeta.layers[k];
+      return { id: k, ten: info.label, mau: thematicColor(info.stops), bieu_tuong: THEMATIC_ICONS[k] ?? "🗺️", active: activeRaster === k, isThematic: true };
+    }),
+  } : null;
   const allEditableLayers = new Set<string>([...EDITABLE_LAYERS, ...customLayerIds]);
   const allExportableLayers = new Set<string>([
     "irrigation", "forests", "vac_models", "medicinal_plants", "ward_boundaries",
@@ -2133,6 +2410,97 @@ onEachFeature:(feat,lyr)=>{
     return <EditableValue value={(val??"") as string|number} suffix={suffix} type={type} decimals={decimals} placeholder="Click để nhập" onSave={v=>updateWardField(selectedWard.ma_xa,field,type==="number"?parseFloat(v):v)}/>;
   };
 
+  const openEarth3D = async () => {
+    const m = mapRef.current;
+    const center: [number, number] = m ? [m.getCenter().lng, m.getCenter().lat] : [103.6, 21.7];
+    const zoom = m ? Math.min(Math.max(m.getZoom(), 7), 11) : 9;
+    let overlay: unknown = null;
+    if (selectedWard && currentProvinceGeoJson) {
+      overlay = { type: "FeatureCollection", features: currentProvinceGeoJson.features.filter(f => (f.properties as Record<string, unknown>)?.ma_xa === selectedWard.ma_xa) };
+    } else if (currentProvinceGeoJson) {
+      overlay = currentProvinceGeoJson;
+    } else if (provinceMaskGeomRef.current) {
+      overlay = provinceMaskGeomRef.current;
+    }
+
+    // Lớp raster chuyên đề đang bật — dùng bản đã cắt theo ranh giới nếu có cache
+    let raster: { url: string; bounds: [[number, number], [number, number]]; opacity: number } | null = null;
+    if (activeRaster && rasterMeta?.layers[activeRaster]) {
+      const info = rasterMeta.layers[activeRaster];
+      raster = {
+        url: maskedRasterCacheRef.current.get(activeRaster) || `${BASE_PATH}/data/raster/${info.file}`,
+        bounds: rasterMeta.bounds,
+        opacity: rasterOpacity,
+      };
+    }
+
+    // Gộp các lớp vector đang bật thành một FeatureCollection cho MapLibre 3D
+    const { featuresToGeoJSON } = await import("../utils/geoUtils");
+    const earthFeatures: GeoJSON.Feature[] = [];
+    const pushInternalLayer = (features: any[], geom: "point" | "line" | "polygon", color: string, fillColor: string, fill: number, weight: number) => {
+      if (!Array.isArray(features) || features.length === 0) return;
+      const fc = featuresToGeoJSON(features, geom, { color, lineWidth: weight, fillAlpha: fill }) as GeoJSON.FeatureCollection;
+      fc.features.forEach(feature => {
+        feature.properties = { ...(feature.properties || {}), __geom: geom, __color: color, __fillColor: fillColor, __fill: fill, __weight: weight };
+        earthFeatures.push(feature);
+      });
+    };
+    const pushWardLayer = (fc: unknown, color: string, fillColor: string, fill: number, weight: number) => {
+      if (!fc) return;
+      const features = (fc as GeoJSON.FeatureCollection).features;
+      if (!Array.isArray(features) || features.length === 0) return;
+      features.forEach(feature => {
+        if (!feature?.geometry) return;
+        earthFeatures.push({
+          type: "Feature",
+          properties: { __geom: "polygon", __color: color, __fillColor: fillColor, __fill: fill, __weight: weight },
+          geometry: feature.geometry,
+        });
+      });
+    };
+
+    const wardStyle = getLayerSymbology("ward_boundaries");
+    if (wardBoundaryOnRef.current) {
+      if (currentProvinceGeoJson) pushWardLayer(currentProvinceGeoJson, wardStyle.color, wardStyle.fillColor, wardStyle.fillOpacity, wardStyle.lineWeight);
+      else if (allWardsGeoJson) pushWardLayer(allWardsGeoJson, wardStyle.color, wardStyle.fillColor, wardStyle.fillOpacity, wardStyle.lineWeight);
+    }
+    if (activeLayers.has("population_density") && !activeRaster && selectedProvince && currentProvinceGeoJson) {
+      const densityStyle = getLayerSymbology("population_density");
+      ((currentProvinceGeoJson as unknown) as GeoJSON.FeatureCollection).features.forEach(feature => {
+        const props = (feature?.properties ?? {}) as unknown as WardProperties;
+        if (!feature?.geometry) return;
+        earthFeatures.push({
+          type: "Feature",
+          properties: {
+            __geom: "polygon",
+            __color: "#3f3f3f",
+            __fillColor: getDensityColor(getDensityValue(props)),
+            __fill: densityStyle.fillOpacity,
+            __weight: 1.1,
+          },
+          geometry: feature.geometry,
+        });
+      });
+    }
+    activeLayers.forEach(id => {
+      if (id === "ward_boundaries" || id === "population_density") return;
+      const features = layersData ? (layersData as Record<string, any>)[id] : null;
+      if (!Array.isArray(features) || features.length === 0) return;
+      const geom = layerGeomAll[id] || "point";
+      const style = getLayerSymbology(id);
+      const hasOwnSymbology = !!layerSymbologies[id] || !!DEFAULT_LAYER_SYMBOLOGY[id];
+      const customColor = customDisplay[id]?.color;
+      const color = (hasOwnSymbology ? style.color : customColor) || customColor || style.color || "#4c6ef5";
+      const fillColor = (hasOwnSymbology ? style.fillColor : customColor) || color;
+      pushInternalLayer(features, geom, color, fillColor, geom === "polygon" ? style.fillOpacity : 0, style.lineWeight || 2);
+    });
+
+    const vectors: GeoJSON.FeatureCollection | null = earthFeatures.length > 0
+      ? { type: "FeatureCollection", features: earthFeatures }
+      : null;
+    setEarth3d({ open: true, center, zoom, overlay, raster, vectors });
+  };
+
   /* ─── Render ─── */
   return (
     <div className="webgis-container">
@@ -2178,13 +2546,13 @@ onEachFeature:(feat,lyr)=>{
               <><button className="breadcrumb-item link" onClick={handleBack}>Toàn vùng</button><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{selectedProvince}</span>{selectedWard&&<><span className="breadcrumb-sep">›</span><span className="breadcrumb-item active">{(getWardValue(selectedWard,"ten_xa") as string)||selectedWard.ten_xa}</span></>}</>
             )}
           </div>
-          <button className={`layer-toggle-btn ${showThematic?"active":""}`} onClick={()=>setShowThematic(s=>!s)} title="Bản đồ chuyên đề">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <span className="btn-label">Chuyên đề</span> {activeRaster&&<span className="layer-count">1</span>}
+          <button className="layer-toggle-btn" onClick={openEarth3D} title="Chế độ 3D (xoay · nghiêng góc nhìn)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <span className="btn-label">Chế độ 3D</span>
           </button>
           <button className={`layer-toggle-btn ${showLayers?"active":""}`} onClick={()=>setShowLayers(s=>!s)} title="Lớp bản đồ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-            <span className="btn-label">Lớp bản đồ</span> {activeLayers.size>0&&<span className="layer-count">{activeLayers.size}</span>}
+            <span className="btn-label">Lớp bản đồ</span> {(activeLayers.size + (activeRaster ? 1 : 0))>0&&<span className="layer-count">{activeLayers.size + (activeRaster ? 1 : 0)}</span>}
           </button>
           <button className="import-btn" onClick={()=>setShowImport(true)} title="Nhập dữ liệu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2224,6 +2592,7 @@ onClick={() => setShowMapComposer(s => !s)}
             )}
             {showLayers && <LayerControl
   categories={layerCategoriesWithState}
+  thematicCategory={thematicCategory}
   onToggle={toggleLayer}
   onEditLayer={openLayerEditor}
   onEditSymbology={openSymbologyEditor}
@@ -2236,6 +2605,12 @@ onClick={() => setShowMapComposer(s => !s)}
   onAddCategory={addLayerCategory}
   onDeleteCategory={deleteLayerCategory}
   onRemoveBuiltinLayer={removeBuiltinLayer}
+  onToggleFolderCollapse={toggleFolderCollapse}
+  onMoveLayer={moveLayer}
+  rasterOpacity={rasterOpacity}
+  onRasterOpacity={setRasterOpacity}
+  thematicSource={activeRaster && rasterMeta?.layers[activeRaster] ? rasterMeta.layers[activeRaster].source : undefined}
+  onClearThematic={() => setActiveRaster(null)}
   onExportLayer={exportLayer}
   featureCounts={featureCounts}
   editableLayers={allEditableLayers}
@@ -2246,6 +2621,12 @@ onClick={() => setShowMapComposer(s => !s)}
   showEthnicPie={showPieSelector}
   onToggleEthnicPie={()=>setShowPieSelector(prev => { if (prev) { setPieWardSelection(new Set()); setShowPieSelectorModal(false); } return !prev; })}
   onOpenPieSelector={() => { setShowPieSelector(true); setShowPieSelectorModal(true); }}
+  showWardLabels={wardLabelConfig.on}
+  onToggleWardLabels={() => setWardLabelConfig(c => ({ ...c, on: !c.on }))}
+  wardLabelColor={wardLabelConfig.color}
+  onWardLabelColor={(value) => setWardLabelConfig(c => ({ ...c, color: value }))}
+  wardLabelSize={wardLabelConfig.size}
+  onWardLabelSize={(value) => setWardLabelConfig(c => ({ ...c, size: value }))}
 />}
           </div>
           <div onMouseDown={startResizingLeft} style={{ position: "absolute", top: 0, right: 0, width: "8px", height: "100%", cursor: "col-resize", background: "transparent", zIndex: 10 }} title="Kéo để thay đổi độ rộng"/>
@@ -2266,49 +2647,6 @@ onClick={() => setShowMapComposer(s => !s)}
             </label>
           </div>
 
-
-          {showThematic && rasterMeta && (
-            <div className="thematic-panel">
-              <div className="thematic-header"><span className="thematic-title">Bản đồ chuyên đề</span><button className="thematic-close" onClick={()=>setShowThematic(false)} title="Đóng">×</button></div>
-              <div className="thematic-body">
-                <div className="thematic-group"><div className="thematic-group-label">🌡️ Khí hậu</div>
-                  {(["temperature","precipitation"] as const).map(k => {
-                    const info = rasterMeta.layers[k]; if (!info) return null;
-                    return (<label key={k} className={`thematic-row ${activeRaster===k?"active":""}`}><input type="radio" name="thematic" checked={activeRaster===k} onChange={()=>setActiveRaster(k)} /><span className="thematic-row-label">{info.label}</span></label>);
-                  })}
-                </div>
-                <div className="thematic-group"><div className="thematic-group-label">⛰️ Địa hình</div>
-                  {(["elevation","aspect"] as const).map(k => {
-                    const info = rasterMeta.layers[k]; if (!info) return null;
-                    return (<label key={k} className={`thematic-row ${activeRaster===k?"active":""}`}><input type="radio" name="thematic" checked={activeRaster===k} onChange={()=>setActiveRaster(k)} /><span className="thematic-row-label">{info.label}</span></label>);
-                  })}
-                </div>
-                <div className="thematic-group"><div className="thematic-group-label">🌱 Thổ nhưỡng</div>
-                  {(["soil_type","soil_ph"] as const).map(k => {
-                    const info = rasterMeta.layers[k]; if (!info) return null;
-                    return (<label key={k} className={`thematic-row ${activeRaster===k?"active":""}`}><input type="radio" name="thematic" checked={activeRaster===k} onChange={()=>setActiveRaster(k)} /><span className="thematic-row-label">{info.label}</span></label>);
-                  })}
-                </div>
-                <button className="thematic-clear" disabled={!activeRaster} onClick={()=>setActiveRaster(null)}>Tắt lớp chuyên đề</button>
-                <button className="thematic-3d-btn" onClick={() => {
-                  const m = mapRef.current;
-                  const center: [number, number] = m ? [m.getCenter().lng, m.getCenter().lat] : [103.6, 21.7];
-                  const zoom = m ? Math.min(Math.max(m.getZoom(), 7), 11) : 9;
-                  let overlay: unknown = null;
-                  if (selectedWard && currentProvinceGeoJson) {
-                    overlay = { type: "FeatureCollection", features: currentProvinceGeoJson.features.filter(f => (f.properties as Record<string, unknown>)?.ma_xa === selectedWard.ma_xa) };
-                  } else if (currentProvinceGeoJson) {
-                    overlay = currentProvinceGeoJson;
-                  } else if (provinceMaskGeomRef.current) {
-                    overlay = provinceMaskGeomRef.current;
-                  }
-                  setEarth3d({ open: true, center, zoom, overlay });
-                }}>🌍 Chế độ 3D (xoay · nghiêng góc nhìn)</button>
-                {activeRaster && (<div className="thematic-opacity"><label>Độ trong suốt: {Math.round(rasterOpacity*100)}%</label><input type="range" min={0.2} max={1} step={0.05} value={rasterOpacity} onChange={e=>setRasterOpacity(parseFloat(e.target.value))} /></div>)}
-                {activeRaster && rasterMeta.layers[activeRaster] && (<div className="thematic-source">Nguồn: <em>{rasterMeta.layers[activeRaster].source}</em></div>)}
-              </div>
-            </div>
-          )}
 
           {activeRaster && rasterMeta && rasterMeta.layers[activeRaster] && (() => {
             const info = rasterMeta.layers[activeRaster];
@@ -2610,7 +2948,6 @@ onClick={() => setShowMapComposer(s => !s)}
                           Đặc điểm địa bàn
                         </div>
                         <p className="ward-dacdiem-text">{selectedWard.dac_diem}</p>
-                        <SourceStatus item={{ trang_thai: selectedWard.dac_diem_trang_thai, nguon: selectedWard.dac_diem_nguon }} />
                       </div>
                     )}
 
@@ -2647,36 +2984,6 @@ onClick={() => setShowMapComposer(s => !s)}
                           })}
                         </div>
                         <div className="ethnic-bar-wrap">{wardDanToc.map(({dan_toc,ty_le})=>{const info=getDanTocInfo(dan_toc);return info?<div key={dan_toc} className="ethnic-bar-seg" style={{width:`${ty_le}%`,background:info.mau}} title={`${info.ten.replace("Dân tộc ","")}: ${ty_le}%`}/>:null;})}</div>
-                        {(()=>{
-                          const tt=selectedWard.dan_toc_trang_thai;
-                          const nguon=selectedWard.dan_toc_nguon||[];
-                          const ghiChu=selectedWard.dan_toc_ghi_chu;
-                          const edited=!!wardOverrides.get(selectedWard.ma_xa)?.dan_toc;
-                          if(!tt&&!edited)return null;
-                          // Panel "Thông tin địa bàn": bỏ khối "Ước tính — cần đối chiếu" (dữ liệu ước tính theo mẫu), chỉ giữ nguồn đã đối chiếu
-                          if(!edited&&tt!=="co_nguon"&&tt!=="mot_phan")return null;
-                          const meta=tt==="co_nguon"?{label:"✓ Đã có nguồn",color:"#15803d",bg:"#dcfce7",border:"#86efac"}
-                            :tt==="mot_phan"?{label:"~ Một phần có nguồn",color:"#a16207",bg:"#fef9c3",border:"#fde047"}
-                            :{label:"⚠ Ước tính — cần đối chiếu",color:"#b45309",bg:"#ffedd5",border:"#fdba74"};
-                          return(
-                            <div style={{marginTop:8,padding:"6px 8px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,fontSize:11}}>
-                              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                                <span style={{padding:"2px 8px",borderRadius:999,background:edited?"#e0e7ff":meta.bg,color:edited?"#3730a3":meta.color,border:`1px solid ${edited?"#a5b4fc":meta.border}`,fontWeight:600}}>{edited?"✎ Đã chỉnh sửa cục bộ":meta.label}</span>
-                                {nguon.length>0&&<span style={{color:"#64748b"}}>📚 {nguon.length} nguồn</span>}
-                              </div>
-                              {nguon.length>0&&(
-                                <ul style={{margin:"6px 0 0",paddingLeft:16,display:"flex",flexDirection:"column",gap:2}}>
-                                  {nguon.map((u,i)=>(
-                                    <li key={i}>{/^https?:\/\//.test(u)
-                                      ?<a href={u} target="_blank" rel="noopener noreferrer" style={{color:"#2563eb",wordBreak:"break-all"}}>{u.replace(/^https?:\/\//,"").replace(/\/$/,"")}</a>
-                                      :<span>{u}</span>}</li>
-                                  ))}
-                                </ul>
-                              )}
-                              {ghiChu&&<p style={{margin:"6px 0 0",color:"#475569",lineHeight:1.5}}>{ghiChu}</p>}
-                            </div>
-                          );
-                        })()}
                       </div>
                     )}
 
@@ -2875,7 +3182,7 @@ onClick={() => setShowMapComposer(s => !s)}
       {showKnowledge && <IndigenousKnowledge onClose={()=>setShowKnowledge(false)} data={knowledgeData} onChange={setKnowledgeData}/>}
       
       {pendingAnnotation && <AnnotationModal coords={pendingAnnotation.coords} loai={pendingAnnotation.loai} onSave={saveAnnotation} onCancel={()=>setPendingAnnotation(null)}/>}
-      <Earth3DModal open={earth3d.open} onClose={() => setEarth3d(s => ({ ...s, open: false }))} center={earth3d.center} zoom={earth3d.zoom} overlay={earth3d.overlay} />
+      <Earth3DModal open={earth3d.open} onClose={() => setEarth3d(s => ({ ...s, open: false }))} center={earth3d.center} zoom={earth3d.zoom} overlay={earth3d.overlay} raster={earth3d.raster} vectors={earth3d.vectors} />
       <MapComposer
   hidden={!showMapComposer || !!editingLayer}
   onClose={() => setShowMapComposer(false)}
@@ -2883,6 +3190,7 @@ onClick={() => setShowMapComposer(s => !s)}
   syncSnapshot={composerSnapshot}
   onRequestSync={syncToComposer}
   syncPending={syncPending}
+  onFrameAspect={setMapFrameAspect}
   onOpenLayerEditor={() => {
     const candidates = Array.from(activeLayers);
     const isEditable = (id: string) => allEditableLayers.has(id) && !!layerDisplayAll[id];

@@ -958,11 +958,12 @@ interface MapComposerProps {
   syncPending?: boolean;
   hidden?: boolean;
   onOpenLayerEditor?: () => void;
+  onFrameAspect?: (aspect: number | null) => void;
 }
 
 const MapComposer: React.FC<MapComposerProps> = ({
   onClose, mapSnapshot,
-  syncSnapshot, onRequestSync, syncPending = false, hidden = false, onOpenLayerEditor,
+  syncSnapshot, onRequestSync, syncPending = false, hidden = false, onOpenLayerEditor, onFrameAspect,
 }) => {
   const [pageSize, setPageSize] = useState<PageSize>(PAGE_SIZES[0]);
   const [elements, setElements] = useState<ComposerElement[]>([]);
@@ -995,6 +996,13 @@ const MapComposer: React.FC<MapComposerProps> = ({
       // ignore invalid draft
     }
   }, []);
+
+  // Báo tỉ lệ khung bản đồ về trang WebGIS để ảnh chụp được cắt đúng tỉ lệ (khung lấp đầy, không cắt mất vùng chọn)
+  const frameAspect = (() => {
+    const frame = elements.find(el => el.type === "mapFrame" && el.visible);
+    return frame && frame.height > 0 ? frame.width / frame.height : null;
+  })();
+  useEffect(() => { onFrameAspect?.(frameAspect); }, [frameAspect, onFrameAspect]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
