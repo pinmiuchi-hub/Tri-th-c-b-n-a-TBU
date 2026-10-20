@@ -1,0 +1,45 @@
+0	Mã phiếu
+1	Ngày phỏng vấn
+2	Người phỏng vấn
+3	1. Họ và tên
+4	2. Giới tính
+5	3. Năm sinh
+6	4. Dân tộc
+8	5. Địa chỉ thường trú
+9	6. Số năm sinh sống tại địa phương
+10	7. Số điện thoại liên hệ
+11	8. Trình độ học vấn
+12	9. Hoạt động tạo ra thu nhập chính
+14	Câu 1.1. Hiện có đang hoặc đã từng tham gia quản lý, sử dụng đất canh tác của gia đình?
+15	Câu 1.2. Nếu có tham gia, cụ thể là hoạt động gì?
+16	Câu 1.3. Đã ngừng sử dụng diện tích đất đó khoảng bao nhiêu năm? (số năm)
+17	Câu 1.4. Lý do chính ngừng sử dụng đất
+19	Câu 2. Cách đã áp dụng để quản lý và bảo tồn đất canh tác (chọn nhiều)
+29	Câu 3. Biện pháp quản lý, cải tạo đất xuất phát từ đâu? (chọn nhiều)
+35	Câu 4. Biện pháp hiệu quả nhất trong các biện pháp đã thực hiện (chọn nhiều)
+45	Câu 5. Nguyên nhân mai một tri thức bản địa về quản lý đất (chọn nhiều)
+50	Câu 6. Mức độ cần thiết của việc ghi chép, số hóa thành bản đồ hướng dẫn (đất)
+51	Câu 1. Nguồn nước đang sử dụng trong sinh hoạt và sản xuất (chọn nhiều)
+58	Câu 2.1. Cách khai thác, sử dụng nguồn nước (chọn nhiều)
+62	Câu 2.2. Mức độ thường xuyên sử dụng thủy lợi truyền thống
+63	Câu 2.3. Biện pháp bảo vệ, vệ sinh, phục hồi thủy lợi truyền thống (chọn nhiều)
+70	Câu 3. Hình thức quy định quản lý, bảo vệ nguồn nước (chọn nhiều)
+74	Câu 4. Biện pháp cộng đồng đã thực hiện để phân chia, sử dụng, bảo vệ nước (chọn nhiều)
+80	Câu 5. Tần suất thực hiện các biện pháp bảo vệ sau khi phân chia, sử dụng nước
+81	Câu 6. Nguyên nhân mai một tri thức bản địa về quản lý nước (chọn nhiều)
+86	Câu 7. Mức độ cần thiết của việc ghi chép, số hóa thành bản đồ hướng dẫn (nước)
+87	Câu 1. Cộng đồng có duy trì song song cách tự phân loại rừng theo phong tục (rừng cấm, rừng thiêng…)?
+88	Câu 2. Cách phân loại theo phong tục có được ghi vào hương ước/quy ước của bản?
+89	Câu 3. Rừng Nhà nước giao/khoán có khu vực trùng với rừng thiêng/rừng ma/rừng cấm của bản?
+90	Câu 4.1. Có thường vào các khu rừng khác để thu hái sản phẩm rừng?
+91	Câu 4.2. Sản phẩm thu hái là gì?
+92	Câu 5.1. Có áp dụng biện pháp giúp cây rừng tự phục hồi khi/sau thu hái?
+93	Câu 5.2. Mô tả ngắn gọn cách làm
+94	Câu 6. Nguyên nhân mai một tri thức bản địa về quản lý rừng (chọn nhiều)
+99	Câu 7. Mức độ cần thiết của việc ghi chép, số hóa thành bản đồ hướng dẫn (rừng)
+100	Câu 1. Loại bản đồ đã từng biết/sử dụng (chọn nhiều)
+105	Câu 2. Thông tin cần thể hiện trên bản đồ tri thức bản địa (chọn nhiều)
+114	Câu 3. Hình thức sử dụng bản đồ mong muốn
+115	Câu 4. Ai nên là người quản lý bản đồ? (chọn nhiều)
+119	Câu 5. Mức độ sẵn sàng sử dụng bản đồ
+120	Câu 6. Góp ý thêm

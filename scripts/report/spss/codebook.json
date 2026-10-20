@@ -1,0 +1,224 @@
+{
+  "codebook": {
+    "GIOI": [
+      "Nam",
+      "Nữ"
+    ],
+    "DANTOC": [
+      "Thái",
+      "Mông",
+      "Mường"
+    ],
+    "NAMSONG": [
+      "Dưới 5 năm",
+      "Từ 5–15 năm",
+      "Trên 15 năm"
+    ],
+    "HOVAN": [
+      "Chưa qua đào tạo",
+      "Tiểu học",
+      "THCS",
+      "THPT",
+      "Trung cấp/CĐ/ĐH trở lên"
+    ],
+    "THUNHAP": [
+      "Nông nghiệp",
+      "Chăn nuôi",
+      "Lâm nghiệp",
+      "Công nhân/viên chức Nhà nước",
+      "Khác",
+      "Dịch vụ",
+      "Tiểu thủ công nghiệp"
+    ],
+    "thamGiaDat": [
+      "Đang tham gia thường xuyên",
+      "Đã từng tham gia, nhưng hiện đã ngừng"
+    ],
+    "lydoNgung": [
+      "Thiếu nhân lực (chuyển đi làm nghề khác)",
+      "Chuyển đổi mục đích sử dụng theo quy hoạch",
+      "Đất bạc màu, xói mòn nặng",
+      "Khác"
+    ],
+    "dat6": [
+      "Bình thường",
+      "Cần thiết",
+      "Rất cần thiết"
+    ],
+    "nuoc22": [
+      "Thường xuyên",
+      "Rất hiếm khi",
+      "Thỉnh thoảng",
+      "Ít khi",
+      "Rất thường xuyên"
+    ],
+    "nuoc5": [
+      "Thỉnh thoảng (có làm nhưng không duy trì đều đặn)",
+      "Thường xuyên",
+      "Không bao giờ thực hiện",
+      "Luôn luôn thực hiện",
+      "Hiếm khi"
+    ],
+    "nuoc7": [
+      "Hoàn toàn không cần thiết",
+      "Bình thường",
+      "Cần thiết",
+      "Rất cần thiết"
+    ],
+    "rung1": [
+      "Có",
+      "Không"
+    ],
+    "rung2": [
+      "Có",
+      "Không"
+    ],
+    "rung3": [
+      "Có",
+      "Không"
+    ],
+    "rung41": [
+      "Có",
+      "Không"
+    ],
+    "rung51": [
+      "Có",
+      "Không"
+    ],
+    "rung7": [
+      "Hoàn toàn không cần thiết",
+      "Không cần thiết",
+      "Bình thường",
+      "Cần thiết",
+      "Rất cần thiết"
+    ],
+    "bd3": [
+      "Bản đồ giấy treo tại nhà văn hóa bản",
+      "Cả hai hình thức trên",
+      "Không có nhu cầu sử dụng",
+      "Ứng dụng/website tra cứu trên điện thoại"
+    ],
+    "bd5": [
+      "Sẵn sàng sử dụng thường xuyên",
+      "Sử dụng khi cần thiết",
+      "Không có nhu cầu sử dụng"
+    ]
+  },
+  "MR": {
+    "dat2": [
+      "bonphan",
+      "phanchuong",
+      "vatnuoi",
+      "checover",
+      "luancanh",
+      "ruongbat",
+      "dongmuc",
+      "nghialand",
+      "khongcaitao",
+      "khac"
+    ],
+    "dat3": [
+      "trithuc",
+      "nhanNuoc",
+      "tuHoc",
+      "hocDanToc",
+      "chuaUNG",
+      "khac"
+    ],
+    "dat4": [
+      "bonphan",
+      "phanchuong",
+      "vatnuoi",
+      "checover",
+      "luancanh",
+      "ruongbat",
+      "dongmuc",
+      "nghialand",
+      "khongcaitao",
+      "khac"
+    ],
+    "dat5": [
+      "khongGhichep",
+      "LopTre",
+      "NguoiGia",
+      "PhanBonHoa",
+      "khac"
+    ],
+    "nuoc1": [
+      "thuongnguon",
+      "hamnguon",
+      "mo",
+      "songsuoi",
+      "ngum",
+      "mua",
+      "khac"
+    ],
+    "nuoc21": [
+      "tttn",
+      "tlTruyenThong",
+      "tlHienDai",
+      "khac"
+    ],
+    "nuoc23": [
+      "ngaycong",
+      "tusua",
+      "tuantra",
+      "trongcay",
+      "nghiLy",
+      "khongco",
+      "khac"
+    ],
+    "nuoc3": [
+      "nhaNuoc",
+      "huongUoc",
+      "LuatTuc",
+      "khac"
+    ],
+    "nuoc4": [
+      "dauNguon",
+      "congDong",
+      "phanChia",
+      "taiSD",
+      "khong",
+      "khac"
+    ],
+    "nuoc6": [
+      "phuThuoc",
+      "BDKH",
+      "yLi",
+      "BienDong",
+      "khac"
+    ],
+    "rung6": [
+      "truyenMieng",
+      "LopTre",
+      "NguoiGia",
+      "NhaTruong",
+      "khac"
+    ],
+    "bd1": [
+      "giay",
+      "app",
+      "sodo",
+      "chuabiet",
+      "khac"
+    ],
+    "bd2": [
+      "hientriatDat",
+      "diahinh",
+      "songsuoi",
+      "hanhChinh",
+      "giaoThong",
+      "danCu",
+      "nongLich",
+      "quyDinh",
+      "khac"
+    ],
+    "bd4": [
+      "truongBan",
+      "canBo",
+      "nghienCuu",
+      "hoGiaDinh"
+    ]
+  }
+}

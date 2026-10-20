@@ -56,7 +56,7 @@ const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 const assetUrl = (p?: string): string => (!p ? "" : /^(https?:|data:|blob:)/.test(p) ? p : `${BASE_PATH}/${p.replace(/^\//, "")}`);
 const LAYER_CONFIG_STORAGE_KEY = "webgis-layer-config";
 // Bump when built-in layer content in public/data/layers.json changes (forces discard of stale saved copies)
-const LAYER_DATA_REV = 4;
+const LAYER_DATA_REV = 6;
 const LAYER_DATA_REV_KEYS = ["irrigation", "vac_models", "customary_zones", "villages"];
 // Lớp đã gỡ khỏi giao diện bản đồ (round 3): hiển thị văn bản theo xã trong panel "Thông tin địa bàn"
 const REMOVED_LAYER_IDS = new Set(["villages", "customary_zones"]);
@@ -652,7 +652,8 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
       provinceMaskGeomRef.current = g;
       maskedRasterCacheRef.current.clear();
     }).catch(console.error);
-    fetch(BASE_PATH+"/data/layers.json").then(r=>r.json()).then((d: any) => {
+    // cache:"no-cache" + ?v=REV: buộc trình duyệt revalidate/ruột URL mới, tránh phụ thuộc heuristic cache của file public (không có Cache-Control)
+    fetch(BASE_PATH+"/data/layers.json?v="+LAYER_DATA_REV, { cache: "no-cache" }).then(r=>r.json()).then((d: any) => {
       if (d.medicinal_plants) {
         d.medicinal_plants = d.medicinal_plants.map((p: any) => {
           const { ["tình_trang"]: tt, ...rest } = p;

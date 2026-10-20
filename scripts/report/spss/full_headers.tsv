@@ -1,0 +1,121 @@
+0	PHẦN I. THÔNG TIN CHUNG	Mã phiếu	Điền chữ
+1		Ngày phỏng vấn	dd/mm/yyyy
+2		Người phỏng vấn	Điền chữ
+3		1. Họ và tên	Điền chữ
+4		2. Giới tính	Chọn 1 đáp án ▼
+5		3. Năm sinh	Nhập số
+6		4. Dân tộc	Chọn 1 đáp án ▼
+7			Khác (ghi rõ)
+8		5. Địa chỉ thường trú	Điền chữ
+9		6. Số năm sinh sống tại địa phương	Chọn 1 đáp án ▼
+10		7. Số điện thoại liên hệ	Điền chữ
+11		8. Trình độ học vấn	Chọn 1 đáp án ▼
+12		9. Hoạt động tạo ra thu nhập chính	Chọn 1 đáp án ▼
+13			Khác (ghi rõ)
+14	2.1 ĐẤT	Câu 1.1. Hiện có đang hoặc đã từng tham gia quản lý, sử dụng đất canh tác của gia đình?	Chọn 1 đáp án ▼
+15		Câu 1.2. Nếu có tham gia, cụ thể là hoạt động gì?	Điền chữ
+16		Câu 1.3. Đã ngừng sử dụng diện tích đất đó khoảng bao nhiêu năm? (số năm)	Nhập số
+17		Câu 1.4. Lý do chính ngừng sử dụng đất	Chọn 1 đáp án ▼
+18			Khác (ghi rõ)
+19		Câu 2. Cách đã áp dụng để quản lý và bảo tồn đất canh tác (chọn nhiều)	Bón phân hóa học
+20			Phân chuồng, phân xanh, ủ phụ phẩm nông nghiệp
+21			Dùng vật nuôi hỗ trợ cải tạo đất (trâu bò, lúa-cá/lúa-vịt)
+22			Trồng cây che phủ, phủ rơm rạ/cỏ khô, tro than
+23			Luân canh, xen canh (đặc biệt cây họ đậu)
+24			Ruộng bậc thang, đắp bờ giữ đất, giữ nước
+25			Canh tác theo đường đồng mức
+26			Cho đất nghỉ sau một thời gian canh tác
+27			Không thực hiện biện pháp cải tạo nào
+28			Khác (ghi rõ)
+29		Câu 3. Biện pháp quản lý, cải tạo đất xuất phát từ đâu? (chọn nhiều)	Tri thức truyền thống (cha ông, luật tục)
+30			Nhà nước quy định/hướng dẫn
+31			Tự học hỏi (sách báo, internet)
+32			Học qua các dân tộc cùng sinh sống
+33			Chưa từng áp dụng biện pháp nào
+34			Khác (ghi rõ)
+35		Câu 4. Biện pháp hiệu quả nhất trong các biện pháp đã thực hiện (chọn nhiều)	Bón phân hóa học
+36			Phân chuồng, phân xanh, ủ phụ phẩm nông nghiệp
+37			Dùng vật nuôi hỗ trợ cải tạo đất (trâu bò, lúa-cá/lúa-vịt)
+38			Trồng cây che phủ, phủ rơm rạ/cỏ khô, tro than
+39			Luân canh, xen canh (đặc biệt cây họ đậu)
+40			Ruộng bậc thang, đắp bờ giữ đất, giữ nước
+41			Canh tác theo đường đồng mức
+42			Cho đất nghỉ sau một thời gian canh tác
+43			Không thực hiện biện pháp cải tạo nào
+44			Khác (ghi rõ)
+45		Câu 5. Nguyên nhân mai một tri thức bản địa về quản lý đất (chọn nhiều)	Không có ghi chép, bản đồ, tài liệu
+46			Lớp trẻ đi làm ăn xa, ít gắn bó nương rẫy
+47			Người già mất đi chưa kịp truyền lại
+48			Chuyển sang phân bón hóa học, máy móc
+49			Khác (ghi rõ)
+50		Câu 6. Mức độ cần thiết của việc ghi chép, số hóa thành bản đồ hướng dẫn (đất)	Chọn 1 đáp án ▼
+51	2.2 NƯỚC	Câu 1. Nguồn nước đang sử dụng trong sinh hoạt và sản xuất (chọn nhiều)	Nước thượng nguồn
+52			Nước hạ nguồn
+53			Nước mó (nước ngầm lộ ra)
+54			Nước sông/suối
+55			Nước ngầm (giếng)
+56			Nước mưa
+57			Khác (ghi rõ)
+58		Câu 2.1. Cách khai thác, sử dụng nguồn nước (chọn nhiều)	Trực tiếp lấy từ tự nhiên
+59			Công trình thủy lợi truyền thống (ống bương, máng gỗ, mương đất, phai)
+60			Hệ thống thủy lợi hiện đại (ống nhựa/sắt, mương bê tông, trạm bơm)
+61			Khác (ghi rõ)
+62		Câu 2.2. Mức độ thường xuyên sử dụng thủy lợi truyền thống	Chọn 1 đáp án ▼
+63		Câu 2.3. Biện pháp bảo vệ, vệ sinh, phục hồi thủy lợi truyền thống (chọn nhiều)	Huy động ngày công chung nạo vét, khơi thông
+64			Chặt tre, nứa, gom đá… tu sửa phai đập, máng
+65			Cử người tuần tra, vớt rác, dọn cành cây
+66			Trồng thêm/cấm chặt phá cây ven mương, quanh mó
+67			Tổ chức nghi lễ tâm linh (cúng bến nước, cúng mó nước)
+68			Không có biện pháp nào đặc biệt
+69			Khác (ghi rõ)
+70		Câu 3. Hình thức quy định quản lý, bảo vệ nguồn nước (chọn nhiều)	Quy định, chính sách của Nhà nước
+71			Hương ước, quy ước thành văn của bản
+72			Luật tục, quy ước bất thành văn truyền đời
+73			Khác (ghi rõ)
+74		Câu 4. Biện pháp cộng đồng đã thực hiện để phân chia, sử dụng, bảo vệ nước (chọn nhiều)	Bảo vệ sinh thái đầu nguồn
+75			Duy tu theo cộng đồng (góp ngày công)
+76			Phân chia công bằng vào mùa khô
+77			Tái sử dụng/tuần hoàn nước
+78			Không thực hiện biện pháp nào ở trên
+79			Khác (ghi rõ)
+80		Câu 5. Tần suất thực hiện các biện pháp bảo vệ sau khi phân chia, sử dụng nước	Chọn 1 đáp án ▼
+81		Câu 6. Nguyên nhân mai một tri thức bản địa về quản lý nước (chọn nhiều)	Phụ thuộc công trình hiện đại
+82			Biến đổi khí hậu (hạn hán, nguồn nước cạn)
+83			Người dân ỷ lại cán bộ xã/công ty thủy nông
+84			Biến động dân cư, lao động
+85			Khác (ghi rõ)
+86		Câu 7. Mức độ cần thiết của việc ghi chép, số hóa thành bản đồ hướng dẫn (nước)	Chọn 1 đáp án ▼
+87	2.3 RỪNG	Câu 1. Cộng đồng có duy trì song song cách tự phân loại rừng theo phong tục (rừng cấm, rừng thiêng…)?	Chọn 1 đáp án ▼
+88		Câu 2. Cách phân loại theo phong tục có được ghi vào hương ước/quy ước của bản?	Chọn 1 đáp án ▼
+89		Câu 3. Rừng Nhà nước giao/khoán có khu vực trùng với rừng thiêng/rừng ma/rừng cấm của bản?	Chọn 1 đáp án ▼
+90		Câu 4.1. Có thường vào các khu rừng khác để thu hái sản phẩm rừng?	Chọn 1 đáp án ▼
+91		Câu 4.2. Sản phẩm thu hái là gì?	Điền chữ
+92		Câu 5.1. Có áp dụng biện pháp giúp cây rừng tự phục hồi khi/sau thu hái?	Chọn 1 đáp án ▼
+93		Câu 5.2. Mô tả ngắn gọn cách làm	Điền chữ
+94		Câu 6. Nguyên nhân mai một tri thức bản địa về quản lý rừng (chọn nhiều)	Chỉ truyền miệng, không có ghi chép
+95			Lớp trẻ đi làm ăn xa/làm công nhân
+96			Người già mất đi chưa kịp truyền lại
+97			Nhà trường, chính quyền chưa có chương trình dạy, phổ biến
+98			Khác (ghi rõ)
+99		Câu 7. Mức độ cần thiết của việc ghi chép, số hóa thành bản đồ hướng dẫn (rừng)	Chọn 1 đáp án ▼
+100	PHẦN 3. NHU CẦU BẢN ĐỒ	Câu 1. Loại bản đồ đã từng biết/sử dụng (chọn nhiều)	Bản đồ giấy (hành chính, sơ đồ đất đai)
+101			Bản đồ/ứng dụng số trên điện thoại (Google Maps, Zalo Maps…)
+102			Sổ đỏ, sơ đồ thửa đất của gia đình
+103			Chưa từng biết/sử dụng loại nào
+104			Khác (ghi rõ)
+105		Câu 2. Thông tin cần thể hiện trên bản đồ tri thức bản địa (chọn nhiều)	Hiện trạng sử dụng đất
+106			Địa hình
+107			Hệ thống sông, suối
+108			Hành chính
+109			Hệ thống giao thông
+110			Phân bố dân cư, dân tộc
+111			Nông lịch
+112			Quy định/điều lệ về tri thức bản địa trong quản lý tài nguyên
+113			Khác (ghi rõ)
+114		Câu 3. Hình thức sử dụng bản đồ mong muốn	Chọn 1 đáp án ▼
+115		Câu 4. Ai nên là người quản lý bản đồ? (chọn nhiều)	Trưởng bản/người có uy tín
+116			Cán bộ khuyến nông xã
+117			Nhóm nghiên cứu/trường đại học phối hợp cộng đồng
+118			Các hộ gia đình tự cập nhật
+119		Câu 5. Mức độ sẵn sàng sử dụng bản đồ	Chọn 1 đáp án ▼
+120		Câu 6. Góp ý thêm	Điền chữ

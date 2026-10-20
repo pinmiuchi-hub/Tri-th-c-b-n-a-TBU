@@ -47,3 +47,13 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Word lock/backup files
+~$*
+*.docx.bak
+
+# raw survey exports containing respondent names/phones/addresses
+# (the anonymized khao_sat_sonla_65.csv + ket_qua outputs stay committed)
+artifacts/webgis/docs/BaoCao_NghienCuu/Nhap_lieu_phieu_khao_sat_TTBD_SonLa.xlsx
+scripts/report/spss/sheet_2.csv
+scripts/report/spss/sample_rows.txt

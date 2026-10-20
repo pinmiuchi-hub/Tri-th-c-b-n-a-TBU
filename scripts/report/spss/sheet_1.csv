@@ -1,0 +1,19 @@
+﻿BẢNG NHẬP LIỆU PHIẾU KHẢO SÁT,
+Lập bản đồ tri thức bản địa trong quản lý tài nguyên và phát triển kinh tế tuần hoàn trên địa bàn tỉnh Sơn La — Trường Đại học Tây Bắc,
+,
+Cách nhập,"Mỗi phiếu khảo sát = 1 dòng trong sheet “Nhập liệu”. Nhập từ dòng 5 trở đi (dòng 4 là dòng ví dụ, xóa hoặc ghi đè khi bắt đầu nhập). Có sẵn 500 dòng."
+Câu chọn 1 đáp án,"Bấm vào ô → chọn đáp án từ danh sách thả xuống (đúng nguyên văn trong phiếu). Nếu chọn “Khác”, ghi rõ vào cột “Khác (ghi rõ)” bên cạnh."
+Câu chọn nhiều đáp án,Mỗi đáp án là 1 cột riêng. Ô nào người trả lời TÍCH ☐ thì chọn số 1; không tích thì để TRỐNG (không nhập 0). Ô có số 1 sẽ tự tô xanh.
+Câu điền chữ / số,Gõ trực tiếp. Năm sinh nhập 4 chữ số (VD 1978); ngày phỏng vấn nhập dạng dd/mm/yyyy; số điện thoại để dạng văn bản (giữ số 0 đầu).
+Câu bỏ trống,Người trả lời không trả lời câu nào thì để trống cả câu đó.
+Sheet “Thống kê”,"Tự động đếm số phiếu và tỷ lệ % cho từng đáp án, cập nhật ngay khi nhập liệu — không cần làm gì thêm. Câu chọn nhiều: % tính trên tổng số phiếu; câu chọn 1: % tính trên số phiếu đã trả lời câu đó. Các câu thang 5 mức có thêm điểm trung bình (1–5)."
+Sheet “Danh mục”,"Chứa các danh sách đáp án dùng cho ô thả xuống. Nếu sửa chữ ở đây, phải sửa cả trong Thống kê (hoặc giữ nguyên để khớp)."
+Mở rộng quá 500 phiếu,Chèn thêm dòng ở giữa vùng dữ liệu (chuột phải → Insert) để công thức thống kê tự giãn theo; hoặc báo để mở rộng vùng.
+Màu ô,"Dòng ví dụ: chữ xám nghiêng. Ô thang đo, đáp án chọn nhiều đã chọn: nền xanh nhạt."
+,
+Các nhóm câu hỏi (màu tiêu đề trong sheet Nhập liệu),
+PHẦN I. THÔNG TIN CHUNG,
+2.1 ĐẤT,
+2.2 NƯỚC,
+2.3 RỪNG,
+PHẦN 3. NHU CẦU BẢN ĐỒ,

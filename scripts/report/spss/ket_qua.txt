@@ -1,0 +1,2130 @@
+
+
+
+PSPP Output
+
+
+
+p {
+ margin: 0pt 0pt 0pt 0em
+}
+body>p + p {
+ text-indent: 1.5em;
+}
+h1 {
+ font-size: 150%;
+ margin-left: -1.33em
+}
+h2 {
+ font-size: 125%;
+ font-weight: bold;
+ margin-left: -.8em
+}
+h3 {
+ font-size: 100%;
+ font-weight: bold;
+ margin-left: -.5em }
+h4 {
+ font-size: 100%;
+ margin-left: 0em
+}
+h1, h2, h3, h4, h5, h6 {
+ font-family: sans-serif;
+ color: blue
+}
+html {
+ margin: 0
+}
+code {
+ font-family: sans-serif
+}
+table {
+ border-collapse: collapse;
+ margin-bottom: 1em
+}
+caption {
+ text-align: left
+}
+th { font-weight: normal }
+a:link {
+ color: #1f00ff;
+}
+a:visited {
+ color: #9900dd;
+}
+a:active {
+ color: red;
+}
+-->
+
+
+
+
+Statistics
+
+
+ROW 
+ | 
+ | 
+Gioi tinh | 
+Dan toc | 
+So nam sinh song tai dia phuong | 
+Trinh do hoc van | 
+Hoat dong tao thu nhap chinh | 
+C1.1 Tham gia quan ly dat | 
+C1.4 Ly do ngung su dung dat | 
+C6 muc do can so hoa DAT | 
+C2.2 Tan suat su dung TL truyen thong | 
+C5 Tan suat bao ve nuoc | 
+C7 muc do can so hoa NUOC | 
+C1 Phan loai rung theo phong tuc | 
+C2 Ghi huong uoc | 
+C3 Trung giao khoan vs rung thieng | 
+C4.1 Thu hai san pham rung | 
+C5.1 Giup cay rung tu phuc hoi | 
+C7 muc do can so hoa RUNG | 
+C3 Hinh thuc ban do mong muon | 
+C5 Muc do san sang su dung ban do | 
+
+
+ROW 
+N | 
+Valid | 
+65 | 
+65 | 
+63 | 
+65 | 
+65 | 
+63 | 
+37 | 
+64 | 
+63 | 
+65 | 
+65 | 
+65 | 
+65 | 
+65 | 
+65 | 
+62 | 
+65 | 
+61 | 
+62 | 
+
+
+ROW 
+Missing | 
+0 | 
+0 | 
+2 | 
+0 | 
+0 | 
+2 | 
+28 | 
+1 | 
+2 | 
+0 | 
+0 | 
+0 | 
+0 | 
+0 | 
+0 | 
+3 | 
+0 | 
+4 | 
+3 | 
+
+
+ROW 
+Mean | 
+1.40 | 
+2.00 | 
+2.67 | 
+3.25 | 
+3.12 | 
+1.59 | 
+1.46 | 
+1.97 | 
+2.75 | 
+2.05 | 
+2.65 | 
+1.08 | 
+1.17 | 
+1.35 | 
+1.11 | 
+1.03 | 
+3.78 | 
+2.11 | 
+1.79 | 
+
+
+ROW 
+Std Dev | 
+.49 | 
+.94 | 
+.57 | 
+.90 | 
+1.63 | 
+.50 | 
+.80 | 
+.31 | 
+.84 | 
+1.23 | 
+.78 | 
+.27 | 
+.38 | 
+.48 | 
+.31 | 
+.18 | 
+.94 | 
+.73 | 
+.45 | 
+
+
+ROW 
+Minimum | 
+Nam | 
+Thai | 
+Duoi 5 nam | 
+Chua qua dao tao | 
+Nong nghiep | 
+Dang tham gia thuong xuyen | 
+Thieu nhan luc | 
+Binh thuong | 
+Thuong xuyen | 
+Thinh thoang | 
+Hoan toan khong can thiet | 
+Co | 
+Co | 
+Co | 
+Co | 
+Co | 
+Hoan toan khong can thiet | 
+Ban do giay treo NVB | 
+San sang dung thuong xuyen | 
+
+
+ROW 
+Maximum | 
+Nu | 
+Muong | 
+Tren 15 nam | 
+Trung cap/Cao dang/Dai hoc tro len | 
+Tieu thu cong nghiep | 
+Da tung tham gia nhung hien da ngung | 
+Khac | 
+Rat can thiet | 
+Rat thuong xuyen | 
+Hiep khi | 
+Rat can thiet | 
+Khong | 
+Khong | 
+Khong | 
+Khong | 
+Khong | 
+Rat can thiet | 
+App/website dien thoai | 
+Khong co nhu cau | 
+
+
+
+
+
+Gioi tinh
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Nam | 
+39 | 
+60.0% | 
+60.0% | 
+60.0% | 
+
+
+ROW 
+Nu | 
+26 | 
+40.0% | 
+40.0% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+Dan toc
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Thai | 
+28 | 
+43.1% | 
+43.1% | 
+43.1% | 
+
+
+ROW 
+Mong | 
+9 | 
+13.8% | 
+13.8% | 
+56.9% | 
+
+
+ROW 
+Muong | 
+28 | 
+43.1% | 
+43.1% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+So nam sinh song tai dia phuong
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Duoi 5 nam | 
+3 | 
+4.6% | 
+4.8% | 
+4.8% | 
+
+
+ROW 
+5-15 nam | 
+15 | 
+23.1% | 
+23.8% | 
+28.6% | 
+
+
+ROW 
+Tren 15 nam | 
+45 | 
+69.2% | 
+71.4% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+2 | 
+3.1% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+Trinh do hoc van
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Chua qua dao tao | 
+4 | 
+6.2% | 
+6.2% | 
+6.2% | 
+
+
+ROW 
+Tieu hoc | 
+5 | 
+7.7% | 
+7.7% | 
+13.8% | 
+
+
+ROW 
+THCS | 
+30 | 
+46.2% | 
+46.2% | 
+60.0% | 
+
+
+ROW 
+THPT | 
+23 | 
+35.4% | 
+35.4% | 
+95.4% | 
+
+
+ROW 
+Trung cap/Cao dang/Dai hoc tro len | 
+3 | 
+4.6% | 
+4.6% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+Hoat dong tao thu nhap chinh
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Nong nghiep | 
+21 | 
+32.3% | 
+32.3% | 
+32.3% | 
+
+
+ROW 
+Chan nuoi | 
+2 | 
+3.1% | 
+3.1% | 
+35.4% | 
+
+
+ROW 
+Lam nghiep | 
+3 | 
+4.6% | 
+4.6% | 
+40.0% | 
+
+
+ROW 
+Cong nhan/vien chuc Nha nuoc | 
+29 | 
+44.6% | 
+44.6% | 
+84.6% | 
+
+
+ROW 
+Khac | 
+8 | 
+12.3% | 
+12.3% | 
+96.9% | 
+
+
+ROW 
+Dich vu | 
+1 | 
+1.5% | 
+1.5% | 
+98.5% | 
+
+
+ROW 
+Tieu thu cong nghiep | 
+1 | 
+1.5% | 
+1.5% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C1.1 Tham gia quan ly dat
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Dang tham gia thuong xuyen | 
+26 | 
+40.0% | 
+41.3% | 
+41.3% | 
+
+
+ROW 
+Da tung tham gia nhung hien da ngung | 
+37 | 
+56.9% | 
+58.7% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+2 | 
+3.1% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C1.4 Ly do ngung su dung dat
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Thieu nhan luc | 
+26 | 
+40.0% | 
+70.3% | 
+70.3% | 
+
+
+ROW 
+Chuyen doi muc dich theo quy hoach | 
+6 | 
+9.2% | 
+16.2% | 
+86.5% | 
+
+
+ROW 
+Dat bac mau xoi mon nang | 
+4 | 
+6.2% | 
+10.8% | 
+97.3% | 
+
+
+ROW 
+Khac | 
+1 | 
+1.5% | 
+2.7% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+28 | 
+43.1% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C6 muc do can so hoa DAT
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Binh thuong | 
+4 | 
+6.2% | 
+6.3% | 
+6.3% | 
+
+
+ROW 
+Can thiet | 
+58 | 
+89.2% | 
+90.6% | 
+96.9% | 
+
+
+ROW 
+Rat can thiet | 
+2 | 
+3.1% | 
+3.1% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+1 | 
+1.5% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C2.2 Tan suat su dung TL truyen thong
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Thuong xuyen | 
+8 | 
+12.3% | 
+12.7% | 
+12.7% | 
+
+
+ROW 
+Rat hiem khi | 
+6 | 
+9.2% | 
+9.5% | 
+22.2% | 
+
+
+ROW 
+Thinh thoang | 
+45 | 
+69.2% | 
+71.4% | 
+93.7% | 
+
+
+ROW 
+It khi | 
+2 | 
+3.1% | 
+3.2% | 
+96.8% | 
+
+
+ROW 
+Rat thuong xuyen | 
+2 | 
+3.1% | 
+3.2% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+2 | 
+3.1% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C5 Tan suat bao ve nuoc
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Thinh thoang | 
+27 | 
+41.5% | 
+41.5% | 
+41.5% | 
+
+
+ROW 
+Thuong xuyen | 
+22 | 
+33.8% | 
+33.8% | 
+75.4% | 
+
+
+ROW 
+Khong bao gio | 
+8 | 
+12.3% | 
+12.3% | 
+87.7% | 
+
+
+ROW 
+Luon luon | 
+2 | 
+3.1% | 
+3.1% | 
+90.8% | 
+
+
+ROW 
+Hiep khi | 
+6 | 
+9.2% | 
+9.2% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C7 muc do can so hoa NUOC
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Hoan toan khong can thiet | 
+3 | 
+4.6% | 
+4.6% | 
+4.6% | 
+
+
+ROW 
+Binh thuong | 
+26 | 
+40.0% | 
+40.0% | 
+44.6% | 
+
+
+ROW 
+Can thiet | 
+27 | 
+41.5% | 
+41.5% | 
+86.2% | 
+
+
+ROW 
+Rat can thiet | 
+9 | 
+13.8% | 
+13.8% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C1 Phan loai rung theo phong tuc
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Co | 
+60 | 
+92.3% | 
+92.3% | 
+92.3% | 
+
+
+ROW 
+Khong | 
+5 | 
+7.7% | 
+7.7% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C2 Ghi huong uoc
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Co | 
+54 | 
+83.1% | 
+83.1% | 
+83.1% | 
+
+
+ROW 
+Khong | 
+11 | 
+16.9% | 
+16.9% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C3 Trung giao khoan vs rung thieng
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Co | 
+42 | 
+64.6% | 
+64.6% | 
+64.6% | 
+
+
+ROW 
+Khong | 
+23 | 
+35.4% | 
+35.4% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C4.1 Thu hai san pham rung
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Co | 
+58 | 
+89.2% | 
+89.2% | 
+89.2% | 
+
+
+ROW 
+Khong | 
+7 | 
+10.8% | 
+10.8% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C5.1 Giup cay rung tu phuc hoi
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Co | 
+60 | 
+92.3% | 
+96.8% | 
+96.8% | 
+
+
+ROW 
+Khong | 
+2 | 
+3.1% | 
+3.2% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+3 | 
+4.6% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C7 muc do can so hoa RUNG
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Hoan toan khong can thiet | 
+4 | 
+6.2% | 
+6.2% | 
+6.2% | 
+
+
+ROW 
+Khong can thiet | 
+2 | 
+3.1% | 
+3.1% | 
+9.2% | 
+
+
+ROW 
+Binh thuong | 
+7 | 
+10.8% | 
+10.8% | 
+20.0% | 
+
+
+ROW 
+Can thiet | 
+43 | 
+66.2% | 
+66.2% | 
+86.2% | 
+
+
+ROW 
+Rat can thiet | 
+9 | 
+13.8% | 
+13.8% | 
+100.0% | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C3 Hinh thuc ban do mong muon
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+Ban do giay treo NVB | 
+7 | 
+10.8% | 
+11.5% | 
+11.5% | 
+
+
+ROW 
+Ca hai | 
+46 | 
+70.8% | 
+75.4% | 
+86.9% | 
+
+
+ROW 
+Khong co nhu cau | 
+2 | 
+3.1% | 
+3.3% | 
+90.2% | 
+
+
+ROW 
+App/website dien thoai | 
+6 | 
+9.2% | 
+9.8% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+4 | 
+6.2% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+C5 Muc do san sang su dung ban do
+
+
+ROW 
+ | 
+ | 
+Frequency | 
+Percent | 
+Valid Percent | 
+Cumulative Percent | 
+
+
+ROW 
+Valid | 
+San sang dung thuong xuyen | 
+14 | 
+21.5% | 
+22.6% | 
+22.6% | 
+
+
+ROW 
+Dung khi can | 
+47 | 
+72.3% | 
+75.8% | 
+98.4% | 
+
+
+ROW 
+Khong co nhu cau | 
+1 | 
+1.5% | 
+1.6% | 
+100.0% | 
+
+
+ROW 
+Missing | 
+. | 
+3 | 
+4.6% | 
+ | 
+ | 
+
+
+ROW 
+Total | 
+65 | 
+100.0% | 
+ | 
+ | 
+
+
+
+
+
+Descriptive Statistics
+
+
+ROW 
+ | 
+N | 
+Mean | 
+Std Dev | 
+Minimum | 
+Maximum | 
+
+
+ROW 
+C1.3 So nam ngung su dung dat | 
+1 | 
+21.00 | 
+. | 
+21 | 
+21 | 
+
+
+ROW 
+C6 muc do can so hoa DAT | 
+64 | 
+1.97 | 
+.31 | 
+Binh thuong | 
+Rat can thiet | 
+
+
+ROW 
+C7 muc do can so hoa NUOC | 
+65 | 
+2.65 | 
+.78 | 
+Hoan toan khong can thiet | 
+Rat can thiet | 
+
+
+ROW 
+C7 muc do can so hoa RUNG | 
+65 | 
+3.78 | 
+.94 | 
+Hoan toan khong can thiet | 
+Rat can thiet | 
+
+
+ROW 
+Valid N (listwise) | 
+65 | 
+ | 
+ | 
+ | 
+ | 
+
+
+ROW 
+Missing N (listwise) | 
+64 | 
+ | 
+ | 
+ | 
+ | 
+
+
+
+
+
+Summary
+
+
+ROW 
+ | 
+Cases | 
+
+
+ROW 
+ | 
+Valid | 
+Missing | 
+Total | 
+
+
+ROW 
+ | 
+N | 
+Percent | 
+N | 
+Percent | 
+N | 
+Percent | 
+
+
+ROW 
+Dan toc × C3 Hinh thuc ban do mong muon | 
+61 | 
+93.8% | 
+4 | 
+6.2% | 
+65 | 
+100.0% | 
+
+
+
+
+
+Dan toc × C3 Hinh thuc ban do mong muon
+
+
+ROW 
+ | 
+ | 
+ | 
+C3 Hinh thuc ban do mong muon | 
+Total | 
+
+
+ROW 
+ | 
+ | 
+ | 
+Ban do giay treo NVB | 
+Ca hai | 
+Khong co nhu cau | 
+App/website dien thoai | 
+
+
+ROW 
+Dan toc | 
+Thai | 
+Count | 
+0 | 
+23 | 
+2 | 
+2 | 
+27 | 
+
+
+ROW 
+Expected | 
+3.10 | 
+20.36 | 
+.89 | 
+2.66 | 
+.44 | 
+
+
+ROW 
+Row % | 
+.0% | 
+85.2% | 
+7.4% | 
+7.4% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+.0% | 
+50.0% | 
+100.0% | 
+33.3% | 
+44.3% | 
+
+
+ROW 
+Mong | 
+Count | 
+5 | 
+1 | 
+0 | 
+0 | 
+6 | 
+
+
+ROW 
+Expected | 
+.69 | 
+4.52 | 
+.20 | 
+.59 | 
+.10 | 
+
+
+ROW 
+Row % | 
+83.3% | 
+16.7% | 
+.0% | 
+.0% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+71.4% | 
+2.2% | 
+.0% | 
+.0% | 
+9.8% | 
+
+
+ROW 
+Muong | 
+Count | 
+2 | 
+22 | 
+0 | 
+4 | 
+28 | 
+
+
+ROW 
+Expected | 
+3.21 | 
+21.11 | 
+.92 | 
+2.75 | 
+.46 | 
+
+
+ROW 
+Row % | 
+7.1% | 
+78.6% | 
+.0% | 
+14.3% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+28.6% | 
+47.8% | 
+.0% | 
+66.7% | 
+45.9% | 
+
+
+ROW 
+Total | 
+Count | 
+7 | 
+46 | 
+2 | 
+6 | 
+61 | 
+
+
+ROW 
+Expected | 
+.11 | 
+.75 | 
+.03 | 
+.10 | 
+1.00 | 
+
+
+ROW 
+Row % | 
+11.5% | 
+75.4% | 
+3.3% | 
+9.8% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+100.0% | 
+100.0% | 
+100.0% | 
+100.0% | 
+100.0% | 
+
+
+
+
+
+Chi-Square Tests
+
+
+ROW 
+ | 
+Value | 
+df | 
+Asymptotic Sig. (2-tailed) | 
+
+
+ROW 
+Pearson Chi-Square | 
+37.51 | 
+6 | 
+.000 | 
+
+
+ROW 
+Likelihood Ratio | 
+27.44 | 
+6 | 
+.000 | 
+
+
+ROW 
+Linear-by-Linear Association | 
+.00 | 
+1 | 
+.983 | 
+
+
+ROW 
+N of Valid Cases | 
+61 | 
+ | 
+ | 
+
+
+
+
+
+Symmetric Measures
+
+
+ROW 
+ | 
+ | 
+Value | 
+
+
+ROW 
+Nominal by Nominal | 
+Phi | 
+.78 | 
+
+
+ROW 
+Cramer's V | 
+.55 | 
+
+
+ROW 
+N of Valid Cases | 
+61 | 
+
+
+
+
+
+Summary
+
+
+ROW 
+ | 
+Cases | 
+
+
+ROW 
+ | 
+Valid | 
+Missing | 
+Total | 
+
+
+ROW 
+ | 
+N | 
+Percent | 
+N | 
+Percent | 
+N | 
+Percent | 
+
+
+ROW 
+Gioi tinh × Dan toc | 
+65 | 
+100.0% | 
+0 | 
+.0% | 
+65 | 
+100.0% | 
+
+
+
+
+
+Gioi tinh × Dan toc
+
+
+ROW 
+ | 
+ | 
+ | 
+Dan toc | 
+Total | 
+
+
+ROW 
+ | 
+ | 
+ | 
+Thai | 
+Mong | 
+Muong | 
+
+
+ROW 
+Gioi tinh | 
+Nam | 
+Count | 
+14 | 
+7 | 
+18 | 
+39 | 
+
+
+ROW 
+Row % | 
+35.9% | 
+17.9% | 
+46.2% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+50.0% | 
+77.8% | 
+64.3% | 
+60.0% | 
+
+
+ROW 
+Nu | 
+Count | 
+14 | 
+2 | 
+10 | 
+26 | 
+
+
+ROW 
+Row % | 
+53.8% | 
+7.7% | 
+38.5% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+50.0% | 
+22.2% | 
+35.7% | 
+40.0% | 
+
+
+ROW 
+Total | 
+Count | 
+28 | 
+9 | 
+28 | 
+65 | 
+
+
+ROW 
+Row % | 
+43.1% | 
+13.8% | 
+43.1% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+100.0% | 
+100.0% | 
+100.0% | 
+100.0% | 
+
+
+
+
+
+Chi-Square Tests
+
+
+ROW 
+ | 
+Value | 
+df | 
+Asymptotic Sig. (2-tailed) | 
+
+
+ROW 
+Pearson Chi-Square | 
+2.57 | 
+2 | 
+.277 | 
+
+
+ROW 
+Likelihood Ratio | 
+2.64 | 
+2 | 
+.267 | 
+
+
+ROW 
+Linear-by-Linear Association | 
+1.17 | 
+1 | 
+.279 | 
+
+
+ROW 
+N of Valid Cases | 
+65 | 
+ | 
+ | 
+
+
+
+
+
+Summary
+
+
+ROW 
+ | 
+Cases | 
+
+
+ROW 
+ | 
+Valid | 
+Missing | 
+Total | 
+
+
+ROW 
+ | 
+N | 
+Percent | 
+N | 
+Percent | 
+N | 
+Percent | 
+
+
+ROW 
+Dan toc × C3 Trung giao khoan vs rung thieng | 
+65 | 
+100.0% | 
+0 | 
+.0% | 
+65 | 
+100.0% | 
+
+
+
+
+
+Dan toc × C3 Trung giao khoan vs rung thieng
+
+
+ROW 
+ | 
+ | 
+ | 
+C3 Trung giao khoan vs rung thieng | 
+Total | 
+
+
+ROW 
+ | 
+ | 
+ | 
+Co | 
+Khong | 
+
+
+ROW 
+Dan toc | 
+Thai | 
+Count | 
+18 | 
+10 | 
+28 | 
+
+
+ROW 
+Row % | 
+64.3% | 
+35.7% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+42.9% | 
+43.5% | 
+43.1% | 
+
+
+ROW 
+Mong | 
+Count | 
+8 | 
+1 | 
+9 | 
+
+
+ROW 
+Row % | 
+88.9% | 
+11.1% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+19.0% | 
+4.3% | 
+13.8% | 
+
+
+ROW 
+Muong | 
+Count | 
+16 | 
+12 | 
+28 | 
+
+
+ROW 
+Row % | 
+57.1% | 
+42.9% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+38.1% | 
+52.2% | 
+43.1% | 
+
+
+ROW 
+Total | 
+Count | 
+42 | 
+23 | 
+65 | 
+
+
+ROW 
+Row % | 
+64.6% | 
+35.4% | 
+100.0% | 
+
+
+ROW 
+Column % | 
+100.0% | 
+100.0% | 
+100.0% | 
+
+
+
+
+
+Chi-Square Tests
+
+
+ROW 
+ | 
+Value | 
+df | 
+Asymptotic Sig. (2-tailed) | 
+
+
+ROW 
+Pearson Chi-Square | 
+3.00 | 
+2 | 
+.223 | 
+
+
+ROW 
+Likelihood Ratio | 
+3.45 | 
+2 | 
+.178 | 
+
+
+ROW 
+Linear-by-Linear Association | 
+.31 | 
+1 | 
+.579 | 
+
+
+ROW 
+N of Valid Cases | 
+65 | 
+ | 
+ | 
+
+
+
+
+
+Case Processing Summary
+
+
+ROW 
+ | 
+Cases | 
+
+
+ROW 
+ | 
+Valid | 
+Missing | 
+Total | 
+
+
+ROW 
+ | 
+N | 
+Percent | 
+N | 
+Percent | 
+N | 
+Percent | 
+
+
+ROW 
+C1.3 So nam ngung su dung dat | 
+1 | 
+1.5% | 
+64 | 
+98.5% | 
+65 | 
+100.0% | 
+
+
+
+
+
+Descriptives
+
+
+ROW 
+ | 
+ | 
+ | 
+Statistic | 
+Std. Error | 
+
+
+ROW 
+C1.3 So nam ngung su dung dat | 
+Mean | 
+21.00 | 
+NaN | 
+
+
+ROW 
+95% Confidence Interval for Mean | 
+Lower Bound | 
+NaN | 
+ | 
+
+
+ROW 
+Upper Bound | 
+NaN | 
+ | 
+
+
+ROW 
+5% Trimmed Mean | 
+21.00 | 
+ | 
+
+
+ROW 
+Median | 
+21.00 | 
+ | 
+
+
+ROW 
+Variance | 
+. | 
+ | 
+
+
+ROW 
+Std. Deviation | 
+NaN | 
+ | 
+
+
+ROW 
+Minimum | 
+21.00 | 
+ | 
+
+
+ROW 
+Maximum | 
+21.00 | 
+ | 
+
+
+ROW 
+Range | 
+.00 | 
+ | 
+
+
+ROW 
+Interquartile Range | 
+10.50 | 
+ | 
+
+
+ROW 
+Skewness | 
+. | 
+.00 | 
+
+
+ROW 
+Kurtosis | 
+. | 
+.00 | 
+
+
+
+
+
+
+
