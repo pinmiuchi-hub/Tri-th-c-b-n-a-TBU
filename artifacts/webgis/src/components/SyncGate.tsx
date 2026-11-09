@@ -159,7 +159,7 @@ function SyncGate({ children }: { children: React.ReactNode }) {
             gap: 8,
           }}
         >
-          Không kết nối được máy chủ — đang dùng dữ liệu trên máy.
+          Không kết nối được máy chủ{sync.error ? ` (${sync.error})` : ""} — đang dùng dữ liệu trên máy.
           <button
             onClick={() => retrySync()}
             style={{ background: "transparent", border: "none", color: "#fff", textDecoration: "underline", cursor: "pointer", fontSize: 12 }}

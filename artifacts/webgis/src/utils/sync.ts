@@ -69,7 +69,7 @@ async function fetchRemote(): Promise<{ payload: CloudPayload; updatedAt: string
     `${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${ROW_ID}&select=payload,updated_at`,
     { headers: headers(), signal: ctrl.signal },
   );
-  if (!res.ok) throw new Error(`Supabase GET ${res.status}`);
+  if (!res.ok) throw new Error(await errorDetail("GET", res));
   const rows = (await res.json()) as { payload: CloudPayload | null; updated_at: string }[];
   const row = rows[0];
   if (!row || !row.payload || typeof row.payload !== "object") return null;
@@ -85,7 +85,18 @@ async function pushRemote(payload: CloudPayload, keepalive = false): Promise<voi
     signal: ctrl?.signal,
     keepalive,
   });
-  if (!res.ok) throw new Error(`Supabase POST ${res.status}`);
+  if (!res.ok) throw new Error(await errorDetail("POST", res));
+}
+
+/** Mô tả lỗi HTTP ngắn gọn kèm nội dung trả về (vd: "bảng chưa tồn tại", "sai api key"). */
+async function errorDetail(method: string, res: Response): Promise<string> {
+  let body = "";
+  try {
+    body = (await res.text()).replace(/\s+/g, " ").slice(0, 200);
+  } catch {
+    /* bỏ qua */
+  }
+  return `Supabase ${method} ${res.status}${body ? ` — ${body}` : ""}`;
 }
 
 /* ─── Snapshot local → CloudPayload ─── */
@@ -136,6 +147,16 @@ function merge(
 let lastRemote: CloudPayload | null = null;
 let running: Promise<{ appliedRemote: boolean }> | null = null;
 
+/** Dịch lỗi kỹ thuật sang lời dễ hiểu cho banner. */
+function friendlyError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (e instanceof Error && e.name === "AbortError") return "hết 8 giây chờ máy chủ phản hồi";
+  if (msg === "Failed to fetch" || /NetworkError|fetch resource/i.test(msg)) {
+    return "lỗi mạng/CORS — kiểm tra lại SUPABASE_URL";
+  }
+  return msg;
+}
+
 async function syncNow(): Promise<{ appliedRemote: boolean }> {
   if (!syncEnabled) return { appliedRemote: false };
   if (running) return running;
@@ -158,7 +179,7 @@ async function syncNow(): Promise<{ appliedRemote: boolean }> {
       });
       return { appliedRemote };
     } catch (e) {
-      setState({ phase: "error", error: e instanceof Error ? e.message : String(e) });
+      setState({ phase: "error", error: friendlyError(e) });
       return { appliedRemote: false };
     } finally {
       running = null;

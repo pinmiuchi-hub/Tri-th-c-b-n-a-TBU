@@ -2856,7 +2856,7 @@ onEachFeature:(feat,lyr)=>{
               onClick={() => { if (syncState.phase === "error") retrySync(); }}
               title={
                 syncState.phase === "error"
-                  ? "Đồng bộ lỗi — bấm để thử lại"
+                  ? `Đồng bộ lỗi: ${syncState.error || "không rõ"} — bấm để thử lại`
                   : syncState.phase === "syncing"
                     ? "Đang đồng bộ dữ liệu chung…"
                     : syncState.lastSyncAt
