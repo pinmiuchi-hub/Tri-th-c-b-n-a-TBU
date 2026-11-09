@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { applyBackup, backupUsageBytes, collectBackup } from "@/utils/persist";
 
 /* ─── Types ─── */
 export interface DanTocTyLe { dan_toc: string; ty_le: number; }
@@ -56,7 +57,7 @@ export default function ImportModal({
   pdfFiles, onAddPdf, onRemovePdf, onViewPdf,
   currentWard, wardList
 }: Props) {
-  const [tab, setTab] = useState<"ward-csv"|"ethnic-csv"|"pdf">("ward-csv");
+  const [tab, setTab] = useState<"ward-csv"|"ethnic-csv"|"pdf"|"backup">("ward-csv");
   const [msg, setMsg] = useState<{ type:"ok"|"err"; text:string }|null>(null);
 
   /* ward CSV state */
@@ -73,6 +74,35 @@ export default function ImportModal({
   const wardInputRef = useRef<HTMLInputElement>(null);
   const ethInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const backupInputRef = useRef<HTMLInputElement>(null);
+
+  /* ─── Sao lưu / khôi phục ─── */
+  const exportBackup = () => {
+    const backup = collectBackup();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `webgis_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setMsg({ type:"ok", text:`Đã xuất ${Object.keys(backup.data).length} mục dữ liệu ra file JSON.` });
+  };
+
+  const handleBackupFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      let parsed: unknown;
+      try { parsed = JSON.parse(e.target?.result as string); }
+      catch { setMsg({ type:"err", text:"File không phải JSON hợp lệ." }); return; }
+      const res = applyBackup(parsed);
+      if (!res.ok) { setMsg({ type:"err", text: res.error ?? "Khôi phục thất bại." }); return; }
+      setMsg({ type:"ok", text:`Đã khôi phục ${res.count} mục. Trang sẽ tải lại để áp dụng…` });
+      window.setTimeout(() => window.location.reload(), 900);
+    };
+    reader.readAsText(file, "utf-8");
+    if (backupInputRef.current) backupInputRef.current.value = "";
+  };
+
 
   /* ─── Ward CSV ─── */
   const handleWardCSVFile = (file: File) => {
@@ -217,6 +247,7 @@ export default function ImportModal({
           <button className={`modal-tab ${tab==="ward-csv"?"active":""}`} onClick={()=>{setTab("ward-csv");setMsg(null);}}>📊 CSV Xã/Phường</button>
           <button className={`modal-tab ${tab==="ethnic-csv"?"active":""}`} onClick={()=>{setTab("ethnic-csv");setMsg(null);}}>🏷️ CSV Dân tộc</button>
           <button className={`modal-tab ${tab==="pdf"?"active":""}`} onClick={()=>{setTab("pdf");setMsg(null);}}>📄 Tài liệu PDF</button>
+          <button className={`modal-tab ${tab==="backup"?"active":""}`} onClick={()=>{setTab("backup");setMsg(null);}}>💾 Sao lưu</button>
         </div>
 
         <div className="modal-body">
@@ -368,6 +399,32 @@ export default function ImportModal({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Sao lưu tab ── */}
+          {tab === "backup" && (
+            <div className="csv-tab">
+              <div className="import-info">
+                <strong>Sao lưu & khôi phục dữ liệu trên máy:</strong>
+                <p>Xuất toàn bộ dữ liệu người dùng (lớp, chú thích, dữ liệu xã, dân tộc, bản nháp bản đồ…) ra file JSON để chuyển sang máy khác hoặc dự phòng.</p>
+                <p>Dung lượng đang dùng: <strong>{formatBytes(backupUsageBytes())}</strong> (giới hạn trình duyệt thường ~5 MB).</p>
+                <p>Lưu ý: file PDF đính kèm là URL tạm trên máy — không nằm trong file sao lưu, cần đính kèm lại sau khi khôi phục.</p>
+              </div>
+              <div className="btn-row">
+                <button className="action-btn primary" onClick={exportBackup}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Xuất file sao lưu
+                </button>
+                <button className="action-btn secondary" onClick={()=>backupInputRef.current?.click()}>
+                  Nhập file để khôi phục
+                </button>
+                <input ref={backupInputRef} type="file" accept=".json,application/json" hidden
+                  onChange={e=>{ if(e.target.files?.[0]) handleBackupFile(e.target.files[0]); }}/>
+              </div>
+              <div className="applied-info">
+                <span>⚠ Khôi phục sẽ <strong>ghi đè</strong> dữ liệu hiện tại trên máy này.</span>
+              </div>
             </div>
           )}
         </div>

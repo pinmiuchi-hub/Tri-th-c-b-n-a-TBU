@@ -15,6 +15,8 @@ import WardPieSelector from "../components/WardPieSelector";
 import WardEthnicEditorModal from "../components/WardEthnicEditorModal";
 import Earth3DModal from "../components/Earth3DModal";
 import MapComposer, { type ComposerLegendSection, type ComposerLegendRow } from '@/components/MapComposer';
+import { STORAGE, readJson, writeJsonIfChanged, mapToRec, recToMap, registerQuotaHandler } from "@/utils/persist";
+import { getSyncState, subscribeSync, retrySync, syncEnabled, type SyncState } from "@/utils/sync";
 import html2canvas from "html2canvas";
 import { Printer } from 'lucide-react';
 
@@ -272,7 +274,14 @@ type SavedEthnicData = { calendar?: Partial<Record<EthnicKey, CalendarGroup[]>>;
 const loadEthnicData = (): SavedEthnicData | null => {
   try { const raw = window.localStorage.getItem(ETHNIC_DATA_LS_KEY); return raw ? JSON.parse(raw) as SavedEthnicData : null; } catch { return null; }
 };
-const savedEthnicData = loadEthnicData();
+/** File lưu chung các bản sửa của người dùng (xã · dân tộc · tri thức · số liệu tỉnh). */
+type OverridesFile = {
+  ward?: Record<string, WardOverrides>;
+  ethnic?: Record<string, EthnicOverride>;
+  triThuc?: Record<string, TriThuc[]>;
+  province?: Record<string, Partial<ProvinceStat>>;
+};
+const readOverridesFile = (): OverridesFile => readJson<OverridesFile>(STORAGE.overrides) ?? {};
 const statusNote = (x: { trang_thai?: string; nguon?: string[] } | null | undefined): string => {
   if (!x?.trang_thai) return "";
   const msg = x.trang_thai === "minh_hoa" ? "⚠ Dữ liệu minh họa — chưa có nguồn xác minh, không dùng làm căn cứ"
@@ -310,6 +319,8 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
   const wardBoundaryAutoOnRef = useRef(false);
   const wardBoundaryOnRef = useRef(true);
   const syncQueuedRef = useRef(false);
+  /** Bản sao layers.json gốc (chưa trộn bản lưu) — dùng để chỉ lưu lớp người dùng đã sửa. */
+  const baseLayersRef = useRef<Record<string, any> | null>(null);
 
   /* ─── Core state ─── */
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -443,16 +454,38 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  /* ─── Editable data state ─── */
-  const [wardOverrides, setWardOverrides] = useState<Map<string,WardOverrides>>(new Map());
-  const [ethnicOverrides, setEthnicOverrides] = useState<Map<string,EthnicOverride>>(new Map());
-  const [triThucOverrides, setTriThucOverrides] = useState<Map<string,TriThuc[]>>(new Map());
-  const [provinceEdits, setProvinceEdits] = useState<Map<string,Partial<ProvinceStat>>>(new Map());
+  /* ─── Editable data state (khôi phục từ localStorage khi mở trang) ─── */
+  const [wardOverrides, setWardOverrides] = useState<Map<string,WardOverrides>>(() => recToMap(readOverridesFile().ward));
+  const [ethnicOverrides, setEthnicOverrides] = useState<Map<string,EthnicOverride>>(() => recToMap(readOverridesFile().ethnic));
+  const [triThucOverrides, setTriThucOverrides] = useState<Map<string,TriThuc[]>>(() => recToMap(readOverridesFile().triThuc));
+  const [provinceEdits, setProvinceEdits] = useState<Map<string,Partial<ProvinceStat>>>(() => recToMap(readOverridesFile().province));
   const [pdfFiles, setPdfFiles] = useState<Map<string,PdfFile[]>>(new Map());
-  const [calendarByEthnic, setCalendarByEthnic] = useState<Record<EthnicKey, CalendarGroup[]>>({ ...DEFAULT_ACTIVITIES_BY_ETHNIC, ...(savedEthnicData?.calendar ?? {}) });
-  const [transectByEthnic, setTransectByEthnic] = useState<Record<EthnicKey, TransectZone[]>>({ ...DEFAULT_ZONES_BY_ETHNIC, ...(savedEthnicData?.transect ?? {}) });
-  const [transectEthnic, setTransectEthnic] = useState<EthnicZone[]>(savedEthnicData?.ethnicZones ?? DEFAULT_ETHNIC_ZONES);
-  const [knowledgeData, setKnowledgeData] = useState<KnowledgeSection[]>(DEFAULT_KNOWLEDGE);
+  const [calendarByEthnic, setCalendarByEthnic] = useState<Record<EthnicKey, CalendarGroup[]>>(() => ({ ...DEFAULT_ACTIVITIES_BY_ETHNIC, ...(loadEthnicData()?.calendar ?? {}) }));
+  const [transectByEthnic, setTransectByEthnic] = useState<Record<EthnicKey, TransectZone[]>>(() => ({ ...DEFAULT_ZONES_BY_ETHNIC, ...(loadEthnicData()?.transect ?? {}) }));
+  const [transectEthnic, setTransectEthnic] = useState<EthnicZone[]>(() => loadEthnicData()?.ethnicZones ?? DEFAULT_ETHNIC_ZONES);
+  const [knowledgeData, setKnowledgeData] = useState<KnowledgeSection[]>(() => {
+    const saved = readJson<KnowledgeSection[]>(STORAGE.knowledge);
+    return Array.isArray(saved) && saved.length ? saved : DEFAULT_KNOWLEDGE;
+  });
+
+  // Báo khi trình duyệt đầy bộ nhớ (mọi ghi local đều đi qua persist.writeJson*)
+  useEffect(() => registerQuotaHandler(() => showToast("⚠ Bộ nhớ trình duyệt đã đầy — thay đổi mới có thể không được lưu!")), []);
+
+  // Lưu bản sửa của người dùng: xã · dân tộc · tri thức · số liệu tỉnh
+  useEffect(() => {
+    writeJsonIfChanged(STORAGE.overrides, {
+      ward: mapToRec(wardOverrides),
+      ethnic: mapToRec(ethnicOverrides),
+      triThuc: mapToRec(triThucOverrides),
+      province: mapToRec(provinceEdits),
+    });
+  }, [wardOverrides, ethnicOverrides, triThucOverrides, provinceEdits]);
+
+  // Kiến thức bản địa: chỉ ghi khi người dùng thực sự sửa (không lưu bản mặc định)
+  useEffect(() => {
+    if (knowledgeData === DEFAULT_KNOWLEDGE) return;
+    writeJsonIfChanged(STORAGE.knowledge, knowledgeData);
+  }, [knowledgeData]);
   const [customLayers, setCustomLayers] = useState<CustomLayer[]>(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
@@ -503,9 +536,19 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
   /* ─── UI state ─── */
   const [showImport, setShowImport] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
-  const [activeRaster, setActiveRaster] = useState<string | null>(null);
+  const [activeRaster, setActiveRaster] = useState<string | null>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      return typeof saved?.activeRaster === "string" ? saved.activeRaster : null;
+    } catch { return null; }
+  });
   const [earth3d, setEarth3d] = useState<{ open: boolean; center?: [number, number]; zoom?: number; overlay?: unknown; raster?: { url: string; bounds: [[number, number], [number, number]]; opacity: number } | null; vectors?: GeoJSON.FeatureCollection | null }>({ open: false });
-  const [rasterOpacity, setRasterOpacity] = useState(0.8);
+  const [rasterOpacity, setRasterOpacity] = useState<number>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      return Number.isFinite(Number(saved?.rasterOpacity)) ? Number(saved.rasterOpacity) : 0.8;
+    } catch { return 0.8; }
+  });
   const [rasterMeta, setRasterMeta] = useState<{ bounds: [[number,number],[number,number]]; layers: Record<string, { file: string; unit: string; label: string; source: string; stops: any }> } | null>(null);
   /* Nhãn tên xã: bật/tắt + màu chữ + cỡ chữ (lưu localStorage) */
   const [wardLabelConfig, setWardLabelConfig] = useState<{ on: boolean; color: string; size: number }>(() => {
@@ -519,21 +562,32 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
     } catch { return { on: false, color: "#1b4332", size: 11 }; }
   });
   useEffect(() => {
-    try { window.localStorage.setItem("webgis-ward-labels", JSON.stringify(wardLabelConfig)); } catch { /* bỏ qua lỗi dung lượng */ }
+    writeJsonIfChanged("webgis-ward-labels", wardLabelConfig);
   }, [wardLabelConfig]);
   const [transectFor, setTransectFor] = useState<EthnicKey | null>(null);
   const [calendarFor, setCalendarFor] = useState<EthnicKey | null>(null);
   // Tự động lưu lược đồ mặt cắt & nông lịch theo dân tộc vào localStorage
   useEffect(() => {
     const t = window.setTimeout(() => {
-      try { window.localStorage.setItem(ETHNIC_DATA_LS_KEY, JSON.stringify({ calendar: calendarByEthnic, transect: transectByEthnic, ethnicZones: transectEthnic })); } catch { /* bỏ qua lỗi dung lượng */ }
+      writeJsonIfChanged(ETHNIC_DATA_LS_KEY, { calendar: calendarByEthnic, transect: transectByEthnic, ethnicZones: transectEthnic });
     }, 600);
     return () => window.clearTimeout(t);
   }, [calendarByEthnic, transectByEthnic, transectEthnic]);
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [showAnnotations, setShowAnnotations] = useState(false);
   const [showPieSelector, setShowPieSelector] = useState(false);
-  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
+  const [activeLayers, setActiveLayers] = useState<Set<string>>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
+      const ids: unknown = saved?.activeLayers;
+      if (!Array.isArray(ids)) return new Set();
+      // Chỉ giữ id còn tồn tại trong danh mục lớp hiện tại (lớp bị gỡ không bật lại)
+      const valid = new Set<string>();
+      layerCategories.forEach(c => c.layers.forEach(l => valid.add(l.id)));
+      customLayers.forEach(l => valid.add(l.id));
+      return new Set(ids.filter((x): x is string => typeof x === "string" && valid.has(x)));
+    } catch { return new Set(); }
+  });
   const [layerSymbologies, setLayerSymbologies] = useState<Record<string, LayerSymbologyConfig>>(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
@@ -552,13 +606,28 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
 
   useEffect(() => {
     try {
-      const payload: Record<string, unknown> = { customLayers, layerCategories, layerSymbologies, deletedCategoryIds, hiddenLayerIds };
+      const payload: Record<string, unknown> = {
+        customLayers, layerCategories, layerSymbologies, deletedCategoryIds, hiddenLayerIds,
+        activeRaster, rasterOpacity, activeLayers: [...activeLayers],
+      };
       if (layersData) {
         const { rivers: _rivers, ...rest } = layersData as Record<string, any>;
-        // Không lưu lại mảng built-in còn nhãn minh họa/chưa xác minh (dữ liệu cũ từ phiên trước) — lần nạp sau lấy bản mới từ layers.json
         const hasStaleLabel = (arr: unknown) => Array.isArray(arr) && arr.some((x: any) => x?.trang_thai === "minh_hoa" || x?.trang_thai === "chua_xac_minh");
-        Object.keys(rest).forEach(k => { if (!k.startsWith("custom_") && hasStaleLabel(rest[k])) delete rest[k]; });
-        payload.layersData = rest;
+        // Chỉ lưu mảng người dùng ĐÃ sửa (so với layers.json gốc) + lớp tự tạo —
+        // lớp nguyên bản không lưu lại để lần tải sau lấy bản mới từ layers.json
+        // và không phình to localStorage/cloud.
+        const base = baseLayersRef.current;
+        const edited: Record<string, any[]> = {};
+        Object.keys(rest).forEach(k => {
+          if (!Array.isArray(rest[k])) return;
+          if (k.startsWith("custom_")) { edited[k] = rest[k]; return; }
+          // Không lưu lại mảng built-in còn nhãn minh họa/chưa xác minh (dữ liệu cũ từ phiên trước)
+          if (hasStaleLabel(rest[k])) return;
+          const b = base ? base[k] : undefined;
+          if (b !== undefined && JSON.stringify(b) === JSON.stringify(rest[k])) return;
+          edited[k] = rest[k];
+        });
+        payload.layersData = edited;
         payload.layersDataRev = LAYER_DATA_REV;
       } else {
         // Chưa load xong: giữ nguyên layersData đã lưu từ phiên trước
@@ -567,9 +636,9 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
           if (prev?.layersData) { payload.layersData = prev.layersData; payload.layersDataRev = prev.layersDataRev; }
         } catch { /* bỏ qua */ }
       }
-      window.localStorage.setItem(LAYER_CONFIG_STORAGE_KEY, JSON.stringify(payload));
+      writeJsonIfChanged(LAYER_CONFIG_STORAGE_KEY, payload);
     } catch { /* Ignore storage quota or privacy errors. */ }
-  }, [customLayers, layerCategories, layerSymbologies, layersData, deletedCategoryIds, hiddenLayerIds]);
+  }, [customLayers, layerCategories, layerSymbologies, layersData, deletedCategoryIds, hiddenLayerIds, activeRaster, rasterOpacity, activeLayers]);
 
   const [pdfViewer, setPdfViewer] = useState<PdfFile | null>(null);
   const [editingEthnicPct, setEditingEthnicPct] = useState<string|null>(null);
@@ -593,7 +662,20 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
   const [ethnicPhotoLightbox, setEthnicPhotoLightbox] = useState<string | null>(null);
 
   /* ─── Annotation state ─── */
-  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [annotations, setAnnotations] = useState<Annotation[]>(() => {
+    const saved = readJson<Annotation[]>(STORAGE.annotations);
+    return Array.isArray(saved) ? saved : [];
+  });
+  // Lưu chú thích (chỉ ghi khi nội dung đổi để không đẩy timestamp vô nghĩa)
+  useEffect(() => {
+    writeJsonIfChanged(STORAGE.annotations, annotations);
+  }, [annotations]);
+  /** Bản đồ Leaflet đã khởi tạo xong — effect vẽ chú thích phải chạy lại sau đó. */
+  const [mapReady, setMapReady] = useState(false);
+
+  /* ─── Trạng thái đồng bộ cloud (chip ☁️ ở thanh tiêu đề) ─── */
+  const [syncState, setSyncState] = useState<SyncState>(getSyncState);
+  useEffect(() => subscribeSync(() => setSyncState(getSyncState())), []);
   const [drawMode, setDrawMode] = useState<null|"diem"|"duong"|"vung">(null);
   const [pendingAnnotation, setPendingAnnotation] = useState<{coords:[number,number][];loai:"diem"|"duong"|"vung"}|null>(null);
   const [editingRecipe, setEditingRecipe] = useState<{ethId:string;topicIdx:number;recipeIdx:number|null;data:BaiThuoc}|null>(null);
@@ -660,6 +742,8 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
           return tt && !rest.tinh_trang ? { ...rest, tinh_trang: tt } : rest;
         });
       }
+      // Giữ bản gốc (chưa trộn bản lưu, clone sâu để không bị đổi ngầm) để so sánh "lớp nào người dùng đã sửa"
+      baseLayersRef.current = structuredClone(d);
       // Phục hồi dữ liệu lớp người dùng đã biên tập trong các phiên trước
       const savedConfig = readSavedLayerConfig();
       const savedLayerData = savedConfig?.layersData;
@@ -1098,7 +1182,7 @@ ls.push(makeDraggableMarker(v.lat, v.lng, makeDivIcon("♻️",layerStyle.color,
         ag.addLayer(poly);
       }
     });
-  }, [annotations]);
+  }, [annotations, mapReady]);
 
   /* ─── Map-pick mode ─── */
   useEffect(() => {
@@ -2092,6 +2176,7 @@ style:()=>({
     L.control.layers({ "Bản đồ thường": osmLayer, "Vệ tinh": hybridLayer, "Địa hình": topoLayer }, undefined, { position: "topright", collapsed: true }).addTo(map);
     const og=L.layerGroup().addTo(map); const ag=L.layerGroup().addTo(map);
     overlayGroupRef.current=og; annotationGroupRef.current=ag; mapRef.current=map;
+    setMapReady(true); // effect vẽ chú thích chạy lại để vẽ bản đã khôi phục
     map.on("zoomend", () => {
       refreshBoundaryStyles();
       setMapScale(scaleFromZoom(map.getCenter().lat, map.getZoom()));
@@ -2765,6 +2850,29 @@ onEachFeature:(feat,lyr)=>{
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
             <span className="btn-label">Lớp bản đồ</span> {(activeLayers.size + (activeRaster ? 1 : 0))>0&&<span className="layer-count">{activeLayers.size + (activeRaster ? 1 : 0)}</span>}
           </button>
+          {syncEnabled && (
+            <button
+              className="layer-toggle-btn"
+              onClick={() => { if (syncState.phase === "error") retrySync(); }}
+              title={
+                syncState.phase === "error"
+                  ? "Đồng bộ lỗi — bấm để thử lại"
+                  : syncState.phase === "syncing"
+                    ? "Đang đồng bộ dữ liệu chung…"
+                    : syncState.lastSyncAt
+                      ? `Đã đồng bộ dữ liệu chung lúc ${new Date(syncState.lastSyncAt).toLocaleTimeString("vi-VN")}`
+                      : "Đồng bộ dữ liệu chung (mọi máy thấy giống nhau)"
+              }
+              style={{ gap: 5 }}
+            >
+              <span style={{ fontSize: 13 }}>
+                {syncState.phase === "syncing" ? "☁️…" : syncState.phase === "error" ? "☁️⚠" : "☁️"}
+              </span>
+              <span className="btn-label">
+                {syncState.phase === "syncing" ? "Đang đồng bộ" : syncState.phase === "error" ? "Lỗi đồng bộ" : "Đã đồng bộ"}
+              </span>
+            </button>
+          )}
           <button className="import-btn" onClick={()=>setShowImport(true)} title="Nhập dữ liệu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <span className="btn-label">Nhập dữ liệu</span>

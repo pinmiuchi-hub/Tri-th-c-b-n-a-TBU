@@ -39,6 +39,8 @@ jobs:
         env:
           PORT: "4173"
           BASE_PATH: "/Tri-th-c-b-n-a-TBU/"
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: pnpm --filter "@workspace/webgis" build
 
       - name: Add .nojekyll

@@ -1,10 +1,14 @@
 import { Router as WouterRouter } from "wouter";
 import WebGIS from "@/pages/WebGIS goc";
+import SyncGate from "@/components/SyncGate";
+
 function App() {
   return (
-    <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-      <WebGIS />
-    </WouterRouter>
+    <SyncGate>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <WebGIS />
+      </WouterRouter>
+    </SyncGate>
   );
 }
 

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import "./MapComposer.css";
+import { STORAGE, writeJson } from "@/utils/persist";
 // 🟢 THÊM HÀM NÀY VÀO TRÊN CÙNG FILE MapComposer.tsx:
 const isImageSymbol = (str?: string): boolean => {
   if (!str) return false;
@@ -1124,11 +1125,7 @@ const MapComposer: React.FC<MapComposerProps> = ({
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      try {
-        window.localStorage.setItem("webgis-composer-draft", JSON.stringify({ pageSize, zoom, elements, selectedId }));
-      } catch {
-        // ignore storage errors
-      }
+      writeJson(STORAGE.composer, { pageSize, zoom, elements, selectedId });
     }, 800);
     return () => window.clearTimeout(timer);
   }, [pageSize, zoom, elements, selectedId]);
