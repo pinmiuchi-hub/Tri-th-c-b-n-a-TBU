@@ -21,7 +21,7 @@ import html2canvas from "html2canvas";
 import { Printer } from 'lucide-react';
 
 interface CustomLayer { id: string; categoryId: string; ten: string; mau: string; bieu_tuong: string; geomType: "point" | "line" | "polygon"; }
-interface LayerCategoryState { id: string; ten: string; icon: string; collapsed?: boolean; layers: { id: string; ten: string; mau: string; bieu_tuong: string; iconOnly?: boolean }[]; }
+interface LayerCategoryState { id: string; ten: string; icon: string; collapsed?: boolean; layers: { id: string; ten: string; mau: string; bieu_tuong: string; iconOnly?: boolean; isThematic?: boolean; thematicSource?: string }[]; }
 
 /* ─── Types ─── */
 interface WardProperties { ma_xa: string; ten_xa: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number; ten_tinh?: string; dan_toc?: DanTocTyLe[]; dan_toc_trang_thai?: string; dan_toc_nguon?: string[]; dan_toc_ghi_chu?: string; dac_diem?: string; dac_diem_nguon?: string[]; dac_diem_trang_thai?: string; dan_so_nguon?: string; dan_so_ky?: string; dtts_so?: number; }
@@ -65,20 +65,18 @@ const REMOVED_LAYER_IDS = new Set(["villages", "customary_zones"]);
 
 // Cấu trúc lớp dữ liệu chuẩn hóa theo Atlat Quốc gia Việt Nam
 const DEFAULT_LAYER_CATEGORIES = [
-  { id: "hydrology", ten: "03. Thủy văn & Tài nguyên nước", icon: "💧", layers: [
-    { id: "rivers", ten: "Hệ thống sông suối (OpenStreetMap)", mau: "#2589c7", bieu_tuong: "🌊", iconOnly: true },
-    { id: "irrigation", ten: "Thủy lợi truyền thống (Mương·Phai)", mau: "#74c69d", bieu_tuong: "🚿", iconOnly: true }, 
-  ]},
-  { id: "landcover", ten: "04. Lớp phủ & Sử dụng đất", icon: "🌾", layers: [
+  { id: "land_knowledge", ten: "Tri thức bản địa trong quản lí tài nguyên đất", icon: "🌾", layers: [
     { id: "vac_models", ten: "Mô hình VAC/VACR tuần hoàn", mau: "#b5e48c", bieu_tuong: "🏡", iconOnly: true },
+    { id: "population_density", ten: "Mật độ dân số", mau: "#2a9d8f", bieu_tuong: "📊" },
+    { id: "ward_boundaries", ten: "Ranh giới xã/phường", mau: "#6b4226", bieu_tuong: "🗺️" },
   ]},
-  { id: "forest", ten: "05. Rừng & Sinh thái", icon: "🌲", layers: [
+  { id: "forest_knowledge", ten: "Tri thức bản địa trong quản lí tài nguyên rừng", icon: "🌲", layers: [
     { id: "forests", ten: "Phân vùng rừng", mau: "#2d6a4f", bieu_tuong: "🌲", iconOnly: true },
     { id: "medicinal_plants", ten: "Khu vực cây thuốc quý", mau: "#e63946", bieu_tuong: "🌿", iconOnly: true },
   ]},
-  { id: "socio", ten: "09. Kinh tế - Xã hội & Dân cư", icon: "🏘️", layers: [
-    { id: "ward_boundaries", ten: "Ranh giới xã/phường", mau: "#6b4226", bieu_tuong: "🗺️" },
-    { id: "population_density", ten: "Mật độ dân số", mau: "#2a9d8f", bieu_tuong: "📊" }
+  { id: "water_knowledge", ten: "Tri thức bản địa trong quản lí tài nguyên nước", icon: "💧", layers: [
+    { id: "rivers", ten: "Hệ thống sông suối (OpenStreetMap)", mau: "#2589c7", bieu_tuong: "🌊", iconOnly: true },
+    { id: "irrigation", ten: "Thủy lợi truyền thống (Mương·Phai)", mau: "#74c69d", bieu_tuong: "🚿", iconOnly: true },
   ]},
 ];
 const EDITABLE_LAYERS = new Set(["irrigation", "forests", "vac_models", "medicinal_plants"]);
@@ -128,7 +126,7 @@ const walkGeoCoords = (node: unknown, visit: (lng: number, lat: number) => void)
 const FOREST_COLORS: Record<string, string> = { vqg: "#1b4332", kbttn: "#52b788", kbvcq: "#023e8a", rung_dac_dung: "#9b5de5" };
 const FOREST_LABELS: Record<string, string> = { vqg: "Vườn quốc gia", kbttn: "Khu bảo tồn thiên nhiên", kbvcq: "Khu bảo vệ cảnh quan", rung_dac_dung: "Rừng đặc dụng khác" };
 const IRRIGATION_LABELS: Record<string, string> = { phai: "Phai (đập)", muong: "Mương (kênh)", lin: "Lịn (phân phối nước vào ruộng)", lai: "Lái (máng dẫn)", con: "Cọn (guồng nước)" };
-const ETHNIC_COLORS: Record<string, string> = { thai: "#2d6a4f", mong: "#b5179e", dao: "#f4a261", kho_mu: "#6d6875", muong: "#e76f51", la_hu: "#457b9d", lu: "#2a9d8f", mang: "#8338ec", kinh: "#e63946", tay: "#1d3557", giay: "#06a77d", ha_nhi: "#a4243b", nung: "#5a189a", phu_la: "#ff8c42", la_chi: "#ffc857" };
+const ETHNIC_COLORS: Record<string, string> = { thai: "#c96a3d", mong: "#d97706", dao: "#e6a23c", kho_mu: "#9a6b45", muong: "#b45309", la_hu: "#a16207", lu: "#c2410c", mang: "#92400e", kinh: "#dc2626", tay: "#a8553d", giay: "#b7791f", ha_nhi: "#9f1239", nung: "#c2410c", phu_la: "#f59e0b", la_chi: "#d97706" };
 const VIETNAMESE_ETHNIC_NAMES = [
   "Ba Na", "Bố Y", "Brâu", "Bru-Vân Kiều", "Chăm", "Chơ Ro", "Chu Ru", "Chứt", "Co", "Cống", "Cơ Ho", "Cơ Lao", "Cơ Tu", "Dao", "Ê Đê", "Gia Rai", "Giáy", "Giẻ-Triêng", "Hà Nhì", "Hrê", "Kháng", "Khmer", "Khơ Mú", "Kinh", "La Chí", "La Ha", "La Hủ", "Lào", "Lự", "Lô Lô", "Mạ", "Mảng", "M'Nông", "Mông", "Mường", "Ngái", "Nùng", "Ơ Đu", "Pà Thẻn", "Phù Lá", "Pu Péo", "Ra Glai", "Rơ Măm", "Sán Chay", "Sán Dìu", "Si La", "Tà Ôi", "Tày", "Thái", "Thổ", "Xinh Mun", "Xơ Đăng", "Xtiêng", "Cao Lan (nhánh Sán Chay)"
 ];
@@ -1316,14 +1314,19 @@ const getZoomAwareDashArray = (baseDashArray: string, zoom: number) =>
     return classes[classIndex < 0 ? classes.length - 1 : classIndex].color;
   };
   const getWardValue = <K extends keyof WardProperties>(w:WardProperties,f:K):WardProperties[K] => { const ov=wardOverrides.get(w.ma_xa); return (ov&&f in ov?ov[f as string]:w[f]) as WardProperties[K]; };
+  const ethnicDisplayColor = (id: string, fallback?: string) => ETHNIC_COLORS[id] || fallback || ETHNIC_OTHER_COLOR;
   const getWardMapStyle = (p: WardProperties, baseStyle: LayerSymbologyConfig) => {
   const ov = wardOverrides.get(p.ma_xa);
+  const composition = ov?.dan_toc ?? p.dan_toc ?? [];
+  const dominant = composition.filter(item => Number(item.ty_le) > 0).sort((a, b) => b.ty_le - a.ty_le)[0];
+  const ethnicMapActive = ["vac_models", "population_density", "forests", "medicinal_plants", "rivers", "irrigation"].some(id => activeLayers.has(id));
+  const dominantInfo = dominant ? danTocData?.dan_toc.find(item => item.id === dominant.dan_toc) : undefined;
   return {
     color: (ov?.mau_vien as string) ?? baseStyle.color,
     weight: (ov?.do_day_vien as number) ?? baseStyle.lineWeight,
     opacity: (ov?.do_dam_vien as number) ?? baseStyle.opacity,
-    fillColor: (ov?.mau_vung as string) ?? baseStyle.fillColor,
-    fillOpacity: (ov?.do_dam_vung as number) ?? baseStyle.fillOpacity,
+    fillColor: (ov?.mau_vung as string) ?? (ethnicMapActive && dominant ? ethnicDisplayColor(dominant.dan_toc, dominantInfo?.mau) : baseStyle.fillColor),
+    fillOpacity: (ov?.do_dam_vung as number) ?? (ethnicMapActive && dominant ? Math.max(baseStyle.fillOpacity, 0.38) : baseStyle.fillOpacity),
     // Cấp xã giữ nét đứt ở mọi zoom để phân cấp với ranh giới cấp tỉnh (nét liền)
     dashArray: baseStyle.dashArray || undefined,
   };
@@ -1357,6 +1360,9 @@ const refreshBoundaryStyles = () => {
     });
   }
 };
+  useEffect(() => {
+    refreshBoundaryStyles();
+  }, [activeLayers, wardOverrides, ethnicOverrides, danTocData, selectedAreaOnly, selectedWardIds]);
   const getDanTocInfo = (id:string):DanTocInfo|undefined => {
     const b = danTocData?.dan_toc.find(d => d.id === id);
     const extra = EXTRA_ETHNIC_OPTIONS.find(item => item.id === id);
@@ -1507,6 +1513,50 @@ const resetWardStyle = (ma_xa: string) => {
     setLayersData(prev => ({ ...(prev || {} as LayersData), [id]: [] } as LayersData));
     setActiveLayers(prev => new Set([...prev, id]));
   };
+  const thematicSourceOf = (id: string): string | null => {
+    const stored = layerCategories.flatMap(category => category.layers).find(layer => layer.id === id);
+    if (stored?.isThematic) return stored.thematicSource || id;
+    return THEMATIC_KEYS.includes(id as (typeof THEMATIC_KEYS)[number]) ? id : null;
+  };
+  const duplicateLayer = (layerId: string, categoryId: string) => {
+    const source = layerCategories.flatMap(category => category.layers).find(layer => layer.id === layerId)
+      || customLayers.find(layer => layer.id === layerId)
+      || (rasterMeta?.layers[layerId] ? { id: layerId, ten: rasterMeta.layers[layerId].label, mau: thematicColor(rasterMeta.layers[layerId].stops), bieu_tuong: THEMATIC_ICONS[layerId] ?? "🗺️" } : null);
+    if (!source) return;
+    const id = `custom_${Math.random().toString(36).slice(2, 9)}`;
+    const thematicSource = thematicSourceOf(layerId);
+    if (thematicSource) {
+      const targetCategoryId = categoryId === "__thematic__" ? layerCategories[0]?.id : categoryId;
+      if (!targetCategoryId) return;
+      const copy = { id, ten: `${source.ten} (bản sao)`, mau: source.mau, bieu_tuong: source.bieu_tuong, isThematic: true, thematicSource };
+      setLayerCategories(prev => prev.map(category => category.id === targetCategoryId ? { ...category, layers: [...category.layers, copy] } : category));
+      setActiveRaster(thematicSource);
+      showToast(`Đã tạo bản sao lớp chuyên đề "${copy.ten}"`);
+      return;
+    }
+    const copy: CustomLayer = {
+      id,
+      categoryId,
+      ten: `${source.ten} (bản sao)`,
+      mau: source.mau,
+      bieu_tuong: source.bieu_tuong,
+      geomType: LAYER_GEOM_TYPE[layerId] || (source as CustomLayer).geomType || "point",
+    };
+    setCustomLayers(prev => [...prev, copy]);
+    setLayersData(prev => ({ ...(prev || {} as LayersData), [id]: JSON.parse(JSON.stringify((prev as any)?.[layerId] || [])) } as LayersData));
+    setActiveLayers(prev => new Set([...prev, id]));
+    showToast(`Đã tạo bản sao "${copy.ten}"`);
+  };
+  const toggleLayerCategory = (categoryId: string) => {
+    const ids = combinedLayerIds(categoryId);
+    if (!ids.length) return;
+    setActiveLayers(prev => {
+      const next = new Set(prev);
+      const shouldEnable = ids.some(id => !next.has(id));
+      ids.forEach(id => shouldEnable ? next.add(id) : next.delete(id));
+      return next;
+    });
+  };
   const addLayerCategory = (ten: string, icon: string) => {
   const id = "group_" + Math.random().toString(36).slice(2, 9);
   setLayerCategories(prev => [...prev, { id, ten, icon, layers: [] }]);
@@ -1602,6 +1652,29 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
     ...customLayers.filter(c => c.categoryId === categoryId).map(c => c.id),
   ];
   const moveLayer = (layerId: string, targetCategoryId: string, index: number) => {
+    const storedThematic = layerCategories.flatMap(category => category.layers).find(layer => layer.id === layerId);
+    const thematic = storedThematic?.isThematic || THEMATIC_KEYS.includes(layerId as (typeof THEMATIC_KEYS)[number]);
+    if (thematic) {
+      const sourceLayer = storedThematic || (rasterMeta?.layers[layerId] ? {
+        id: layerId,
+        ten: rasterMeta.layers[layerId].label,
+        mau: thematicColor(rasterMeta.layers[layerId].stops),
+        bieu_tuong: THEMATIC_ICONS[layerId] ?? "🗺️",
+        isThematic: true,
+        thematicSource: layerId,
+      } : undefined);
+      if (!sourceLayer) return;
+      setLayerCategories(prev => {
+        const without = prev.map(category => ({ ...category, layers: category.layers.filter(layer => layer.id !== layerId) }));
+        if (targetCategoryId === "__thematic__") return without;
+        const target = without.find(category => category.id === targetCategoryId);
+        if (!target) return prev;
+        const nextLayers = [...target.layers];
+        nextLayers.splice(Math.max(0, Math.min(index, nextLayers.length)), 0, sourceLayer);
+        return without.map(category => category.id === targetCategoryId ? { ...category, layers: nextLayers } : category);
+      });
+      return;
+    }
     if (!layerCategories.some(c => c.id === targetCategoryId)) return;
     const builtin = layerCategories.flatMap(c => c.layers).find(l => l.id === layerId);
     const custom = customLayers.find(c => c.id === layerId);
@@ -2093,8 +2166,9 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
 
   /* ─── Toggle layer ─── */
   const toggleLayer = (id:string) => {
-    if (THEMATIC_KEYS.includes(id as (typeof THEMATIC_KEYS)[number])) {
-      setActiveRaster(prev => prev === id ? null : id);
+    const thematicSource = thematicSourceOf(id);
+    if (thematicSource || THEMATIC_KEYS.includes(id as (typeof THEMATIC_KEYS)[number])) {
+      setActiveRaster(prev => prev === thematicSource ? null : thematicSource);
       return;
     }
     if(id==="ward_boundaries") wardBoundaryAutoOnRef.current=false;
@@ -2532,6 +2606,41 @@ onEachFeature:(feat,lyr)=>{
       })
       .sort((a, b) => b.value - a.value);
   }, [showPieSelector, pieWardSelection, viewMode, selectedWard, selectedProvince, currentProvinceGeoJson, wardDanToc, wardOverrides, ethnicOverrides, danTocData]);
+  const knowledgeLayersActive = ["vac_models", "population_density", "forests", "medicinal_plants", "rivers", "irrigation"].some(id => activeLayers.has(id));
+  const ethnicPanelBars = useMemo(() => {
+    if (!knowledgeLayersActive || !selectedProvince) return [];
+    const totals = new Map<string, number>();
+    const add = (items: DanTocTyLe[], weight = 1) => {
+      const listed = items.reduce((sum, item) => sum + Math.max(0, Number(item.ty_le) || 0), 0);
+      items.forEach(item => {
+        if (item.ty_le > 0) totals.set(item.dan_toc, (totals.get(item.dan_toc) || 0) + item.ty_le * weight);
+      });
+      if (listed < 100) totals.set(ETHNIC_OTHER_ID, (totals.get(ETHNIC_OTHER_ID) || 0) + (100 - listed) * weight);
+    };
+    if (selectedWard) add(wardDanToc);
+    else if (currentProvinceGeoJson) {
+      const features = currentProvinceGeoJson.features;
+      const population = features.reduce((sum, feature) => sum + (Number((feature.properties as unknown as WardProperties).dan_so) || 0), 0);
+      features.forEach(feature => {
+        const props = feature.properties as unknown as WardProperties;
+        add(wardOverrides.get(props.ma_xa)?.dan_toc ?? props.dan_toc ?? [], population ? (Number(props.dan_so) || 0) / population : 1 / Math.max(features.length, 1));
+      });
+    }
+    const groups = [
+      { id: "thai", label: "Thái", color: ethnicDisplayColor("thai", getDanTocInfo("thai")?.mau) },
+      { id: "mong", label: "Mông", color: ethnicDisplayColor("mong", getDanTocInfo("mong")?.mau) },
+      { id: "muong", label: "Mường", color: ethnicDisplayColor("muong", getDanTocInfo("muong")?.mau) },
+      { id: ETHNIC_OTHER_ID, label: ETHNIC_OTHER_LABEL, color: ETHNIC_OTHER_COLOR },
+    ];
+    const values = groups.map(group => {
+      const value = group.id === ETHNIC_OTHER_ID
+        ? Array.from(totals.entries()).filter(([id]) => !["thai", "mong", "muong"].includes(id)).reduce((sum, [, amount]) => sum + amount, 0)
+        : totals.get(group.id) || 0;
+      return { ...group, value };
+    });
+    const total = values.reduce((sum, item) => sum + item.value, 0);
+    return total ? values.map(item => ({ ...item, value: Math.round(item.value / total * 1000) / 10 })) : [];
+  }, [knowledgeLayersActive, selectedProvince, selectedWard, wardDanToc, currentProvinceGeoJson, wardOverrides, danTocData, ethnicOverrides]);
   const ethnicLegendItems = useMemo(() => {
     if (!showPieSelector || pieWardSelection.size === 0 || viewMode !== "ward" || !currentProvinceGeoJson) return [];
     const ids = new Set<string>();
@@ -2623,7 +2732,12 @@ onEachFeature:(feat,lyr)=>{
   const layerCategoriesWithState = layerCategories.map(cat => ({
   ...cat,
   layers: [
-    ...cat.layers.map(l => ({ ...l, active: activeLayers.has(l.id), isCustom: false })),
+    ...cat.layers.map(l => ({
+      ...l,
+      active: l.isThematic ? activeRaster === (l.thematicSource || l.id) : activeLayers.has(l.id),
+      isCustom: false,
+      isThematic: l.isThematic,
+    })),
     ...customLayers.filter(c => c.categoryId === cat.id).map(c => ({
       id: c.id, ten: c.ten, mau: c.mau, bieu_tuong: c.bieu_tuong, active: activeLayers.has(c.id), isCustom: true
     }))
@@ -2635,10 +2749,12 @@ onEachFeature:(feat,lyr)=>{
     ten: "Bản đồ chuyên đề",
     icon: "🗺️",
     isThematic: true,
-    layers: THEMATIC_KEYS.filter(k => rasterMeta.layers[k]).map(k => {
+    layers: [
+      ...THEMATIC_KEYS.filter(k => rasterMeta.layers[k] && !layerCategories.some(category => category.layers.some(layer => layer.isThematic && (layer.thematicSource || layer.id) === k))).map(k => {
       const info = rasterMeta.layers[k];
       return { id: k, ten: info.label, mau: thematicColor(info.stops), bieu_tuong: THEMATIC_ICONS[k] ?? "🗺️", active: activeRaster === k, isThematic: true };
-    }),
+      }),
+    ],
   } : null;
   const allEditableLayers = new Set<string>([...EDITABLE_LAYERS, ...customLayerIds]);
   const allExportableLayers = new Set<string>([
@@ -2913,6 +3029,8 @@ onClick={() => setShowMapComposer(s => !s)}
   categories={layerCategoriesWithState}
   thematicCategory={thematicCategory}
   onToggle={toggleLayer}
+  onToggleCategory={toggleLayerCategory}
+  onDuplicateLayer={duplicateLayer}
   onEditLayer={openLayerEditor}
   onEditSymbology={openSymbologyEditor}
   onAddCustomLayer={addCustomLayer}
@@ -3211,6 +3329,41 @@ onClick={() => setShowMapComposer(s => !s)}
                   <div className="info-panel-titles"><div className="panel-title">Thông tin địa bàn</div><div className="panel-subtitle">{selectedProvince}</div></div>
                   <button className="info-panel-close" onClick={handleBack} title="Đóng / quay lại bản đồ">✕</button>
                 </div>
+
+                {ethnicPanelBars.length > 0 && (
+                  <div className="ethnic-panel-chart">
+                    <div className="ethnic-panel-chart-title">Cơ cấu dân tộc</div>
+                    <div className="ethnic-panel-chart-subtitle">{selectedWard ? selectedWard.ten_xa : selectedProvince} · bấm tên để xem chi tiết</div>
+                    <div className="ethnic-panel-bars">
+                      {ethnicPanelBars.map(bar => {
+                        const info = bar.id === ETHNIC_OTHER_ID ? undefined : getDanTocInfo(bar.id);
+                        return (
+                          <div className="ethnic-panel-bar-row" key={bar.id} title={info?.ten || bar.label}>
+                            <button
+                              className="ethnic-panel-bar-label"
+                              disabled={!info}
+                              onClick={() => { if (info) { setSelectedDanToc(info); setActiveTriThuc(0); } }}
+                            >
+                              {info?.ten || bar.label}
+                            </button>
+                            <div className="ethnic-panel-bar-track">
+                              <div className="ethnic-panel-bar-fill" style={{ width: `${bar.value}%`, background: bar.color }} />
+                            </div>
+                            <strong>{bar.value}%</strong>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {selectedWard && wardDanToc.length > 0 && (
+                      <div className="ethnic-panel-all-names">
+                        {wardDanToc.map(item => {
+                          const info = getDanTocInfo(item.dan_toc);
+                          return <button key={item.dan_toc} onClick={() => info && setSelectedDanToc(info)}>{info?.ten || ethnicLabelOf(item.dan_toc, item.dan_toc)}</button>;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
 {selectedWard ? (
                   <div className="ward-info">

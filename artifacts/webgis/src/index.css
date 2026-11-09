@@ -1719,6 +1719,14 @@ html, body, #root {
   background: rgba(82,183,136,0.12); border: 1px solid rgba(82,183,136,0.25);
   border-radius: 8px; padding: 0 6px; flex-shrink: 0;
 }
+.lf-group-toggle {
+  width: 28px; height: 16px; padding: 2px; flex-shrink: 0;
+  border: 1px solid rgba(149,213,178,0.35); border-radius: 999px;
+  background: rgba(15,31,15,0.8); cursor: pointer; display: flex; align-items: center;
+}
+.lf-group-toggle .layer-toggle-thumb { width: 10px; height: 10px; border-radius: 50%; background: rgba(149,213,178,0.55); transition: transform 0.15s; }
+.lf-group-toggle.on { background: #2d6a4f; border-color: #52b788; justify-content: flex-end; }
+.lf-group-toggle.on .layer-toggle-thumb { background: #d8f3dc; }
 .lf-btn {
   width: 20px; height: 20px; flex-shrink: 0;
   background: transparent; border: 1px solid transparent; border-radius: 4px;
@@ -1743,6 +1751,25 @@ html, body, #root {
   transition: all 0.15s;
 }
 .lf-new-btn:hover { background: rgba(82,183,136,0.18); border-color: #52b788; color: #d8f3dc; }
+
+.ethnic-panel-chart {
+  margin: 12px 14px 0; padding: 12px;
+  border: 1px solid rgba(201,106,61,0.35); border-radius: 10px;
+  background: rgba(201,106,61,0.08);
+}
+.ethnic-panel-chart-title { color: #f3c29d; font-size: 13px; font-weight: 700; }
+.ethnic-panel-chart-subtitle { color: rgba(216,243,220,0.7); font-size: 10px; margin: 3px 0 10px; }
+.ethnic-panel-bars { display: flex; flex-direction: column; gap: 7px; }
+.ethnic-panel-bar-row { display: grid; grid-template-columns: 82px 1fr 38px; align-items: center; gap: 6px; font-size: 10px; }
+.ethnic-panel-bar-label, .ethnic-panel-all-names button {
+  border: 0; padding: 0; background: transparent; color: #f1e2d5; text-align: left; cursor: pointer; font: inherit;
+}
+.ethnic-panel-bar-label:disabled { cursor: default; }
+.ethnic-panel-bar-label:not(:disabled):hover, .ethnic-panel-all-names button:hover { color: #f6ad7d; text-decoration: underline; }
+.ethnic-panel-bar-track { height: 10px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,0.12); }
+.ethnic-panel-bar-fill { height: 100%; min-width: 2px; border-radius: inherit; }
+.ethnic-panel-bar-row strong { color: #f3c29d; text-align: right; font-size: 10px; }
+.ethnic-panel-all-names { display: flex; flex-wrap: wrap; gap: 5px 8px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(201,106,61,0.2); }
 .lf-new-form { display: flex; gap: 6px; align-items: center; }
 .lf-thematic-tools { padding: 4px 12px 8px; }
 .lf-thematic-tools .thematic-opacity { margin-top: 4px; }

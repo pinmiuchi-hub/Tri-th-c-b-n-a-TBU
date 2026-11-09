@@ -31,6 +31,8 @@ interface Props {
   categories: LayerCategory[];
   thematicCategory?: LayerCategory | null;
   onToggle: (layerId: string) => void;
+  onToggleCategory?: (categoryId: string) => void;
+  onDuplicateLayer?: (layerId: string, categoryId: string) => void;
   onEditLayer: (layerId: string) => void;
   onEditSymbology?: (layerId: string) => void;
   onAddCustomLayer: (categoryId: string, input: NewLayerInput) => void;
@@ -77,6 +79,7 @@ const PRESS_SLOP_PX = 10;
 
 export default function LayerControl({
   categories, thematicCategory, onToggle, onEditLayer, onEditSymbology, onAddCustomLayer, onImportLayerFile,
+  onToggleCategory, onDuplicateLayer,
   onDeleteCustomLayer, onRenameCustomLayer, onRenameLayer, onAddCategory, onDeleteCategory, onRenameCategory, onRemoveBuiltinLayer, onExportLayer,
   featureCounts, editableLayers, exportableLayers, onClose, showTransect, onToggleTransect,
   showCalendar, onToggleCalendar, showKnowledge, onToggleKnowledge, showEthnicPie, onToggleEthnicPie, onOpenPieSelector,
@@ -172,7 +175,9 @@ export default function LayerControl({
     setNamingFolder(false);
   };
 
-  const combinedIds = (catId: string) => categories.find(c => c.id === catId)?.layers.map(l => l.id) ?? [];
+  const combinedIds = (catId: string) => catId === thematicCategory?.id
+    ? thematicCategory.layers.map(l => l.id)
+    : categories.find(c => c.id === catId)?.layers.map(l => l.id) ?? [];
 
   const clearHint = () => {
     const el = hintRef.current;
@@ -304,7 +309,7 @@ export default function LayerControl({
   };
 
   const onRowPointerDown = (e: React.PointerEvent<HTMLElement>, layer: LayerToggle) => {
-    if (!onMoveLayer || layer.isThematic) return;
+    if (!onMoveLayer) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     if (pressRef.current || dragRef.current) return;
     const t = e.target as HTMLElement;
@@ -369,6 +374,11 @@ export default function LayerControl({
             )}
           </div>
         )}
+        {(
+          <button className="layer-edit-btn" onClick={() => onDuplicateLayer?.(layer.id, catId)} title="Tạo bản sao lớp">
+            ⧉
+          </button>
+        )}
         {!layer.isThematic && (
           <button
             className="layer-delete-btn"
@@ -396,7 +406,7 @@ export default function LayerControl({
   );
 
   const renderFolder = (cat: LayerCategory) => {
-    const droppable = !cat.isThematic;
+    const droppable = true;
     const collapsed = cat.isThematic ? !thematicOpen : !!cat.collapsed;
     return (
       <div className={`layer-folder${collapsed ? " is-collapsed" : ""}${cat.isThematic ? " is-thematic" : ""}`} key={cat.id}>
@@ -428,6 +438,15 @@ export default function LayerControl({
             </span>
           )}
           <span className="lf-count" title={`${cat.layers.length} lớp`}>{cat.layers.length}</span>
+          {droppable && onToggleCategory && !cat.isThematic && cat.layers.length > 0 && (
+            <button
+              className={`lf-group-toggle${cat.layers.some(layer => layer.active) ? " on" : ""}`}
+              onClick={() => onToggleCategory(cat.id)}
+              title={cat.layers.some(layer => layer.active) ? "Tắt toàn bộ nhóm" : "Bật toàn bộ nhóm"}
+            >
+              <span className="layer-toggle-thumb"/>
+            </button>
+          )}
           {droppable && (
             <>
               <button className="lf-btn" title="Đổi tên thư mục" onClick={() => startRenameFolder(cat)}>✎</button>
