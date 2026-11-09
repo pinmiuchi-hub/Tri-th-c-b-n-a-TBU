@@ -11,8 +11,24 @@
 
 import { ALL_KEYS, SYNC_META_KEY, onLocalWrite, readJson, writeLocalSilent } from "./persist";
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, "");
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+/**
+ * Chuẩn hoá SUPABASE_URL cho mọi dạng người dùng hay dán:
+ * có/không `https://`, thừa `/`, thừa `/rest/v1`, có khoảng trắng/thừa xuống dòng.
+ * (Dán kèm `/rest/v1` mà không xử lý sẽ thành .../rest/v1/rest/v1/... → PGRST125.)
+ */
+function normalizeBaseUrl(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  let u = raw.trim().replace(/\s+/g, "");
+  if (!u) return undefined;
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  u = u.replace(/\/+$/, "");
+  u = u.replace(/\/rest\/v1$/i, "");
+  u = u.replace(/\/+$/, "");
+  return u || undefined;
+}
+
+const SUPABASE_URL = normalizeBaseUrl(import.meta.env.VITE_SUPABASE_URL as string | undefined);
+const SUPABASE_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
 
 export const syncEnabled = Boolean(SUPABASE_URL && SUPABASE_KEY);
 const TABLE = "webgis_state";
@@ -69,7 +85,7 @@ async function fetchRemote(): Promise<{ payload: CloudPayload; updatedAt: string
     `${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${ROW_ID}&select=payload,updated_at`,
     { headers: headers(), signal: ctrl.signal },
   );
-  if (!res.ok) throw new Error(await errorDetail("GET", res));
+  if (!res.ok) throw new Error(`${res.url} → ${await errorDetail("GET", res)}`);
   const rows = (await res.json()) as { payload: CloudPayload | null; updated_at: string }[];
   const row = rows[0];
   if (!row || !row.payload || typeof row.payload !== "object") return null;
@@ -85,7 +101,7 @@ async function pushRemote(payload: CloudPayload, keepalive = false): Promise<voi
     signal: ctrl?.signal,
     keepalive,
   });
-  if (!res.ok) throw new Error(await errorDetail("POST", res));
+  if (!res.ok) throw new Error(`${res.url} → ${await errorDetail("POST", res)}`);
 }
 
 /** Mô tả lỗi HTTP ngắn gọn kèm nội dung trả về (vd: "bảng chưa tồn tại", "sai api key"). */
