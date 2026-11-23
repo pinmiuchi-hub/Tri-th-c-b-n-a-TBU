@@ -58,7 +58,7 @@ const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 const assetUrl = (p?: string): string => (!p ? "" : /^(https?:|data:|blob:)/.test(p) ? p : `${BASE_PATH}/${p.replace(/^\//, "")}`);
 const LAYER_CONFIG_STORAGE_KEY = "webgis-layer-config";
 // Bump when built-in layer content in public/data/layers.json changes (forces discard of stale saved copies)
-const LAYER_DATA_REV = 6;
+const LAYER_DATA_REV = 7;
 const LAYER_DATA_REV_KEYS = ["irrigation", "vac_models", "customary_zones", "villages"];
 // Lớp đã gỡ khỏi giao diện bản đồ (round 3): hiển thị văn bản theo xã trong panel "Thông tin địa bàn"
 const REMOVED_LAYER_IDS = new Set(["villages", "customary_zones"]);
