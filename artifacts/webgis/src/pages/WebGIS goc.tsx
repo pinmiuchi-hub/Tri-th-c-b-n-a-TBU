@@ -100,6 +100,14 @@ const DEFAULT_LAYER_CATEGORIES = [
     { id: "medicinal_plants", ten: "Khu vực cây thuốc quý", mau: "#e63946", bieu_tuong: "🌿", iconOnly: true },
   ]},
 ];
+/**
+ * Thư mục "Kinh tế - Xã hội" — đích chứa 2 lớp đặc biệt (Cơ cấu dân tộc · Tên xã).
+ * Tự tạo nếu config người dùng chưa có (trừ khi họ đã chủ động xóa thư mục này).
+ */
+const ensureSocioCategory = (cats: LayerCategoryState[], deletedIds: string[]): LayerCategoryState[] =>
+  cats.some(c => c.id === "socio") || deletedIds.includes("socio")
+    ? cats
+    : [...cats, { id: "socio", ten: "Kinh tế - Xã hội", icon: "👥", layers: [] }];
 const EDITABLE_LAYERS = new Set(["forests", "medicinal_plants"]);
 const LAYER_GEOM_TYPE: Record<string, "point" | "line" | "polygon"> = {
   rivers: "line", forests: "polygon",
@@ -644,7 +652,7 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
     const defaults: LayerCategoryState[] = DEFAULT_LAYER_CATEGORIES.map(c => ({ ...c, layers: c.layers.map(l => ({ ...l })) }));
     try {
       const saved = JSON.parse(window.localStorage.getItem(LAYER_CONFIG_STORAGE_KEY) || "null");
-      if (!Array.isArray(saved?.layerCategories)) return defaults;
+      if (!Array.isArray(saved?.layerCategories)) return ensureSocioCategory(defaults, []);
       const savedCats = saved.layerCategories as LayerCategoryState[];
       const deletedCategoryIds: string[] = Array.isArray(saved?.deletedCategoryIds) ? saved.deletedCategoryIds : [];
       const hiddenLayerIds: Record<string, string[]> = saved?.hiddenLayerIds && typeof saved.hiddenLayerIds === "object" ? saved.hiddenLayerIds : {};
@@ -685,8 +693,8 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
         normalized.push({ ...cat, ten: def.ten, icon: def.icon, layers: orderedLayers });
       });
       cleaned.forEach(c => { if (!DEFAULT_LAYER_CATEGORIES.some(d => d.id === c.id)) normalized.push(c); });
-      return normalized;
-    } catch { return defaults; }
+      return ensureSocioCategory(normalized, deletedCategoryIds);
+    } catch { return ensureSocioCategory(defaults, []); }
   });
   const [deletedCategoryIds, setDeletedCategoryIds] = useState<string[]>(() => {
     try {
