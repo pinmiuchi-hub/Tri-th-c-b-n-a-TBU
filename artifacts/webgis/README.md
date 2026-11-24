@@ -72,6 +72,23 @@ webgis/
 
 Sau khi `pnpm build`, thư mục `dist/` chứa file tĩnh có thể deploy lên bất kỳ web host nào (Netlify, Vercel, Nginx, Apache, GitHub Pages, ...).
 
+### GitHub Pages (tự động)
+
+- Push lên nhánh `main`, `agents/density-map-integration-with-pie-charts` hoặc `ra-soat-tri-thuc-rev12` → workflow `.github/workflows/deploy-pages.yml` tự build (`pnpm --filter "@workspace/webgis" build`) và deploy lên Pages.
+- Site chạy ở `https://pinmiuchi-hub.github.io/Tri-th-c-b-n-a-TBU/` với `BASE_PATH=/Tri-th-c-b-n-a-TBU/` (đã cấu hình sẵn trong workflow; `.nojekyll` tự thêm).
+- Cần bật Pages: repo → Settings → Pages → Source = **GitHub Actions**.
+- Nếu thiếu secrets Supabase, site vẫn deploy bình thường — chỉ là tắt đồng bộ cloud (chạy local-only).
+
+### Tự động lưu (localStorage + đồng bộ Supabase)
+
+- **Mỗi máy**: mọi thay đổi ở editor (thêm/sửa/xóa đối tượng, đổi tên nhóm/lớp…) tự ghi vào `localStorage` của trình duyệt ngay lập tức; tải lại trang là dữ liệu còn nguyên (khớp `knowledgeDataRev=12` mới khôi phục). Giới hạn ~5MB — hết quota sẽ có toast cảnh báo.
+- **Đồng bộ giữa các máy** (cùng dữ liệu trên cloud):
+  1. Tạo project Supabase → SQL Editor → chạy 1 lần file `supabase/setup.sql` (tạo bảng `webgis_state`, bật RLS cho phép anon đọc/ghi, seed 1 dòng `global`).
+  2. Lấy Project URL + anon key (Dashboard → Project Settings → API) và đặt thành 2 **repository secrets**: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (Settings → Secrets and variables → Actions) → push lại để Pages build với sync bật.
+  3. Dev local: copy `.env.example` → `.env` rồi dán 2 giá trị vào (`.env` đã nằm trong `.gitignore`, không lo lộ khóa).
+- Cơ chế: `SyncGate` kéo dữ liệu cloud khi mở trang, merge theo timestamp từng khóa (bên nào mới hơn thắng), push debounce 1.5s sau mỗi sửa, flush best-effort khi đóng tab; có chip đồng bộ + banner "dữ liệu máy khác mới hơn → tải lại" trên UI. Bật/tắt bằng env — không env thì app chạy local-only, không lỗi.
+- **Quan trọng**: không bump `knowledgeDataRev`/`layersDataRev` tùy tiện — mỗi bump = bỏ qua bản lưu của người dùng. Muốn reset sạch thì xóa key trong localStorage hoặc dùng nút xuất/nhập backup.
+
 ## Lưu ý về dữ liệu
 
 - Sông suối: tọa độ lấy từ **OpenStreetMap** (© OpenStreetMap contributors, ODbL license).

@@ -2,7 +2,7 @@ name: Deploy WebGIS to GitHub Pages
 
 on:
   push:
-    branches: [main, agents/density-map-integration-with-pie-charts]
+    branches: [main, agents/density-map-integration-with-pie-charts, ra-soat-tri-thuc-rev12]
   workflow_dispatch:
 
 permissions:
