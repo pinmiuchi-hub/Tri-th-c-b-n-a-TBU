@@ -10,12 +10,12 @@ try { $word.Options.SaveNormalPrompt = $false } catch {}
 $doc = $word.Documents.Open($docx, $false, $true, $false)
 
 Write-Host ("pages={0} words={1}" -f $doc.ComputeStatistics(2), $doc.ComputeStatistics(0))
-Write-Host ("images(InlineShapes)={0}  expected=15" -f $doc.InlineShapes.Count)
+Write-Host ("images(InlineShapes)={0}  expected=32" -f $doc.InlineShapes.Count)
 Write-Host ("tables={0}  toc={1}" -f $doc.Tables.Count, $doc.TablesOfContents.Count)
 
 $pageref = 0
 foreach ($f in $doc.Fields) { if ($f.Code.Text -match 'PAGEREF') { $pageref++ } }
-Write-Host ("PAGEREF fields={0}  expected=79" -f $pageref)
+Write-Host ("PAGEREF fields={0}  expected=218" -f $pageref)
 
 # no raw tokens left
 $fr = $doc.Content
@@ -28,7 +28,7 @@ $atAt = $find.Execute()
 Write-Host ("raw '@@' found={0}  expected=False" -f $atAt)
 
 # each image followed (within 3 paragraphs) by a 'Hình x.y —' caption?
-$capRx = 'H' + [char]0x1ECB + 'nh\s+[0-9]'
+$capRx = 'H' + [char]0x00EC + 'nh\s+[A-Za-z0-9]'
 $bad = 0
 for ($i = 1; $i -le $doc.InlineShapes.Count; $i++) {
   $sh = $doc.InlineShapes.Item($i)

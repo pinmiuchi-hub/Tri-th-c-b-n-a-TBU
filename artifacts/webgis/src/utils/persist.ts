@@ -19,6 +19,10 @@ export const STORAGE = {
   wardLabels: "webgis-ward-labels",
   ethnicData: "webgis-ethnic-data-v1",
   composer: "webgis-composer-draft",
+  /** Thứ tự 2 lớp đặc biệt trong bảng lớp (Cơ cấu dân tộc · Tên xã). */
+  specialLayerOrder: "webgis-special-layer-order",
+  /** Trạng thái chú giải: ẩn/hiện + tỉ lệ kích cỡ. */
+  legendOpts: "webgis-legend-opts",
 } as const;
 
 /** Meta timestamp cho từng key (đồng bộ cloud theo key). */

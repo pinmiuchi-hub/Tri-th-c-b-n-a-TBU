@@ -69,7 +69,7 @@ Hướng thứ ba là hoàn thiện cách đưa dữ liệu về bản làng: tr
 
 Khi những hướng trên hoàn thành, nền tảng sẽ chuyển từ trạng thái “đã có dữ liệu và công cụ” sang “được vận hành hằng ngày tại xã, bản” — đúng với mục tiêu tổng thể đề tài đã đặt ra.
 
-Báo cáo gồm Phần mở đầu, bốn chương nội dung, Phần kết luận, Danh mục tài liệu tham khảo và các Phụ lục A–E.
+Báo cáo gồm Phần mở đầu, bốn chương nội dung, Phần kết luận, Danh mục tài liệu tham khảo và các Phụ lục A–J.
 
 # DANH MỤC TÀI LIỆU THAM KHẢO
 

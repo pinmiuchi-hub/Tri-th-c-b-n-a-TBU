@@ -16,29 +16,28 @@ export interface CalendarGroup { nhom: string; mau: string; activities: Calendar
 export const DEFAULT_ACTIVITIES_BY_ETHNIC: Record<EthnicKey, CalendarGroup[]> = {
   thai: [
     { nhom: "🌾 Lúa nước", mau: "#52b788", activities: [
-      { ten: "Làm đất, tu sửa mương-phai", months: [1,2], color: "#74c69d", nguon: N_MUONG_LAICHAU },
-      { ten: "Gieo mạ, cấy lúa vụ xuân", months: [2,3], color: "#40916c", nguon: N_LUA_XUAN },
+      { ten: "Làm đất, tu sửa mương-phai ở Phù Yên", months: [1,2], color: "#74c69d", nguon: N_MUONG_LAICHAU },
+      { ten: "Gieo mạ, cấy lúa vụ xuân ở thung lũng", months: [2,3], color: "#40916c", nguon: N_LUA_XUAN },
       { ten: "Chăm sóc, làm cỏ", months: [4,5,6,7], color: "#52b788" },
       { ten: "Thu hoạch lúa xuân", months: [6,7], color: "#b7e4c7" },
       { ten: "Cấy lúa mùa", months: [6,7], color: "#40916c" },
-      { ten: "Thu hoạch lúa mùa + Ủ phân hữu cơ", months: [10,11], color: "#b7e4c7" },
-      { ten: "Lễ cúng cơm mới, xuống đồng", months: [11,12], color: "#d8f3dc" },
+      { ten: "Thu hoạch lúa mùa, ủ phân hữu cơ", months: [10,11], color: "#b7e4c7" },
+      { ten: "Mô hình VAC Quang Huy: chăm vườn, ao, chuồng", months: [1,2,3,4,5,6,7,8,9,10,11,12], color: "#52b788" },
+      { ten: "Cơm mới, xuống đồng theo từng bản", months: [11,12], color: "#d8f3dc" },
     ]},
     { nhom: "🌲 Lâm sản & Rừng", mau: "#2d6a4f", activities: [
-      { ten: "Thu hái lâm sản phụ (măng, rau)", months: [4,5,6,7,8], color: "#52b788" },
-      { ten: "Thu hái chè Shan tuyết", months: [3,4,5,9,10], color: "#40916c" },
+      { ten: "Thu hái măng, rau và cây thuốc theo quy ước", months: [4,5,6,7,8], color: "#52b788" },
       { ten: "Trồng rừng, tu bổ", months: [2,3,7,8], color: "#74c69d" },
     ]},
     { nhom: "🐟 Thủy sản & Chăn nuôi", mau: "#4895ef", activities: [
       { ten: "Thả cá (ruộng, ao)", months: [4,5,6], color: "#4895ef" },
-      { ten: "Đánh bắt cá suối (mùa khô)", months: [12,1,2,3], color: "#023e8a" },
+      { ten: "Chăm và nạo vét mương, phai, cọn nước", months: [12,1,2,3], color: "#023e8a" },
       { ten: "Thu hoạch cá ao-ruộng", months: [10,11], color: "#4895ef" },
       { ten: "Mổ lợn, trữ thịt dịp Tết", months: [12,1], color: "#e07070" },
     ]},
     { nhom: "🌿 Cây thuốc & Thu hái", mau: "#e63946", activities: [
-      { ten: "Thu hái lá cây thuốc tươi", months: [5,6,7,8,9], color: "#52b788" },
-      { ten: "Thu hoạch củ, rễ cây thuốc", months: [10,11,12], color: "#e63946" },
-      { ten: "Sơ chế, phơi sấy thuốc", months: [10,11,12,1], color: "#f4a261" },
+      { ten: "Chăm sóc và thu hái cây thuốc theo khu vực", months: [5,6,7,8,9], color: "#52b788" },
+      { ten: "Thu hoạch củ, rễ và sơ chế dược liệu", months: [10,11,12], color: "#e63946" },
       { ten: "Tắm lá sau sinh (quanh năm)", months: [1,2,3,4,5,6,7,8,9,10,11,12], color: "#74c69d" },
     ]},
     { nhom: "🎊 Lễ hội & Văn hóa", mau: "#ffd166", activities: [

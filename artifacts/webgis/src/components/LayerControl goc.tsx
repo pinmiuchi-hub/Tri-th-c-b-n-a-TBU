@@ -9,6 +9,7 @@ interface LayerToggle {
   active: boolean;
   isCustom?: boolean;
   isThematic?: boolean;
+  isThematicCopy?: boolean;
 }
 
 interface LayerCategory {
@@ -70,12 +71,25 @@ interface Props {
   onWardLabelColor?: (value: string) => void;
   wardLabelSize?: number;
   onWardLabelSize?: (value: number) => void;
+  /** Thứ tự hiển thị của nhóm lớp đặc biệt (Cơ cấu dân tộc · Tên xã). */
+  specialOrder?: string[];
 }
 
 const PALETTE = ["#4895ef", "#2d6a4f", "#e63946", "#f4a261", "#9b5de5", "#52b788", "#74c69d", "#ffd166", "#6b4226", "#8338ec", "#e76f51", "#457b9d"];
 const HINT_CLASSES = ["drop-before", "drop-after", "drop-into"];
 const PRESS_DELAY_MS = 320;
 const PRESS_SLOP_PX = 10;
+
+/** Nhóm "lớp đặc biệt" — chỉ sắp xếp được trong nhóm này, không trộn với lớp thường. */
+export const SPECIAL_LAYER_CATEGORY_ID = "__special__";
+export const SPECIAL_LAYER_IDS = ["__sp_ethnic__", "__sp_labels__"];
+const SPECIAL_LAYER_TITLES: Record<string, string> = {
+  __sp_ethnic__: "Cơ cấu dân tộc theo xã",
+  __sp_transect__: "Lược đồ mặt cắt độ cao",
+  __sp_calendar__: "Nông lịch bản địa",
+  __sp_labels__: "Tên xã trên bản đồ",
+};
+const isSpecialLayerId = (id: string) => SPECIAL_LAYER_IDS.includes(id);
 
 export default function LayerControl({
   categories, thematicCategory, onToggle, onEditLayer, onEditSymbology, onAddCustomLayer, onImportLayerFile,
@@ -84,7 +98,8 @@ export default function LayerControl({
   featureCounts, editableLayers, exportableLayers, onClose, showTransect, onToggleTransect,
   showCalendar, onToggleCalendar, showKnowledge, onToggleKnowledge, showEthnicPie, onToggleEthnicPie, onOpenPieSelector,
   onToggleFolderCollapse, onMoveLayer, rasterOpacity = 0.8, onRasterOpacity, thematicSource, onClearThematic,
-  showWardLabels, onToggleWardLabels, wardLabelColor = "#1b4332", onWardLabelColor, wardLabelSize = 11, onWardLabelSize
+  showWardLabels, onToggleWardLabels, wardLabelColor = "#1b4332", onWardLabelColor, wardLabelSize = 11, onWardLabelSize,
+  specialOrder = SPECIAL_LAYER_IDS
 }: Props) {
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [draft, setDraft] = useState<NewLayerInput>({ ten: "", mau: PALETTE[0], bieu_tuong: "📌", geomType: "point" });
@@ -175,9 +190,15 @@ export default function LayerControl({
     setNamingFolder(false);
   };
 
-  const combinedIds = (catId: string) => catId === thematicCategory?.id
-    ? thematicCategory.layers.map(l => l.id)
-    : categories.find(c => c.id === catId)?.layers.map(l => l.id) ?? [];
+  const combinedIds = (catId: string) => catId === SPECIAL_LAYER_CATEGORY_ID
+    ? specialOrder.filter(isSpecialLayerId)
+    : catId === thematicCategory?.id
+      ? thematicCategory.layers.map(l => l.id)
+      : categories.find(c => c.id === catId)?.layers.map(l => l.id) ?? [];
+
+  /** Lớp đặc biệt chỉ được thả vào nhóm đặc biệt, và ngược lại. */
+  const dropAllowed = (dragId: string, catId: string) =>
+    isSpecialLayerId(dragId) === (catId === SPECIAL_LAYER_CATEGORY_ID);
 
   const clearHint = () => {
     const el = hintRef.current;
@@ -249,6 +270,7 @@ export default function LayerControl({
       const targetId = rowEl.dataset.layer;
       if (!targetId || targetId === drag.id || rowEl.dataset.droppable === "0") { clearHint(); dropRef.current = null; return; }
       const catId = rowEl.dataset.cat || "";
+      if (!dropAllowed(drag.id, catId)) { clearHint(); dropRef.current = null; return; }
       const ids = combinedIds(catId).filter(id => id !== drag.id);
       const pos = ids.indexOf(targetId);
       if (pos < 0) { clearHint(); dropRef.current = null; return; }
@@ -265,6 +287,7 @@ export default function LayerControl({
     const folder = folderEl.closest(".layer-folder") as HTMLElement | null;
     if (!folder) { clearHint(); dropRef.current = null; return; }
     const catId = folderEl.dataset.cat || "";
+    if (!dropAllowed(drag.id, catId)) { clearHint(); dropRef.current = null; return; }
     clearHint();
     folder.classList.add("drop-into");
     hintRef.current = folder;
@@ -379,17 +402,19 @@ export default function LayerControl({
             ⧉
           </button>
         )}
-        {!layer.isThematic && (
+        {(!layer.isThematic || layer.isThematicCopy) && (
           <button
             className="layer-delete-btn"
             onClick={() => {
               if (layer.isCustom) {
                 if (confirm(`Xóa lớp "${layer.ten}" và toàn bộ dữ liệu?`)) onDeleteCustomLayer(layer.id);
+              } else if (layer.isThematicCopy) {
+                if (confirm(`Xóa bản sao lớp "${layer.ten}" khỏi bảng lớp?`)) onRemoveBuiltinLayer(catId, layer.id);
               } else {
                 if (confirm(`Ẩn lớp "${layer.ten}" khỏi bảng điều khiển?`)) onRemoveBuiltinLayer(catId, layer.id);
               }
             }}
-            title={layer.isCustom ? "Xóa lớp tự tạo" : "Ẩn lớp khỏi bảng điều khiển"}
+            title={layer.isThematicCopy ? "Xóa bản sao lớp" : layer.isCustom ? "Xóa lớp tự tạo" : "Ẩn lớp khỏi bảng điều khiển"}
           >
             ✕
           </button>
@@ -458,7 +483,7 @@ export default function LayerControl({
           <div className="layer-folder-body" data-cat={cat.id} data-droppable={droppable ? "1" : "0"}>
             {cat.layers.map(layer => renderRow(layer, cat.id, droppable))}
             {droppable && cat.layers.length === 0 && <div className="lf-empty">Kéo lớp vào đây</div>}
-            {cat.isThematic && cat.layers.some(l => l.active) && (
+            {cat.isThematic && cat.layers.some(l => l.isThematic && l.active) && (
               <div className="lf-thematic-tools">
                 <div className="thematic-opacity">
                   <label>Độ trong suốt: {Math.round(rasterOpacity * 100)}%</label>
@@ -545,66 +570,107 @@ export default function LayerControl({
         <input ref={fileInputRef} type="file" accept=".geojson,.json,.kml,application/geo+json,application/vnd.google-earth.kml+xml" style={{ display: "none" }} onChange={handleFileChosen}/>
         <input ref={symbolInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style={{ display: "none" }} onChange={handleSymbolFileChosen}/>
 
-        <div className="layer-category">
-          <div className={`layer-item ${showEthnicPie ? "active" : ""}`}>
-  <div className="layer-item-left">
-    <div className="layer-dot" style={{ background: "#f4a261" }}/>
-    <span className="layer-symbol">🥧</span>
-    <span className="layer-name">Biểu đồ cơ cấu dân tộc</span>
-  </div>
-  <div className="layer-item-actions">
-    {/* Thêm nút mở bảng chọn thủ công */}
-    <button className="layer-edit-btn" onClick={onOpenPieSelector} title="Chọn thủ công các xã hiển thị">
-      ⚙️
-    </button>
-    <div className={`layer-toggle ${showEthnicPie ? "on" : ""}`} onClick={onToggleEthnicPie}>
-      <div className="layer-toggle-thumb"/>
-    </div>
-  </div>
-</div>
-          {onToggleTransect && (
-          <div className={`layer-item ${showTransect ? "active" : ""}`}>
-            <div className="layer-item-left">
-              <div className="layer-dot" style={{ background: "#8ecae6" }}/>
-              <span className="layer-symbol">⛰️</span>
-              <span className="layer-name">Lược đồ mặt cắt độ cao</span>
-            </div>
-            <div className="layer-item-actions">
-              <div className={`layer-toggle ${showTransect ? "on" : ""}`} onClick={onToggleTransect}>
-                <div className="layer-toggle-thumb"/>
+        <div className="layer-category" data-cat={SPECIAL_LAYER_CATEGORY_ID} data-droppable="1">
+          {specialOrder.filter(isSpecialLayerId).map(specialId => {
+            const dragLayer = (): LayerToggle => ({
+              id: specialId,
+              ten: SPECIAL_LAYER_TITLES[specialId] || specialId,
+              mau: "#f4a261",
+              bieu_tuong: "",
+              active: false,
+            });
+            const dragProps = onMoveLayer ? { onPointerDown: (e: React.PointerEvent<HTMLElement>) => onRowPointerDown(e, dragLayer()) } : {};
+            if (specialId === "__sp_ethnic__") return (
+              <div
+                key={specialId}
+                className={`layer-item ${showEthnicPie ? "active" : ""}`}
+                data-layer={specialId}
+                data-cat={SPECIAL_LAYER_CATEGORY_ID}
+                data-droppable="1"
+                {...dragProps}
+              >
+                <div className="layer-item-left">
+                  <div className="layer-dot" style={{ background: "#f4a261" }}/>
+                  <span className="layer-symbol">🥧</span>
+                  <span className="layer-name">Cơ cấu dân tộc theo xã</span>
+                </div>
+                <div className="layer-item-actions">
+                  {/* Thêm nút mở bảng chọn thủ công */}
+                  <button className="layer-edit-btn" onClick={onOpenPieSelector} title="Chọn thủ công các xã được tô màu">
+                    ⚙️
+                  </button>
+                  <div className={`layer-toggle ${showEthnicPie ? "on" : ""}`} onClick={onToggleEthnicPie}>
+                    <div className="layer-toggle-thumb"/>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          )}
-          {onToggleCalendar && (
-          <div className={`layer-item ${showCalendar ? "active" : ""}`}>
-            <div className="layer-item-left">
-              <div className="layer-dot" style={{ background: "#ffd166" }}/>
-              <span className="layer-symbol">📅</span>
-              <span className="layer-name">Nông lịch bản địa</span>
-            </div>
-            <div className="layer-item-actions">
-              <div className={`layer-toggle ${showCalendar ? "on" : ""}`} onClick={onToggleCalendar}>
-                <div className="layer-toggle-thumb"/>
+            );
+            if (specialId === "__sp_transect__" && onToggleTransect) return (
+              <div
+                key={specialId}
+                className={`layer-item ${showTransect ? "active" : ""}`}
+                data-layer={specialId}
+                data-cat={SPECIAL_LAYER_CATEGORY_ID}
+                data-droppable="1"
+                {...dragProps}
+              >
+                <div className="layer-item-left">
+                  <div className="layer-dot" style={{ background: "#8ecae6" }}/>
+                  <span className="layer-symbol">⛰️</span>
+                  <span className="layer-name">Lược đồ mặt cắt độ cao</span>
+                </div>
+                <div className="layer-item-actions">
+                  <div className={`layer-toggle ${showTransect ? "on" : ""}`} onClick={onToggleTransect}>
+                    <div className="layer-toggle-thumb"/>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          )}
-          {onToggleWardLabels && (
-          <div className={`layer-item ${showWardLabels ? "active" : ""}`}>
-            <div className="layer-item-left">
-              <div className="layer-dot" style={{ background: "#b7e4c7" }}/>
-              <span className="layer-symbol">🏷️</span>
-              <span className="layer-name">Tên xã trên bản đồ</span>
-            </div>
-            <div className="layer-item-actions">
-              <button className="layer-edit-btn" onClick={() => setLabelStyleOpen(o => !o)} title="Đổi màu chữ & cỡ chữ tên xã">🎨</button>
-              <div className={`layer-toggle ${showWardLabels ? "on" : ""}`} onClick={onToggleWardLabels}>
-                <div className="layer-toggle-thumb"/>
+            );
+            if (specialId === "__sp_calendar__" && onToggleCalendar) return (
+              <div
+                key={specialId}
+                className={`layer-item ${showCalendar ? "active" : ""}`}
+                data-layer={specialId}
+                data-cat={SPECIAL_LAYER_CATEGORY_ID}
+                data-droppable="1"
+                {...dragProps}
+              >
+                <div className="layer-item-left">
+                  <div className="layer-dot" style={{ background: "#ffd166" }}/>
+                  <span className="layer-symbol">📅</span>
+                  <span className="layer-name">Nông lịch bản địa</span>
+                </div>
+                <div className="layer-item-actions">
+                  <div className={`layer-toggle ${showCalendar ? "on" : ""}`} onClick={onToggleCalendar}>
+                    <div className="layer-toggle-thumb"/>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          )}
+            );
+            if (specialId === "__sp_labels__" && onToggleWardLabels) return (
+              <div
+                key={specialId}
+                className={`layer-item ${showWardLabels ? "active" : ""}`}
+                data-layer={specialId}
+                data-cat={SPECIAL_LAYER_CATEGORY_ID}
+                data-droppable="1"
+                {...dragProps}
+              >
+                <div className="layer-item-left">
+                  <div className="layer-dot" style={{ background: "#b7e4c7" }}/>
+                  <span className="layer-symbol">🏷️</span>
+                  <span className="layer-name">Tên xã trên bản đồ</span>
+                </div>
+                <div className="layer-item-actions">
+                  <button className="layer-edit-btn" onClick={() => setLabelStyleOpen(o => !o)} title="Đổi màu chữ & cỡ chữ tên xã">🎨</button>
+                  <div className={`layer-toggle ${showWardLabels ? "on" : ""}`} onClick={onToggleWardLabels}>
+                    <div className="layer-toggle-thumb"/>
+                  </div>
+                </div>
+              </div>
+            );
+            return null;
+          })}
           {labelStyleOpen && (
             <div className="ward-label-style">
               <div className="ward-label-row">

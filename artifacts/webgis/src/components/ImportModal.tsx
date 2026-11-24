@@ -3,6 +3,8 @@ import { applyBackup, backupUsageBytes, collectBackup } from "@/utils/persist";
 
 /* ─── Types ─── */
 export interface DanTocTyLe { dan_toc: string; ty_le: number; }
+/** Một mục nội dung trong "Thông tin địa bàn" của riêng từng xã (thêm/sửa/xóa/sắp xếp được). */
+export interface MucNoiDung { id: string; tieu_de: string; noi_dung: string; anh?: string; anh_ghichu?: string; nguon?: string; }
 export interface WardOverrides {
   ten_xa?: string; loai?: string; dtich_km2?: number; dan_so?: number; matdo_km2?: number;
   ghi_chu?: string; san_pham?: string; tinh_trang?: string;
@@ -12,6 +14,9 @@ export interface WardOverrides {
   mau_vien?: string;      // màu đường ranh giới riêng
   do_day_vien?: number;   // độ dày đường viền
   do_dam_vien?: number;   // độ đậm/nhạt đường viền, 0..1
+  muc_noi_dung?: MucNoiDung[];   // các mục nội dung địa bàn riêng của xã
+  anh_dia_ban?: string;          // ảnh minh họa riêng của xã (dataURL)
+  anh_dia_ban_ghichu?: string;   // credit ảnh minh họa của xã
   [key: string]: unknown;
 }
 export interface EthnicOverride { dan_so_ca_nuoc?: number; ngon_ngu?: string; mo_ta?: string; anh?: string; mau?: string; }

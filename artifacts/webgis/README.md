@@ -39,7 +39,8 @@ webgis/
 │       ├── xa_laichau.geojson   # Ranh giới xã Lai Châu
 │       ├── xa_laocai.geojson    # Ranh giới xã Lào Cai (tỉnh mới, gồm Yên Bái)
 │       ├── layers.json          # Sông suối, thủy lợi, mô hình VAC, ...
-│       └── dan_toc.json         # Thông tin các dân tộc
+│       ├── dan_toc.json         # Thông tin các dân tộc, gồm tri thức Thái ở Phù Yên
+│       └── phu_yen_layers.json  # Điểm đại diện có tọa độ xác minh cấp xã Phù Yên
 ├── src/
 │   ├── pages/
 │   │   └── WebGIS goc.tsx       # Trang chính (hiển thị bản đồ)
@@ -55,7 +56,7 @@ webgis/
 
 ## Tính năng chính
 
-- Bản đồ tương tác với 3 lớp nền: **OpenStreetMap**, **Vệ tinh (Esri)**, **Địa hình (OpenTopoMap)**
+- Bản đồ tương tác với 4 lớp nền: **OpenStreetMap**, **Vệ tinh không mây (Sentinel-2/EOX)**, **Vệ tinh (Esri)**, **Địa hình (OpenTopoMap)**
 - Hiển thị ranh giới tỉnh/xã của Tây Bắc, có thể click để xem chi tiết
 - 7 lớp dữ liệu: Sông suối chính, Thủy lợi, **Phân vùng rừng (polygon)**, Mô hình VAC, **Khu vực cây thuốc quý (polygon)**, Mật độ dân số, Ranh giới xã — riêng **Bản làng tiêu biểu (25)** và **Luật tục cộng đồng (5)** hiển thị văn bản theo từng xã trong panel "Thông tin địa bàn" (vòng 3, tất cả đã có nguồn)
 - Vòng 4: panel "Lớp bản đồ" hiển thị **dạng phẳng, không phân nhóm** (bỏ tiêu đề nhóm + nút quản lý nhóm + dòng "Tri thức & văn hóa bản địa"); dữ liệu minh họa cũ còn sót trong localStorage bị tự động bỏ khi nạp; panel "Thông tin địa bàn" không còn khối "Ước tính — cần đối chiếu"
@@ -79,8 +80,9 @@ Sau khi `pnpm build`, thư mục `dist/` chứa file tĩnh có thể deploy lên
 - **Thủy lợi / VAC / Vùng tập quán** (`irrigation`, `vac_models`, `customary_zones`): nội dung đã đối chiếu nguồn internet (báo địa phương, Bộ Công Thương, Viện KHLN, nghiên cứu học thuật — 10/2026); 5 địa điểm mới thêm với tọa độ centroid hành chính GADM 4.1; polygon vùng tập quán = ranh giới hành chính GADM 4.1 **mang tính đại diện** — xem mục 8 trong `RA_SOAT_DU_LIEU_VA_NGUON_THAM_KHAO.md`.
 - **Bản làng** (`villages`): 25 bản làng có thật kèm nguồn riêng từng bản (10/2026), thay toàn bộ 17 điểm minh họa cũ; tọa độ ước lượng theo bản đồ — xem mục 9.1.
 - **Dân tộc từng xã** (`dan_toc` trong geojson): Sơn La có % tra cứu theo cấp huyện/xã với `dan_toc_nguon` + nhãn trạng thái (`co_nguon`/`mot_phan`/`du_doan`); 3 tỉnh còn lại gắn nhãn `du_doan` (Tổng điều tra dân tộc 2019 chỉ công bố tới cấp huyện) — xem mục 9.2.
+- **Tri thức người Thái ở Phù Yên**: kết quả khảo sát thăm dò 28 người (22–23/08/2026) được tích hợp vào `dan_toc.json`, trong trang chi tiết **Dân tộc Thái**, với ba chủ đề quản lý đất, nước và rừng. `phu_yen_layers.json` bổ sung điểm đại diện cấp xã và các bản ghi Huy Tân/Suối Tấc vào đúng lớp `irrigation`, cùng bản ghi Quang Huy trong lớp `vac_models`; các vùng dược liệu sa nhân, an xoa và sả được bổ sung vào lớp `medicinal_plants`. Các điểm đại diện không được diễn giải là vị trí công trình hoặc ranh giới vùng trồng cụ thể. Cọn nước Suối Tấc và vùng dược liệu đang chờ GPS/ranh giới thực địa. Cọn nước Suối Tấc có ảnh Wikimedia Commons CC0 mang tính minh họa, không phải ảnh tại địa điểm.
 - **Ảnh minh họa**: 17 ảnh tải từ Wikimedia Commons (giấy phép & tác giả ghi trong `public/data/images/NGUON_ANH.md`).
-- Lớp nền vệ tinh do **Esri** cung cấp. Dữ liệu tỉnh/xã từ Bộ Tài nguyên và Môi trường Việt Nam.
+- Lớp nền **Vệ tinh (Esri)** do Esri cung cấp và có thể chứa mây tùy cảnh ghép. Lớp **Vệ tinh không mây (Sentinel-2/EOX)** dùng ảnh ghép Sentinel-2 năm 2019 để giảm vùng mây; độ phân giải và thời điểm ảnh có thể khác Esri. Dữ liệu tỉnh/xã từ Bộ Tài nguyên và Môi trường Việt Nam.
 
 ## Liên hệ / Hỗ trợ
 

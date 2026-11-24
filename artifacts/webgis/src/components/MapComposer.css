@@ -443,6 +443,12 @@
 .legend-swatch { width: 14px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 .legend-swatch-point, .legend-swatch-line, .legend-swatch-polygon { flex-shrink: 0; }
 .legend-swatch-point { width: 18px; height: 18px; border-radius: 999px; border: 2px solid; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.95); font-size: 10px; }
+/* Ghim điểm (pin) cho tri thức bản địa — khớp marker bản đồ chính */
+.legend-point-fill {
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+}
 .legend-swatch-line { width: 24px; height: 12px; }
 .legend-swatch-polygon { width: 18px; height: 12px; border: 1.5px solid; border-radius: 3px; }
 .legend-symbol-img { max-width: 12px; max-height: 12px; object-fit: contain; display: block; }

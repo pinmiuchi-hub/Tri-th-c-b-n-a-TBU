@@ -26,6 +26,9 @@ const MANIFEST = [
   '04_CHUONG_4.md',
   '05_KET_LUAN.md',
   '06_PHU_LUC.md',
+  '07_PHU_LUC_J.md',
+  '08_TRITHUC_BAN_DIA.md',
+  '09_ANH_WEB.md',
 ];
 
 const read = (rel) => fs.readFileSync(path.join(BASE, rel), 'utf8');
@@ -48,10 +51,10 @@ function scanCaptions(text, file) {
       });
       continue;
     }
-    m = /^\*(Hình\s+[0-9]+(?:\.[0-9]+)?)\s*[—–-]\s*(.+?)\*$/.exec(line);
+    m = /^\*(Hình\s+[A-Za-z0-9]+(?:\.[0-9]+)?)\s*[—–-]\s*(.+?)\*$/.exec(line);
     if (m) {
       figureCaps.push({
-        id: 'h_' + m[1].replace(/[^\d.]/g, '').replace(/\./g, '_'),
+        id: 'h_' + m[1].replace(/^Hình\s+/, '').replace(/\./g, '_'),
         text: `${m[1]} — ${m[2]}`.replace(/\s+/g, ' '),
         file,
       });
@@ -77,8 +80,8 @@ const captionIdTable = (text) => {
   return m ? 'b_' + m[1].replace(/\./g, '_') : null;
 };
 const captionIdFig = (text) => {
-  const m = /^\*(Hình\s+[0-9]+(?:\.[0-9]+)?)\s*[—–-]/.exec(text.trim());
-  return m ? 'h_' + m[1].replace(/[^\d.]/g, '').replace(/\./g, '_') : null;
+  const m = /^\*(Hình\s+[A-Za-z0-9]+(?:\.[0-9]+)?)\s*[—–-]/.exec(text.trim());
+  return m ? 'h_' + m[1].replace(/^Hình\s+/, '').replace(/\./g, '_') : null;
 };
 
 function renderTable(rows) {
@@ -144,6 +147,17 @@ function convertBlock(lines) {
       out.push('<ul>' + items.map((it) => `<li>${inline(it)}</li>`).join('') + '</ul>');
       continue;
     }
+    if (/^```/.test(line)) {
+      i++; // bỏ qua dấu ``` mở
+      const buf = [];
+      while (i < lines.length && !/^```\s*$/.test(lines[i].trim())) {
+        buf.push(lines[i].replace(/\s+$/, ''));
+        i++;
+      }
+      if (i < lines.length) i++; // bỏ qua dấu ``` đóng
+      out.push('<pre class="code"><code>' + esc(buf.join('\n')) + '</code></pre>');
+      continue;
+    }
     if (/^---+$/.test(line)) { i++; continue; }
 
     // raw HTML line (used by cover pages)
@@ -158,7 +172,7 @@ function convertBlock(lines) {
     while (
       i < lines.length &&
       lines[i].trim() !== '' &&
-      !/^(#{1,3} |[-|] |\!\[|\[\[|---+$|<[a-zA-Z!])/.test(lines[i].trim())
+      !/^(#{1,3} |[-|] |\!\[|\[\[|---+$|<[a-zA-Z!]|```)/.test(lines[i].trim())
     ) {
       buf.push(lines[i].trim());
       i++;

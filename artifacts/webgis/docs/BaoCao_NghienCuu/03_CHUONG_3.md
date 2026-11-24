@@ -226,7 +226,7 @@ Chức năng Biên tập bản đồ cho phép xuất bản đồ giấy A4/A3 t
 
 *Hình 3.10 — Bảng “Thông tin địa bàn” khi chọn xã: banner ảnh dân tộc chủ đạo, dòng nguồn dân số, khối “Đặc điểm địa bàn”, danh sách bản làng tiêu biểu và luật tục cộng đồng theo mã hành chính.*
 
-Khi người dùng bấm vào một xã/phường, bảng “Thông tin địa bàn” hiển thị: (i) banner ảnh của dân tộc chủ đạo (lấy từ bộ ảnh Wikimedia Commons có giấy phép CC BY-SA/CC0 [25]); (ii) dòng nguồn dân số kèm số lượng đồng bào dân tộc thiểu số; (iii) khối “Đặc điểm địa bàn” với chip trạng thái nguồn; (iv) danh sách bản làng tiêu biểu và luật tục cộng đồng được ghép theo mã hành chính (`ma_xa`). Đây chính là điểm hội tụ của “số hóa ở trung tâm, sử dụng ở bản”: dữ liệu đã kiểm định được trình bày dưới dạng panel dễ đọc cho cán bộ xã và người dân, không yêu cầu kiến thức GIS.
+Khi người dùng bấm vào một xã/phường, bảng “Thông tin địa bàn” hiển thị: (i) banner ảnh của dân tộc chủ đạo (lấy từ bộ ảnh Wikimedia Commons có giấy phép CC BY-SA/CC0 [25]); (ii) dòng nguồn dân số kèm số lượng đồng bào dân tộc thiểu số; (iii) khối “Đặc điểm địa bàn” với chip trạng thái nguồn; (iv) danh sách bản làng tiêu biểu và luật tục cộng đồng được ghép theo mã hành chính (`ma_xa`). Đây chính là điểm hội tụ của “số hóa ở trung tâm, sử dụng ở bản”: dữ liệu đã kiểm định được trình bày dưới dạng panel dễ đọc cho cán bộ xã và người dân, không yêu cầu kiến thức GIS. Toàn bộ cấu trúc bảng “Thông tin địa bàn”, bộ tri thức bản địa theo từng dân tộc, dữ liệu nông lịch và lược đồ mặt cắt mặc định, cùng danh mục17 ảnh sử dụng kèm nguồn và giấy phép, được trình bày đầy đủ tại Phụ lục J.
 
 ### 3.3.6. Kết quả kiểm chứng
 

@@ -6,11 +6,10 @@ export interface EthnicZone { dan_toc: string; mau: string; vi_tri: string; }
 
 export const DEFAULT_ZONES_BY_ETHNIC: Record<EthnicKey, TransectZone[]> = {
   thai: [
-    { label: "Đỉnh núi", color: "#2d6a4f", textColor: "#d8f3dc", symbol: "🌲", items: ["Rừng đầu nguồn", "Rừng thiêng (đông mường)", "Nguồn nước đầu suối"] },
-    { label: "Sườn trên", color: "#52b788", textColor: "#d8f3dc", symbol: "🌿", items: ["Rừng ma, rừng cấm bản", "Lâm sản phụ (măng, rau rừng)", "Cây thuốc quý"] },
-    { label: "Sườn giữa", color: "#b7e4c7", textColor: "#1b4332", symbol: "🌾", items: ["Nương ngô, sắn", "Cây ăn quả xen canh", "Đầu hệ thống mương-phai"] },
-    { label: "Sườn thấp", color: "#f4a261", textColor: "#1b4332", symbol: "🏡", items: ["Bản làng nhà sàn", "Vườn (V): Cây ăn quả", "Ao (A): Cá chép, trắm", "Chuồng (C): Lợn, gà, trâu"] },
-    { label: "Thung lũng", color: "#74c69d", textColor: "#1b4332", symbol: "💧", items: ["Lúa nước 2-3 vụ", "Lúa-cá-vịt kết hợp", "Mương - phai - lái - lìn, cọn nước", "Bản làng ven sông"] },
+    { label: "Đầu nguồn và rừng cộng đồng", color: "#2d6a4f", textColor: "#d8f3dc", symbol: "🌲", items: ["Rừng đầu nguồn, rừng thiêng", "Giữ nguồn nước cho bản", "Khai thác lâm sản phụ có quy ước"] },
+    { label: "Sườn và đất dốc", color: "#52b788", textColor: "#d8f3dc", symbol: "🌿", items: ["Cây thuốc dưới tán rừng", "Ngô, sắn và cây trồng xen", "Phủ đất, dùng phân hữu cơ hạn chế rửa trôi"] },
+    { label: "Chân ruộng và bản", color: "#b7e4c7", textColor: "#1b4332", symbol: "🌾", items: ["Bản nhà sàn người Thái", "Vườn – ao – chuồng", "Đầu mương, phai, lái, lịn"] },
+    { label: "Thung lũng Mường Tấc", color: "#74c69d", textColor: "#1b4332", symbol: "💧", items: ["Ruộng lúa nước và rau màu", "Quang Huy: mô hình VAC", "Huy Tân: thủy lợi truyền thống", "Suối Tấc: cọn nước khu vực bản"] },
   ],
   mong: [
     { label: "Đỉnh núi", color: "#2d6a4f", textColor: "#d8f3dc", symbol: "🌲", items: ["Rừng già nguyên sinh", "Rừng thiêng", "Nguồn nước đầu suối"] },

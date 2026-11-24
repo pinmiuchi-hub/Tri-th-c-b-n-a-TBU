@@ -40,7 +40,7 @@ export interface MapSyncSnapshot {
 // CHÚ GIẢI THEO NHÓM (dựng từ giao diện chính — cùng thứ tự & ký hiệu)
 // ─────────────────────────────────────────────
 export interface ComposerLegendRow {
-  type: "line" | "swatch" | "emoji" | "forest" | "river" | "custom";
+  type: "line" | "swatch" | "emoji" | "forest" | "river" | "custom" | "point";
   label: string;
   color?: string;
   lineWeight?: number;
@@ -474,6 +474,17 @@ const ElementContent: React.FC<{
             )}
             {row.type === "swatch" && <span className="legend-ethnic-color" style={{ background: row.color, opacity: row.fillOpacity ?? 1 }}/>}
             {row.type === "emoji" && <span className="legend-symbol">{row.emoji || "●"}</span>}
+            {row.type === "point" && (
+              <svg className="legend-point-fill" width={20} height={26} viewBox="0 0 40 52" aria-hidden="true">
+                <path
+                  d="M20 52 C12 37 4 30 4 18 A16 16 0 1 1 36 18 C36 30 28 37 20 52 Z"
+                  fill={row.color || "#94a3b8"}
+                  stroke="#ffffff"
+                  strokeWidth="3"
+                />
+                <text x="20" y="19" textAnchor="middle" dominantBaseline="central" fontSize="19">{row.emoji || "●"}</text>
+              </svg>
+            )}
             {row.type === "forest" && (
               <svg width="18" height="14" viewBox="0 0 18 14" className="legend-swatch-line" style={{ width: 18, height: 14 }}>
                 <rect x="1" y="1" width="16" height="12" rx="2" fill="#ffffff" fillOpacity="0.88"/>

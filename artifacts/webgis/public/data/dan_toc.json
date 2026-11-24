@@ -6,53 +6,71 @@
       "mau": "#2d6a4f",
       "dan_so_ca_nuoc": 1820950,
       "ngon_ngu": "Ngữ hệ Tai-Kadai",
-      "mo_ta": "Dân tộc Thái là một trong những dân tộc đông dân nhất vùng Tây Bắc (địa bàn sống chủ yếu: Sơn La, Nghệ An, Thanh Hóa), cư trú ở các thung lũng ven sông suối, trồng lúa nước. Người Thái có chữ viết riêng, trang phục đặc trưng và hệ thống thủy lợi mương – phai – lái – lìn truyền thống.",
+      "mo_ta": "Tại xã Phù Yên, người Thái cư trú lâu đời ở các bản ven suối và thung lũng Mường Tấc, gắn sinh kế với lúa nước, vườn – ao – chuồng, rừng và các nguồn dược liệu. Bản sắc thể hiện qua tiếng Thái, chữ Thái, nhà sàn, dệt piêu – thổ cẩm, ẩm thực nếp và các nghi lễ cộng đồng.",
       "tri_thuc": [
         {
           "chu_de": "Nông nghiệp",
           "bieu_tuong": "🌾",
-          "noi_dung": "Người Thái nổi tiếng với kỹ thuật dẫn nước làm ruộng lúa nước — gọi là 'mương, phai, lái, lịn'. Hệ thống thủy lợi truyền thống này gồm đập ngăn nước (phai), kênh chính (mương), kênh phụ (lái) và máng tre nhỏ (lịn). Lúa nếp là cây trồng chủ đạo, gắn liền với văn hóa ẩm thực đặc trưng.",
+          "noi_dung": "Ở Phù Yên, người Thái canh tác lúa nước tại các thung lũng và chân ruộng ven suối, kết hợp vườn – ao – chuồng như mô hình tại Quang Huy. Lúa nếp, ngô, rau màu và chăn nuôi hộ gia đình gắn với việc tận dụng phụ phẩm, phân chuồng và nguồn nước tại bản.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Tri thức quản lý đất ở Phù Yên",
+          "bieu_tuong": "🌱",
+          "noi_dung": "Tri thức canh tác của người Thái ở Phù Yên chú trọng nhận biết đất ruộng, đất bãi và đất dốc để chọn cây trồng; cho đất nghỉ, phủ rơm rạ hoặc cỏ khô, dùng phân chuồng và phân xanh. Các cách làm này giúp giữ ẩm, bổ sung hữu cơ và hạn chế rửa trôi trên đất dốc.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Tri thức quản lý nước ở Phù Yên",
+          "bieu_tuong": "💧",
+          "noi_dung": "Người Thái ở Phù Yên duy trì tri thức dẫn và chia nước qua mương, phai, lái, lịn, ống bương và máng gỗ. Hệ thống tại Huy Tân và cọn nước ở khu vực Suối Tấc minh họa cách cộng đồng đưa nước về ruộng; việc nạo vét, khơi thông và sửa chữa thường dựa vào ngày công của các hộ trong bản.",
+          "bai_thuoc": []
+        },
+        {
+          "chu_de": "Tri thức bảo vệ rừng ở Phù Yên",
+          "bieu_tuong": "🌲",
+          "noi_dung": "Ở Phù Yên, tri thức bảo vệ rừng gắn với rừng đầu nguồn, rừng thiêng và các khu rừng cộng đồng. Quy ước bản hạn chế chặt phá, giữ nguồn nước và cho phép khai thác lâm sản phụ ở mức phù hợp; các vị trí nhạy cảm không công bố chi tiết để bảo vệ cộng đồng và sinh cảnh.",
           "bai_thuoc": []
         },
         {
           "chu_de": "Y học dân gian",
           "bieu_tuong": "🌿",
-          "noi_dung": "Người Thái sử dụng hàng trăm loài thực vật để chữa bệnh. Một số bài thuốc nổi tiếng: lá ngải cứu rừng (nghệ sen) chữa đau bụng; vỏ cây mò hoa trắng chữa phong thấp; lá cây thuốc tím chữa viêm da; rễ cây hà thủ ô chữa thiếu máu. Thầy thuốc dân gian (mo thuốc) có vai trò quan trọng trong cộng đồng.",
+          "noi_dung": "Người Thái ở Phù Yên lưu truyền kinh nghiệm nhận biết, thu hái và sử dụng cây thuốc quanh bản, nương và dưới tán rừng. Một số vùng dược liệu tại Phù Yên đã được gắn điểm theo từng xã trong hệ thống; thông tin này chỉ có giá trị tham khảo, không thay thế chẩn đoán hoặc điều trị y khoa.",
           "bai_thuoc": [
             {
               "ten": "Bài thuốc tắm thảo dược sau sinh",
               "nguyen_lieu": "Lá ngải cứu, cành sả, lá bưởi, gừng tươi, muối hạt",
-              "cong_dung": "Phục hồi sức khỏe sản phụ, giữ ấm cơ thể, phòng tránh phong hàn"
+              "cong_dung": "Kinh nghiệm chăm sóc sau sinh được truyền trong gia đình; cần tham khảo cán bộ y tế trước khi sử dụng"
             },
             {
               "ten": "Bài thuốc chữa đau xương khớp",
               "nguyen_lieu": "Vỏ cây gắm, rễ đinh lăng, cành dâu tằm, rượu trắng",
-              "cong_dung": "Giảm đau, tiêu viêm, thông kinh lạc"
+              "cong_dung": "Kinh nghiệm dân gian; không thay thế thuốc và hướng dẫn điều trị của cơ sở y tế"
             }
           ]
         },
         {
           "chu_de": "Thủ công truyền thống",
           "bieu_tuong": "🧵",
-          "noi_dung": "Nghề dệt thổ cẩm của người Thái là di sản văn hóa phi vật thể quý giá. Phụ nữ Thái học dệt từ nhỏ, tạo ra các tấm thổ cẩm (piêu, váy, khăn) với hoa văn rồng, chim công, hoa sen. Khung dệt thủ công (khung cửi) sử dụng kỹ thuật dệt nổi truyền thống. Màu nhuộm từ cây rừng tự nhiên: chàm cho màu xanh, quả mặc nưa cho màu đen.",
+          "noi_dung": "Ở Phù Yên, phụ nữ Thái gìn giữ kỹ thuật se sợi, dệt vải và thêu khăn piêu, váy, áo, túi và đồ dùng gia đình. Hoa văn, màu sắc và cách truyền nghề thể hiện ký ức của bản; nghề dệt cũng có thể gắn với sinh kế và du lịch cộng đồng khi được tổ chức phù hợp.",
           "bai_thuoc": []
         },
         {
           "chu_de": "Kiến trúc nhà sàn",
           "bieu_tuong": "🏠",
-          "noi_dung": "Nhà sàn Thái (hướn) được làm hoàn toàn từ vật liệu tự nhiên: gỗ, tre, nứa, lá cọ. Nhà cao từ 1–1,5m so với mặt đất, giúp tránh thú dữ và lũ lụt, đồng thời tạo không gian chăn nuôi bên dưới. Mái nhà hai mái dốc đặc trưng với 'sừng trâu' (khau cút) trang trí trên đỉnh là nhận diện văn hóa quan trọng.",
+          "noi_dung": "Nhà sàn của người Thái ở Phù Yên thường bố trí gần ruộng, suối hoặc đường vào bản, thích ứng với địa hình thung lũng và khí hậu địa phương. Không gian sàn, gầm sàn, bếp và kho phản ánh nếp sống gia đình; khau cút, vật liệu gỗ – tre và cách bài trí là những dấu hiệu văn hóa cần được bảo tồn theo từng bản.",
           "bai_thuoc": []
         },
         {
           "chu_de": "Ẩm thực",
           "bieu_tuong": "🍜",
-          "noi_dung": "Xôi nếp (khảu nựng) là lương thực chính, ăn kèm với thịt nướng, cá suối, rau rừng. Các món đặc trưng: pa pỉnh tộp (cá nướng gập), nộm hoa chuối, thịt trâu sấy, măng đắng muối. Rượu cần (lẩu xá) được làm từ gạo nếp ủ với men lá cây rừng, dùng trong các dịp lễ hội cộng đồng.",
+          "noi_dung": "Ẩm thực Thái ở Phù Yên gắn với lúa nếp, cá suối, rau rừng, măng và sản vật vườn – ao – ruộng. Xôi nếp, pa pỉnh tộp, thịt nướng, măng và các món chế biến bằng mắc khén thường xuất hiện trong bữa ăn, lễ mừng và tiếp khách; cách chế biến có thể khác nhau giữa các bản.",
           "bai_thuoc": []
         },
         {
           "chu_de": "Lễ hội & tín ngưỡng",
           "bieu_tuong": "🎊",
-          "noi_dung": "Lễ hội Xên Bản (cúng bản) tổ chức đầu năm để cầu phúc cho cộng đồng. Lễ hội Hoa Ban gắn với lễ Xên Mường, tổ chức vào mùa hoa ban nở (khoảng tháng 2–3 dương lịch) gắn với truyền thuyết tình yêu. Múa xoè là điệu múa cộng đồng biểu tượng, được UNESCO công nhận là di sản văn hóa phi vật thể. Mo — thầy cúng — đóng vai trò kết nối thế giới người sống và tổ tiên.",
+          "noi_dung": "Đời sống cộng đồng Thái ở Phù Yên gắn với Xên bản, Xên mường, nghi lễ cầu mùa, mừng cơm mới và múa xòe. Các nghi lễ do cộng đồng và người có vai trò tâm linh chủ trì, thể hiện sự gắn kết giữa bản, mùa vụ, tổ tiên và việc gìn giữ nguồn nước – rừng; thời gian tổ chức có thể thay đổi theo từng bản.",
           "bai_thuoc": []
         }
       ],
@@ -63,10 +81,11 @@
         "Tri thức dân gian của người Thái, Tạp chí Dân tộc học (vjol.info.vn/tapchiviendantochoc/article/download/128504/105394/) — dùng cho: mương phai lái lìn",
         "Digital Library of the Commons, Indiana University (dlc.dlib.indiana.edu/dlc/handle/10535/560) — nghiên cứu hệ thống muang-fai của người Thái Đen ở Yên Châu, Sơn La",
         "Báo Văn hóa, \"Xên bản, xên mường\" ở Pắc Ngà (baovanhoa.vn/dan-toc-ton-giao/xen-ban-xen-muong-phong-tuc-doc-dao-cua-nguoi-thai-o-pac-nga-208745.html) — dùng cho: thời gian lễ Xên bản/Xên mường",
-        "Đại học Tây Bắc, Bảo vệ rừng của người Thái tỉnh Sơn La (fss.utb.edu.vn/wp-content/uploads/2021/06/1-1.pdf) — dùng cho: các loại rừng theo tập quán Thái"
+        "Đại học Tây Bắc, Bảo vệ rừng của người Thái tỉnh Sơn La (fss.utb.edu.vn/wp-content/uploads/2021/06/1-1.pdf) — dùng cho: các loại rừng theo tập quán Thái",
+        "Khảo sát thăm dò 28 người Thái tại xã Phù Yên, 22–23/08/2026 — dùng cho: tri thức quản lý đất, nước và rừng tại Phù Yên"
       ],
       "trang_thai_tri_thuc": "mot_phan",
-      "ghi_chu_nguon": "Số dân đã đối chiếu NSO 2019. Phần mô tả & tri thức chưa có tài liệu đính kèm trừ các mục ghi trong \"nguon\"; cần đối chiếu Ủy ban Dân tộc \"Các dân tộc ở Việt Nam\", Bảo tàng Dân tộc học.",
+      "ghi_chu_nguon": "Số dân đã đối chiếu NSO 2019. Các mục tri thức quản lý đất, nước và rừng ở Phù Yên là kết quả khảo sát thăm dò 28 người Thái ngày 22–23/08/2026; chưa phải số liệu đại diện cho toàn bộ cộng đồng và không gắn với vị trí không gian cụ thể.",
       "anh": "data/images/dan_toc/thai.jpg",
       "anh_ghichu": "Ảnh: DTH-BD-NVT / Wikimedia Commons (CC BY-SA 4.0) — Phụ nữ dân tộc Thái ở Việt Nam"
     },

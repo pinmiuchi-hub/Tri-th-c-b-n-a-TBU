@@ -7,6 +7,8 @@ export type EthnicKey = "thai" | "mong" | "muong";
 
 export const ETHNIC_KEYS: EthnicKey[] = ["thai", "mong", "muong"];
 
+// Màu phải TRÙNG với `mau` trong public/data/dan_toc.json — chính là màu hiển thị
+// ở chú giải "Cơ cấu dân tộc" trên bản đồ, để mọi sơ đồ đều nhất quán một bảng màu.
 export const ETHNIC_META: Record<EthnicKey, { ten: string; mau: string }> = {
   thai:  { ten: "Thái",  mau: "#2d6a4f" },
   mong:  { ten: "Mông",  mau: "#b5179e" },

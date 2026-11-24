@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { isKnowledgeLayer } from "../utils/knowledgeLayers";
 
 interface FieldDef {
   key: string;
@@ -68,6 +69,8 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
     { key: "ten", label: "Tên khu vực / cây thuốc", type: "text", required: true },
     { key: "ten_dia_phuong", label: "Tên địa phương", type: "text" },
     { key: "ten_khoa_hoc", label: "Tên khoa học", type: "text" },
+    { key: "lat", label: "Vĩ độ", type: "number" },
+    { key: "lng", label: "Kinh độ", type: "number" },
     { key: "cong_dung", label: "Công dụng", type: "textarea" },
     { key: "tinh_trang", label: "Tình trạng", type: "select", options: ["Chưa xác minh", "Đã xác minh"], optionLabels: { "Chưa xác minh": "Chưa xác minh (chưa đối chiếu nguồn)", "Đã xác minh": "Đã xác minh" } },
     { key: "dan_toc_dung", label: "Dân tộc sử dụng (cách nhau dấu phẩy)", type: "text" },
@@ -80,7 +83,22 @@ const FIELD_CONFIG: Record<string, FieldDef[]> = {
   ],
 };
 
+// Trường dữ liệu cho lớp tri thức bản địa (Đất · Nước · Rừng) — đọc từ tri_thuc_ban_dia.json
+const KNOWLEDGE_FIELDS: FieldDef[] = [
+  { key: "ten", label: "Tên điểm tri thức", type: "text", required: true },
+  { key: "linh_vuc", label: "Lĩnh vực / nội dung", type: "text" },
+  { key: "ma_xa", label: "Mã xã (ma_xa)", type: "text" },
+  { key: "lat", label: "Vĩ độ", type: "number" },
+  { key: "lng", label: "Kinh độ", type: "number" },
+  { key: "mo_ta", label: "Mô tả", type: "textarea" },
+  { key: "anh", label: "Ảnh minh họa (URL hoặc đường dẫn)", type: "text" },
+  { key: "nguon", label: "Nguồn", type: "text" },
+  { key: "trang_thai", label: "Trạng thái", type: "select", options: ["", "co_nguon", "can_doi_chieu"], optionLabels: { "": "— Chưa rõ —", co_nguon: "Có nguồn", can_doi_chieu: "Cần đối chiếu" } },
+  { key: "ghi_chu", label: "Ghi chú", type: "textarea" },
+];
+
 function getFields(layerId: string, geomType: "point" | "line" | "polygon"): FieldDef[] {
+  if (isKnowledgeLayer(layerId)) return KNOWLEDGE_FIELDS;
   if (FIELD_CONFIG[layerId]) return FIELD_CONFIG[layerId];
   // Generic fallback for custom layers
   const base: FieldDef[] = [
@@ -123,6 +141,9 @@ function emptyFeature(layerId: string, mapCenter: [number, number], geomType: "p
 export default function LayerDataEditor(props: Props) {
   const { layerId, layerName, layerColor, onRenameLayer, features, geomType, dragMode, onToggleDrag, onAdd, onUpdate, onDelete, onClose, mapCenter, onFlyTo, onPickPoint, onDrawGeom, hidden } = props;
   const fields = getFields(layerId, geomType);
+  const pointEditable = geomType === "point" || (layerId === "medicinal_plants" && features.some(feature =>
+    Number.isFinite(Number(feature?.lat)) && Number.isFinite(Number(feature?.lng))
+  ));
   const [showAdd, setShowAdd] = useState(false);
   const [newFeat, setNewFeat] = useState<any>(() => emptyFeature(layerId, mapCenter, geomType));
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
@@ -173,7 +194,7 @@ export default function LayerDataEditor(props: Props) {
           <button className={`lde-btn lde-btn-add ${showAdd ? "active" : ""}`} onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? "✕ Hủy" : "+ Thêm đối tượng"}
           </button>
-          {geomType === "point" && (
+          {pointEditable && (
             <button className={`lde-btn lde-btn-drag ${dragMode ? "active" : ""}`} onClick={onToggleDrag}>
               {dragMode ? "🔒 Tắt kéo thả" : "✋ Bật kéo thả trên bản đồ"}
             </button>
@@ -234,7 +255,7 @@ export default function LayerDataEditor(props: Props) {
                     {feat.ten_dia_phuong && <span className="lde-item-sub">— {feat.ten_dia_phuong}</span>}
                   </div>
                   <div className="lde-item-actions">
-                    {geomType === "point" && feat.lat && feat.lng && (
+                    {pointEditable && Number.isFinite(Number(feat.lat)) && Number.isFinite(Number(feat.lng)) && (
                       <button className="lde-icon-btn" onClick={() => onFlyTo(feat.lat, feat.lng)} title="Bay đến vị trí">
                         🎯
                       </button>
@@ -254,7 +275,7 @@ export default function LayerDataEditor(props: Props) {
                         {renderField(f, feat[f.key], v => onUpdate(idx, { ...feat, [f.key]: v }))}
                       </div>
                     ))}
-                    {geomType === "point" && (
+                    {pointEditable && Number.isFinite(Number(feat.lat)) && Number.isFinite(Number(feat.lng)) && (
                       <div className="lde-coord-info">
                         📍 Vị trí: {feat.lat?.toFixed(6)}, {feat.lng?.toFixed(6)}
                         <button
@@ -268,7 +289,7 @@ export default function LayerDataEditor(props: Props) {
                         {dragMode && <div className="lde-drag-hint">✋ Đang ở chế độ kéo thả — kéo điểm trên bản đồ để di chuyển</div>}
                       </div>
                     )}
-                    {geomType !== "point" && feat.coords && (
+                    {(!pointEditable || !Number.isFinite(Number(feat.lat)) || !Number.isFinite(Number(feat.lng))) && geomType !== "point" && feat.coords && (
                       <div className="lde-coord-info">
                         📐 {geomType === "line" ? "Đường gồm" : "Vùng gồm"} {Array.isArray(feat.coords[0][0]) ? feat.coords[0].length : feat.coords.length} điểm
                         <button

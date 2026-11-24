@@ -1,0 +1,153 @@
+/* ── Panel dân tộc lớn (mở khi bấm một dân tộc trong "Cơ cấu dân tộc") ── */
+.ep-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 12, 9, 0.78);
+  backdrop-filter: blur(3px);
+  z-index: 1500; /* dưới WardEthnicEditorModal (2000) & lightbox (10000) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.ep-modal {
+  width: min(1320px, 96vw);
+  height: min(92vh, 980px);
+  background: #0a1410;
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ep-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+  flex-shrink: 0;
+}
+.ep-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.ep-titles { flex: 1; min-width: 0; }
+.ep-title { font-size: 17px; font-weight: 800; line-height: 1.2; }
+.ep-subtitle { font-size: 11px; color: rgba(149, 213, 178, 0.75); margin-top: 2px; }
+.ep-header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.ep-page-link {
+  background: rgba(82, 183, 136, 0.12);
+  border: 1px solid rgba(82, 183, 136, 0.35);
+  color: #95d5b2;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ep-page-link:hover { background: rgba(82, 183, 136, 0.25); color: #d8f3dc; }
+.ep-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #d8f3dc;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.ep-close:hover { background: rgba(230, 57, 70, 0.35); }
+
+.ep-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+}
+
+/* ── Cột trái ── */
+.ep-left {
+  border-right: 1px solid rgba(82, 183, 136, 0.18);
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ep-section-title { color: #f3c29d; font-size: 13px; font-weight: 700; }
+.ep-bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(82, 183, 136, 0.15);
+  border-radius: 10px;
+  padding: 12px 10px 10px;
+}
+.ep-bar { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.ep-bar-value { font-size: 11px; font-weight: 700; color: #f3c29d; }
+.ep-bar-track {
+  width: 26px;
+  height: 88px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.ep-bar-fill { width: 100%; min-height: 3px; border-radius: 6px 6px 0 0; transition: height 0.35s ease; }
+.ep-bar-label { font-size: 10px; line-height: 1.15; color: #e7d9cc; text-align: center; }
+.ep-names-title { font-size: 11px; color: rgba(149, 213, 178, 0.75); }
+.ep-names { display: flex; flex-wrap: wrap; gap: 6px; }
+.ep-left-footer { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.ep-edit-btn {
+  background: rgba(82, 183, 136, 0.15);
+  border: 1px solid rgba(82, 183, 136, 0.45);
+  color: #b7e4c7;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ep-edit-btn:hover { background: rgba(82, 183, 136, 0.3); color: #d8f3dc; }
+.ep-hint { font-size: 10px; line-height: 1.5; color: rgba(149, 213, 178, 0.55); font-style: italic; }
+
+/* ── Cột phải ── */
+.ep-right {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ep-right-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(149, 213, 178, 0.6);
+}
+.ep-no-topic {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(82, 183, 136, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 12px;
+  color: rgba(149, 213, 178, 0.7);
+  text-align: center;
+}
+
+/* Chiều cao ảnh & khoảng rộng cho bối cảnh modal lớn */
+.ep-right .ethnic-photo-wrap { max-height: 300px; }
+.ep-right .ethnic-photo { max-height: 260px; }
+.ep-right .knowledge-text-editable { font-size: 13px; }
+.ep-right .recipe-val-edit { font-size: 12px; }
+.ep-right .knowledge-tab { min-width: 130px; }
+
+/* ── Rresponsive: thu hẹp trên màn hình nhỏ ── */
+@media (max-width: 900px) {
+  .ep-body { grid-template-columns: 1fr; }
+  .ep-left { border-right: none; border-bottom: 1px solid rgba(82, 183, 136, 0.18); max-height: 40%; }
+  .ep-modal { width: 98vw; height: 96vh; }
+}

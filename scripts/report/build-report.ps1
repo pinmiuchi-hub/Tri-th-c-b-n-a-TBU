@@ -69,6 +69,8 @@ if (Test-Path $docxPath) {
 # ---- image width rules (cm) ----
 # All images are >= 2400px wide, so every one renders at 14.5cm.
 function Get-ImageWidthCm([string]$name) {
+  # Lưới ảnh nhỏ trong Phụ lục J (ảnh dùng trên web) hiển thị ở khổ thumbnail
+  if ($name -like 'images/web/*') { return 3.1 }
   return 14.5
 }
 
@@ -233,10 +235,10 @@ try {
   # ---- 4. paragraph formatting ----
   Write-Host "   [4] paragraph formatting..."
   $sw = [Diagnostics.Stopwatch]::StartNew()
-  $nNormal = 0; $nTable = 0; $nCap = 0; $nDm = 0; $nSkip = 0; $pi = 0
+  $nNormal = 0; $nTable = 0; $nCap = 0; $nDm = 0; $nSkip = 0; $nCode = 0; $pi = 0
   foreach ($p in $doc.Paragraphs) {
     $pi++
-    if ($pi % 500 -eq 0) { Write-Host "     ...$pi para ${nNormal}b ${nTable}ch ${nCap}chx ${nDm}dm ${nSkip}skip $([int]$sw.Elapsed.TotalSeconds)s" }
+    if ($pi % 500 -eq 0) { Write-Host "     ...$pi para ${nNormal}b ${nTable}ch ${nCap}chx ${nDm}dm ${nSkip}skip ${nCode}code $([int]$sw.Elapsed.TotalSeconds)s" }
     $rng = $p.Range
     $txt = $rng.Text.Trim()
     $inTable = $rng.Information($wdWithInTable)
@@ -255,12 +257,38 @@ try {
     }
     if ($p.OutlineLevel -ne $wdOutlineLevelBodyText) { $nSkip++; continue }
 
+    # doan ma nguon (<pre>): doc font/goc TRUOC khi ghi de, neu la monospace
+    # (Word gán style HTML Preformatted cho the <pre>) thi giuyen Courier New
+    # va bo qua toan bo dinh dang TNR/13pt cua doan van thuong.
+    $styleName = ''
+    try { $styleName = [string]$p.Style } catch { $styleName = '' }
+    $origFont = $null
+    try { $origFont = $rng.Font.Name } catch { $origFont = $null }
+    if (-not $origFont) {
+      try { $origFont = $rng.Characters.Item(1).Font.Name } catch { $origFont = '' }
+    }
+    if ("$origFont" -match 'Courier|Consolas|Lucida Console' -or $styleName -match 'Preformatted|(^|\s)code(\s|$)') {
+      $cf = $rng.Font
+      $cf.Name = 'Courier New'; $cf.NameAscii = 'Courier New'; $cf.NameOther = 'Courier New'
+      $cf.Size = 10.5
+      $cf.Bold = 0; $cf.Italic = 0
+      $cf.Color = 0
+      $p.Format.Alignment = $wdAlignLeft
+      $p.Format.LineSpacingRule = 0   # wdLineSpaceSingle
+      $p.Format.SpaceBefore = 0
+      $p.Format.SpaceAfter = 0
+      $p.Format.LeftIndent = 0
+      $p.Format.RightIndent = 0
+      $nCode++
+      continue
+    }
+
     $f = $rng.Font
     $f.Name = 'Times New Roman'; $f.NameAscii = 'Times New Roman'; $f.NameOther = 'Times New Roman'
 
     if ($inTable) { $f.Size = 12; $nTable++; continue }
 
-    if ($txt -match '^Hình\s+[0-9]+(\.[0-9]+)?\s+[—–-]') {
+    if ($txt -match '^Hình\s+[A-Za-z0-9]+(\.[0-9]+)?\s+[—–-]') {
       $f.Size = 12; $f.Italic = $msoTrue
       $p.Format.Alignment = $wdAlignCenter
       $p.Format.SpaceBefore = 0
@@ -282,7 +310,7 @@ try {
     if ($f.Size -ne 13) { $f.Size = 13 }
     $nNormal++
   }
-  Write-Host "   paragraphs: body=$nNormal table=$nTable caption=$nCap danhMuc=$nDm skipped=$nSkip"
+  Write-Host "   paragraphs: body=$nNormal table=$nTable caption=$nCap danhMuc=$nDm code=$nCode skipped=$nSkip"
 
   # ---- 5. footer page numbers ----
   Write-Host "   [5] footer..."
