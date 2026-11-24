@@ -111,6 +111,7 @@ export default function LayerControl({
   const [importingFor, setImportingFor] = useState<string | null>(null);
   const [labelStyleOpen, setLabelStyleOpen] = useState(false);
   const [renamingCatId, setRenamingCatId] = useState<string | null>(null);
+  const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [namingFolder, setNamingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -166,13 +167,22 @@ export default function LayerControl({
     onImportLayerFile(cat, file, draft.mau, draft.bieu_tuong || "📌");
   };
 
-  const startRenameFolder = (cat: LayerCategory) => { setRenamingCatId(cat.id); setRenameDraft(cat.ten); };
+  const startRenameFolder = (cat: LayerCategory) => { setRenamingLayerId(null); setRenamingCatId(cat.id); setRenameDraft(cat.ten); };
   const commitRenameFolder = () => {
     const id = renamingCatId;
     const name = renameDraft.trim();
     setRenamingCatId(null);
     if (!id || !name) return;
     onRenameCategory(id, name);
+  };
+  // Đổi tên lớp ngay trong bảng lớp (nhấn đúp vào tên) — lưu cùng cơ chế với thư mục
+  const startRenameLayer = (layer: LayerToggle) => { setRenamingCatId(null); setRenamingLayerId(layer.id); setRenameDraft(layer.ten); };
+  const commitRenameLayer = () => {
+    const id = renamingLayerId;
+    const name = renameDraft.trim();
+    setRenamingLayerId(null);
+    if (!id || !name) return;
+    onRenameLayer(id, name);
   };
   const requestDeleteFolder = (cat: LayerCategory) => {
     const hasCustom = cat.layers.some(l => l.isCustom);
@@ -372,7 +382,24 @@ export default function LayerControl({
             ? <img src={layer.bieu_tuong} alt="" className="layer-symbol-img"/>
             : layer.bieu_tuong}
         </span>
-        <span className="layer-name" title={layer.ten}>{layer.ten}</span>
+        {renamingLayerId === layer.id ? (
+          <input
+            className="lf-rename"
+            autoFocus
+            value={renameDraft}
+            onChange={e => setRenameDraft(e.target.value)}
+            onBlur={commitRenameLayer}
+            onKeyDown={e => { if (e.key === "Enter") commitRenameLayer(); else if (e.key === "Escape") setRenamingLayerId(null); }}
+          />
+        ) : (
+          <span
+            className="layer-name"
+            title={(!layer.isThematic || layer.isThematicCopy) ? `${layer.ten} — nhấn đúp để đổi tên` : layer.ten}
+            onDoubleClick={() => { if (!layer.isThematic || layer.isThematicCopy) startRenameLayer(layer); }}
+          >
+            {layer.ten}
+          </span>
+        )}
         {layer.isCustom && <span className="layer-custom-badge" title="Lớp tự tạo">tự tạo</span>}
         {featureCounts[layer.id] != null && featureCounts[layer.id] > 0 && (
           <span className="layer-feature-count">{featureCounts[layer.id]}</span>
@@ -710,7 +737,7 @@ export default function LayerControl({
 
         <div className="layer-legend-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Nhấn giữ rồi kéo để sắp xếp lớp · Kéo lớp vào thư mục để gộp nhóm · "+ Tạo thư mục" để tạo nhóm mới
+          Nhấn giữ rồi kéo để sắp xếp lớp · Kéo lớp vào thư mục để gộp nhóm · Nhấn đúp vào tên lớp/thư mục để đổi tên · "+ Tạo thư mục" để tạo nhóm mới
         </div>
 
       </div>

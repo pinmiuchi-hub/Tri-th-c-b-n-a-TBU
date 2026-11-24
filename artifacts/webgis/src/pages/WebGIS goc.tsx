@@ -420,6 +420,26 @@ type OverridesFile = {
   province?: Record<string, Partial<ProvinceStat>>;
 };
 const readOverridesFile = (): OverridesFile => readJson<OverridesFile>(STORAGE.overrides) ?? {};
+/** Gộp bản sửa người dùng (vd: tên xã đã đổi) vào properties của GeoJSON — trả về cùng tham chiếu nếu không có gì đổi (tránh loop setState). */
+const applyWardOverridesToGeo = (geo: GeoJsonData | null, overrides: Map<string, WardOverrides>): GeoJsonData | null => {
+  if (!geo || !overrides.size) return geo;
+  let changed = false;
+  const features = geo.features.map(f => {
+    const props = f.properties as Record<string, unknown> | undefined;
+    const ov = props?.ma_xa ? overrides.get(String(props.ma_xa)) : undefined;
+    if (!ov) return f;
+    let hit = false;
+    const merged: Record<string, unknown> = { ...(props || {}) };
+    Object.entries(ov).forEach(([k, v]) => {
+      if (v === undefined || v === null) return;
+      if (merged[k] !== v) { merged[k] = v; hit = true; }
+    });
+    if (!hit) return f;
+    changed = true;
+    return { ...f, properties: merged };
+  });
+  return changed ? { ...geo, features } : geo;
+};
 const statusNote = (x: { trang_thai?: string; nguon?: string[] } | null | undefined): string => {
   if (!x?.trang_thai) return "";
   const msg = x.trang_thai === "minh_hoa" ? "⚠ Dữ liệu minh họa — chưa có nguồn xác minh, không dùng làm căn cứ"
@@ -612,6 +632,9 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
 
   /* ─── Editable data state (khôi phục từ localStorage khi mở trang) ─── */
   const [wardOverrides, setWardOverrides] = useState<Map<string,WardOverrides>>(() => recToMap(readOverridesFile().ward));
+  // Ref để các closure đã bind vào Leaflet (tooltip/vẽ ranh giới lúc vào tỉnh) đọc bản sửa MỚI NHẤT
+  const wardOverridesRef = useRef(wardOverrides);
+  wardOverridesRef.current = wardOverrides;
   const [ethnicOverrides, setEthnicOverrides] = useState<Map<string,EthnicOverride>>(() => recToMap(readOverridesFile().ethnic));
   const [triThucOverrides, setTriThucOverrides] = useState<Map<string,TriThuc[]>>(() => recToMap(readOverridesFile().triThuc));
   const [provinceEdits, setProvinceEdits] = useState<Map<string,Partial<ProvinceStat>>>(() => recToMap(readOverridesFile().province));
@@ -675,7 +698,7 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
       const cleaned = savedCats
         .filter(c => c.id !== "culture" && c.id !== "land_knowledge")
         .map(c => ({ ...c, layers: c.layers.filter(l => !REMOVED_LAYER_IDS.has(l.id)) }));
-      // Đồng bộ tiêu đề & thứ tự nhóm/lớp với mặc định hiện hành (config cũ từ trước vòng gộp lớp)
+      // Đồng bộ THỨ TỰ nhóm/lớp với mặc định hiện hành — tên/icon giữ theo người dùng đã đặt
       const cleanedById = new Map(cleaned.map(c => [c.id, c]));
       const normalized: LayerCategoryState[] = [];
       DEFAULT_LAYER_CATEGORIES.forEach(def => {
@@ -690,7 +713,7 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
           ...def.layers.flatMap(dl => cat.layers.filter(l => l.id === dl.id)),
           ...cat.layers.filter(l => !defaultIds.has(l.id)),
         ];
-        normalized.push({ ...cat, ten: def.ten, icon: def.icon, layers: orderedLayers });
+        normalized.push({ ...cat, layers: orderedLayers });
       });
       cleaned.forEach(c => { if (!DEFAULT_LAYER_CATEGORIES.some(d => d.id === c.id)) normalized.push(c); });
       return ensureSocioCategory(normalized, deletedCategoryIds);
@@ -814,18 +837,14 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
       };
       if (layersData) {
         const { rivers: _rivers, ...rest } = layersData as Record<string, any>;
-        const hasStaleLabel = (arr: unknown) => Array.isArray(arr) && arr.some((x: any) => x?.trang_thai === "minh_hoa" || x?.trang_thai === "chua_xac_minh");
         // Chỉ lưu mảng người dùng ĐÃ sửa (so với layers.json gốc) + lớp tự tạo —
         // lớp nguyên bản không lưu lại để lần tải sau lấy bản mới từ layers.json
-        // và không phình to localStorage/cloud.
+        // và không phình to localStorage/cloud. Lớp tri thức bản địa giữ nguyên mọi nhãn trạng thái nghiên cứu.
         const base = baseLayersRef.current;
         const edited: Record<string, any[]> = {};
         Object.keys(rest).forEach(k => {
           if (!Array.isArray(rest[k])) return;
           if (k.startsWith("custom_")) { edited[k] = rest[k]; return; }
-          // Không lưu lại mảng built-in còn nhãn minh họa/chưa xác minh (dữ liệu cũ từ phiên trước)
-          // — lớp tri thức bản địa giữ nguyên mọi nhãn trạng thái nghiên cứu
-          if (!isKnowledgeLayer(k) && hasStaleLabel(rest[k])) return;
           const b = base ? base[k] : undefined;
           if (b !== undefined && JSON.stringify(b) === JSON.stringify(rest[k])) return;
           edited[k] = rest[k];
@@ -858,6 +877,31 @@ const wardLabelsLayerRef = useRef<L.LayerGroup | null>(null);
   const [pieWardSelection, setPieWardSelection] = useState<Set<string>>(new Set());
   const [editingWardComposition, setEditingWardComposition] = useState<WardProperties | null>(null); const [editingWardStyle, setEditingWardStyle] = useState<WardProperties | null>(null);
   const [currentProvinceGeoJson, setCurrentProvinceGeoJson] = useState<GeoJsonData | null>(null);
+  // Gộp bản sửa người dùng (tên xã...) vào geojson đang xem — đổi là hiện ngay trên mọi chỗ đọc props.
+  // applyWardOverridesToGeo trả cùng tham chiếu khi không đổi → setState tự bỏ qua, không loop.
+  useEffect(() => {
+    setCurrentProvinceGeoJson(prev => applyWardOverridesToGeo(prev, wardOverrides));
+    setAllWardsGeoJson(prev => applyWardOverridesToGeo(prev, wardOverrides));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wardOverrides]);
+  // Làm mới bản sao xã đang chọn (giữ nguyên nếu không có bản sửa) để tiêu đề/panel hiện tên sau khi đổi
+  useEffect(() => {
+    const refresh = <T extends WardProperties | null>(w: T): T => {
+      if (!w) return w;
+      const ov = wardOverrides.get(w.ma_xa);
+      if (!ov) return w;
+      let changed = false;
+      const next = { ...w } as WardProperties;
+      Object.entries(ov).forEach(([k, v]) => {
+        if (v === undefined || v === null) return;
+        if ((next as unknown as Record<string, unknown>)[k] !== v) { (next as unknown as Record<string, unknown>)[k] = v; changed = true; }
+      });
+      return (changed ? next : w) as T;
+    };
+    setSelectedWard(prev => refresh(prev));
+    setInfoPanelWard(prev => refresh(prev));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wardOverrides]);
   const [layerDragMode, setLayerDragMode] = useState<string | null>(null);
 const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
   
@@ -975,7 +1019,6 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
       const savedLayerData = savedConfig?.layersData;
       if (savedLayerData) {
         const savedRev = (savedConfig as any)?.layersDataRev;
-        const hasStaleLabel = (arr: unknown) => Array.isArray(arr) && arr.some((x: any) => x?.trang_thai === "minh_hoa" || x?.trang_thai === "chua_xac_minh");
         Object.keys(savedLayerData).forEach(key => {
           if (!Array.isArray(savedLayerData[key])) return;
           if (key === "rivers") return; // rivers tải lại từ Overpass mỗi phiên
@@ -983,9 +1026,6 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
           if (LAYER_DATA_REV_KEYS.includes(key) && savedRev !== LAYER_DATA_REV) return;
           // Lớp tri thức bản địa: nhận bản lưu nếu JSON khung còn rev cũ thì bỏ (lấy base mới)
           if (isKnowledgeLayer(key) && (savedConfig as any)?.knowledgeDataRev !== KNOWLEDGE_DATA_REV) return;
-          // Bản lưu còn nhãn minh họa/chưa xác minh = dữ liệu trước khi đối chiếu nguồn (kể cả khi rev trùng) — bỏ
-          // (trừ lớp tri thức bản địa: nhãn trạng thái là dữ liệu nghiên cứu hợp lệ)
-          if (!key.startsWith("custom_") && !isKnowledgeLayer(key) && hasStaleLabel(savedLayerData[key])) return;
           if (key === "forests" || key === "medicinal_plants") {
             // Phiên trước lưu dạng điểm (lat/lng) — không dùng nữa; chỉ nhận bản đã biên tập dạng polygon
             const polygonItems = savedLayerData[key].filter((x: any) => Array.isArray(x?.coords));
@@ -1084,7 +1124,7 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
           d.features.map(f => ({ ...f, properties: { ...f.properties, ten_tinh: p } }))
         )
       };
-      setAllWardsGeoJson(merged);
+      setAllWardsGeoJson(applyWardOverridesToGeo(merged, wardOverrides));
     }).catch(console.error).finally(() => setLoadingWardBoundaries(false));
   }, [activeLayers, allWardsGeoJson]);
 
@@ -1120,7 +1160,10 @@ const [showPieSelectorModal, setShowPieSelectorModal] = useState(false);
     const results = await Promise.all(sources.map(async ([name, url]) => ({ name, data: await fetchGeoJson(url) })));
     const match = results.flatMap(result => result.data.features.map(feature => ({ ...result, feature }))).find(result => {
       const props = result.feature.properties as Record<string, unknown>;
-      return String(props.ten_xa || "").toLowerCase().includes(query) || String(props.ma_xa || "").toLowerCase() === query;
+      // Tìm theo TÊN HIỆN TẠI (kể cả tên người dùng đã sửa) + mã xã
+      const ov = props?.ma_xa ? wardOverrides.get(String(props.ma_xa)) : undefined;
+      const wardName = String((ov?.ten_xa as string) || props.ten_xa || "");
+      return wardName.toLowerCase().includes(query) || String(props.ma_xa || "").toLowerCase() === query;
     });
     if (!match) {
       setSearchMessage("Không tìm thấy xã hoặc tỉnh phù hợp.");
@@ -1611,7 +1654,7 @@ const getZoomAwareDashArray = (baseDashArray: string, zoom: number) =>
 };
 /** Tooltip của xã — khi lớp cơ cấu dân tộc bật thì kèm dân tộc đa số + toàn bộ tỷ lệ. */
 const wardTooltipHtml = (p: WardProperties): string => {
-  const name = escapeHtmlText(String(p.ten_xa || ""));
+  const name = escapeHtmlText(String(wardOverridesRef.current.get(p.ma_xa)?.ten_xa || p.ten_xa || ""));
   if (!showPieSelector) return `<div class="ward-tooltip">${name}</div>`;
   const composition = withOtherEthnic((wardOverrides.get(p.ma_xa)?.dan_toc ?? p.dan_toc ?? []).slice())
     .filter(item => Number(item.ty_le) > 0)
@@ -2733,7 +2776,8 @@ style:()=>({
       wardBoundaryAutoOnRef.current=true;
     }
     try {
-      const data=await fetchGeoJson(PROVINCE_FILES[name]);
+      const raw=await fetchGeoJson(PROVINCE_FILES[name]);
+      const data=applyWardOverridesToGeo(raw, wardOverrides) ?? raw;
       const wardStyle = getLayerSymbology("ward_boundaries");
       setCurrentProvinceGeoJson(data);
       provinceMaskGeomRef.current = data as unknown as GeoJSON.FeatureCollection;
@@ -2773,7 +2817,7 @@ onEachFeature:(feat,lyr)=>{
       if (bounds.isValid()) mapRef.current?.fitBounds(bounds, { padding: [70, 70], maxZoom: 14, duration: 0.8 });
     }
   });
-  lyr.bindTooltip(wardTooltipHtml(p),{sticky:true,className:"custom-tooltip ward-tip"});
+  lyr.bindTooltip(()=>wardTooltipHtml(p),{sticky:true,className:"custom-tooltip ward-tip"});
 },
       });
       wl.addTo(mapRef.current);wardsLayerRef.current=wl;
