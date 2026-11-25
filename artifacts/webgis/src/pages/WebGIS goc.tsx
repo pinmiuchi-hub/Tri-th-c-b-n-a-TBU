@@ -2555,6 +2555,9 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
       const knowledgeRows: ComposerLegendRow[] = [];
       knowledgeDefs.forEach(def => {
         if (!knowledgeHasFeatures(def.id)) return;
+        // Ưu tiên tên người dùng đã đổi trong bảng lớp
+        const renamedName = layerDisplayAll[def.id]?.name;
+        const shortLabel = renamedName && renamedName !== def.ten ? renamedName : knowledgeShortLabel(def.ten);
         if (def.id === "tt_l2") {
           // L2 phân loại theo loại hình thủy lợi (cọn/mương/phai/lịn) khớp marker
           const feats = ((layersData as any)?.tt_l2 || []).filter((f: any) => featureVisible(f));
@@ -2565,9 +2568,9 @@ const removeBuiltinLayer = (categoryId: string, layerId: string) => {
               knowledgeRows.push({ type: "point", label: st.label, color: def.mau, emoji: st.emoji });
             }
           }
-          if (!matched) knowledgeRows.push({ type: "point", label: knowledgeShortLabel(def.ten), color: def.mau, emoji: def.icon });
+          if (!matched) knowledgeRows.push({ type: "point", label: shortLabel, color: def.mau, emoji: def.icon });
         } else {
-          knowledgeRows.push({ type: "point", label: knowledgeShortLabel(def.ten), color: def.mau, emoji: def.icon });
+          knowledgeRows.push({ type: "point", label: shortLabel, color: def.mau, emoji: def.icon });
         }
       });
       if (knowledgeRows.length) sections.push({ title: "Tri thức bản địa (L1–L7)", rows: knowledgeRows });
@@ -3303,6 +3306,11 @@ onEachFeature:(feat,lyr)=>{
   customLayers.forEach(c => { customDisplay[c.id] = { name: c.ten, color: c.mau }; customGeom[c.id] = c.geomType; });
   knowledgeDefs.forEach(d => { customDisplay[d.id] = { name: d.ten, color: d.mau }; customGeom[d.id] = d.features.length > 0 && d.features.every(f => Array.isArray((f as any)?.coords)) ? "polygon" : "point"; });
   const layerDisplayAll: Record<string, any> = { ...LAYER_DISPLAY, ...customDisplay };
+  // Ưu tiên TÊN người dùng đã đổi trong bảng lớp (đổi tên qua bảng lớp hoặc ô "Tên lớp" trong editor)
+  // — nếu lấy thẳng từ LAYER_DISPLAY/knowledgeDefs thì ô nhập tên luôn hiện tên cũ, gõ gì cũng bị ngược lại.
+  layerCategories.forEach(c => c.layers.forEach(l => {
+    if (layerDisplayAll[l.id]) layerDisplayAll[l.id] = { ...layerDisplayAll[l.id], name: l.ten };
+  }));
   const layerGeomAll = { ...LAYER_GEOM_TYPE, ...customGeom };
 
   useEffect(() => {
@@ -3811,13 +3819,18 @@ onClick={() => setShowMapComposer(s => !s)}
               {(() => {
                 const defs = knowledgeDefs.filter(d => legendLayerHasFeature(d.id));
                 if (!defs.length) return null;
+                // Ưu tiên tên người dùng đã đổi; chưa đổi thì rút gọn tên gốc
+                const knowledgeLabel = (d: KnowledgeLayerDef): string => {
+                  const n = layerDisplayAll[d.id]?.name;
+                  return n && n !== d.ten ? n : knowledgeShortLabel(d.ten);
+                };
                 return (<>
                   <div className="legend-subtitle">Tri thức bản địa (L1–L7)</div>
                   {defs.map(d => {
                     if (d.id !== "tt_l2") return (
                       <div className="legend-item" key={`legend-${d.id}`}>
                         <LegendPoint color={d.mau} emoji={d.icon}/>
-                        <span>{knowledgeShortLabel(d.ten)}</span>
+                        <span>{knowledgeLabel(d)}</span>
                       </div>
                     );
                     // L2 phân loại theo loại hình thủy lợi khớp marker
@@ -3827,7 +3840,7 @@ onClick={() => setShowMapComposer(s => !s)}
                     if (subtypes.length === 0) return (
                       <div className="legend-item" key={`legend-${d.id}`}>
                         <LegendPoint color={d.mau} emoji={d.icon}/>
-                        <span>{knowledgeShortLabel(d.ten)}</span>
+                        <span>{knowledgeLabel(d)}</span>
                       </div>
                     );
                     return subtypes.map(st => (
@@ -4193,7 +4206,7 @@ onClick={() => setShowMapComposer(s => !s)}
                                 <span className="knowledge-ward-item-icon" style={{ background: def.mau }}>{def.icon}</span>
                                 <div className="knowledge-ward-item-main">
                                   <div className="knowledge-ward-item-ten">{f.ten || "(chưa đặt tên)"}</div>
-                                  <div className="knowledge-ward-item-sub">{f.linh_vuc || def.ten}</div>
+                                  <div className="knowledge-ward-item-sub">{f.linh_vuc || layerDisplayAll[def.id]?.name || def.ten}</div>
                                 </div>
                                 {Number.isFinite(Number(f.lat)) && Number.isFinite(Number(f.lng)) && (
                                   <button
